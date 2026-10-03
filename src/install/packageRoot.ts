@@ -1,4 +1,4 @@
-/** The running dufflebag package: the nearest package.json above this module, and its version. */
+/** The running agent-outfit package: the nearest package.json above this module, and its version. */
 
 import { FileSystem, Path } from "@effect/platform";
 import { Effect, Schema, ParseResult as SchemaParseIssue } from "effect";
@@ -11,7 +11,7 @@ class PackageRootError extends Schema.TaggedError<PackageRootError>()("PackageRo
   }),
 }) {
   get message(): string {
-    return `Cannot read the dufflebag package: ${this.issue}`;
+    return `Cannot read the agent-outfit package: ${this.issue}`;
   }
 }
 

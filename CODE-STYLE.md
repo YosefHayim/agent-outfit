@@ -1,6 +1,6 @@
-# Dufflebag code style
+# agent-outfit code style
 
-This file is the **project dialect** (prescriptive SSOT) for maintained code in this repository. The rule-card format is owned by this package: `src/skills/codeStyleNewProject/_shared/CODE-STYLE-FORMAT.md`, with this file as the living exemplar and `src/templates/projectDocs/CODE-STYLE.md` as the greenfield scaffold. When another guide elsewhere conflicts with this one, **this file wins for dufflebag**.
+This file is the **project dialect** (prescriptive SSOT) for maintained code in this repository. The rule-card format is owned by this package: `src/skills/codeStyleNewProject/_shared/CODE-STYLE-FORMAT.md`, with this file as the living exemplar and `src/templates/projectDocs/CODE-STYLE.md` as the greenfield scaffold. When another guide elsewhere conflicts with this one, **this file wins for agent-outfit**.
 
 The maintained tree conforms to this contract. A new rule is not complete until its verifier gates the same change when the rule is mechanically decidable.
 
@@ -544,7 +544,7 @@ Interfaces appear only for declaration merging or an external interoperability c
 // ✓ src/types/environment.d.ts
 declare global {
   interface ProcessEnv {
-    DUFFLEBAG_REHOME_STATE_DIR?: string;
+    AGENT_OUTFIT_REHOME_STATE_DIR?: string;
   }
 }
 
@@ -849,7 +849,7 @@ Why: behavior tests survive internal refactors and make ownership invariants exe
 Maintained scripts exist only for repository-specific lifecycle work that an installed tool cannot perform directly.
 
 ```ts
-// ✓ maintained script owns Dufflebag README generation
+// ✓ maintained script owns agent-outfit README generation
 // src/scripts/generateReadme.ts
 
 // ✗ wrapper only forwards to Biome
@@ -936,7 +936,7 @@ The feature catalog owns its shipped files, the hook process owns transport, the
 
 ## Golden path — adding a feature
 
-A **feature** is dufflebag's unit of extension: a catalog entry plus the files it installs.
+A **feature** is agent-outfit's unit of extension: a catalog entry plus the files it installs.
 
 1. Define the user-visible contract and its public feature ID before choosing files.
 2. Choose exactly one authored tree: copied skill content under `src/skills/<sourceDirectory>/` or executable hook code under `src/hooks/<sourceDirectory>/`.

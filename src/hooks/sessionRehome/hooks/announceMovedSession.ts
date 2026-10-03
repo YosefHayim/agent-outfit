@@ -54,7 +54,7 @@ const startSweepIfDue = (): void => {
 };
 
 const announceMovedSession = (): never => {
-  const agent = agentFrom(process.env.DUFFLEBAG_AGENT_ID);
+  const agent = agentFrom(process.env.AGENT_OUTFIT_AGENT_ID);
   const sessionStart = decodeSessionStart(JSON.parse(readFileSync(0, "utf8")));
   if (!agent || !sessionStart) {
     return allowAndExit();

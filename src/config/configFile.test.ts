@@ -26,7 +26,7 @@ const writeConfigContents = (contents: Uint8Array | string) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-config-file-" });
+    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-config-file-" });
     const configPath = path.join(root, "config.json");
     yield* fileSystem.writeFile(configPath, typeof contents === "string" ? textEncoder.encode(contents) : contents);
     return configPath;
@@ -48,7 +48,7 @@ layer(NodeContext.layer)("readConfigFile", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-config-file-missing-" });
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-config-file-missing-" });
 
       expect(yield* readConfigFile(path.join(root, "config.json"))).toEqual({ _tag: "missing" });
     }),
@@ -121,7 +121,7 @@ layer(NodeContext.layer)("readConfigFile", (it) => {
   it.scoped("preserves non-missing filesystem errors", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-config-file-read-error-" });
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-config-file-read-error-" });
 
       expect((yield* Effect.flip(readConfigFile(root)))._tag).toBe("SystemError");
     }),

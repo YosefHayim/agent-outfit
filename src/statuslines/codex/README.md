@@ -4,7 +4,7 @@ This preset configures the Codex footer exactly as:
 
 `current directory · model · reasoning level · context remaining · context window · weekly limit`
 
-From the `dufflebag` repository root, run:
+From the `agent-outfit` repository root, run:
 
 ```sh
 ./src/statuslines/codex/install.sh

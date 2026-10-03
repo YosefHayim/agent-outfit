@@ -88,7 +88,7 @@ export const decodeHookConfig = (candidate: unknown): HookConfig => {
   };
 };
 
-// Read on every call, so a running watcher follows `dufflebag config set`.
+// Read on every call, so a running watcher follows `agent-outfit config set`.
 export const readConfig = (): HookConfig => {
   try {
     return decodeHookConfig(JSON.parse(readFileSync(managedConfigPath, "utf8")));
@@ -105,11 +105,11 @@ const durationSeconds = (durationText: string): number | null => {
   return seconds >= 10 && seconds <= 86_400 ? seconds : null;
 };
 
-// DUFFLEBAG_IDLE_COMPACT_AFTER, set when starting an agent, wins over config.json.
+// AGENT_OUTFIT_IDLE_COMPACT_AFTER, set when starting an agent, wins over config.json.
 export const resolveIdleCompactSeconds = (request: {
   readonly env: NodeJS.Dict<string>;
   readonly configValue: string;
 }): number | null => {
-  const override = request.env.DUFFLEBAG_IDLE_COMPACT_AFTER;
+  const override = request.env.AGENT_OUTFIT_IDLE_COMPACT_AFTER;
   return durationSeconds(override === undefined ? request.configValue : override);
 };

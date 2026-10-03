@@ -130,7 +130,7 @@ export class InstallError extends Schema.TaggedError<InstallError>()("InstallErr
   }),
 }) {
   get message(): string {
-    return `Cannot install dufflebag: ${this.issue}`;
+    return `Cannot install agent-outfit: ${this.issue}`;
   }
 }
 

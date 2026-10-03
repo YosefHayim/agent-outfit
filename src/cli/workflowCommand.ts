@@ -1,4 +1,4 @@
-/** `dufflebag workflow scaffold` — copy CI and publish workflow templates. */
+/** `agent-outfit workflow scaffold` — copy CI and publish workflow templates. */
 
 import { Args, Command, Options } from "@effect/cli";
 import { Path } from "@effect/platform";
@@ -35,7 +35,7 @@ const workspaceArgument = Args.directory({ name: "workspace", exists: "either" }
 
 const overwriteOption = Options.boolean("overwrite").pipe(
   Options.withDefault(false),
-  Options.withDescription("Overwrite existing workflow files (resync from dufflebag)"),
+  Options.withDescription("Overwrite existing workflow files (resync from agent-outfit)"),
 );
 
 const scaffoldCommand = Command.make(

@@ -111,7 +111,7 @@ const targetSnapshot = (targetPath: string, original: TargetSnapshot["original"]
 
 const preparePlan = (plan: Plan, root: string) =>
   Effect.map(Path.Path, (path): PreparedPlan => {
-    const transactionRoot = path.join(root, `.dufflebag-transaction-${randomUUID()}`);
+    const transactionRoot = path.join(root, `.agent-outfit-transaction-${randomUUID()}`);
     const preparedDirectory = path.join(transactionRoot, "prepared");
     const snapshotsDirectory = path.join(transactionRoot, "snapshots");
     const receiptTargetPath = path.resolve(root, plan.receipt.target.path);

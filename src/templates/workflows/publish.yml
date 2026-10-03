@@ -1,6 +1,6 @@
 name: Publish Package
 
-# Copied by `dufflebag workflow scaffold`, which fills in this repo's owner, name, and package.
+# Copied by `agent-outfit workflow scaffold`, which fills in this repo's owner, name, and package.
 # It is a per-repo copy, not a reusable workflow: npm OIDC trusted publishing binds provenance
 # to this repo and this exact filename, so keep the file named publish.yml.
 #

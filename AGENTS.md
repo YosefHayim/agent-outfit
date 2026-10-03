@@ -4,10 +4,10 @@ Entrypoint for coding agents and maintainers. Claude Code, Codex, Cursor, Kiro, 
 
 ## What this is
 
-**dufflebag** is a TypeScript CLI that installs, updates, uninstalls, diagnoses, configures, and scaffolds an owned set of agent skills, dependency-free hooks, agent configuration, and copyable single-gate CI/publish workflow templates.
+**agent-outfit** is a TypeScript CLI that installs, updates, uninstalls, diagnoses, configures, and scaffolds an owned set of agent skills, dependency-free hooks, agent configuration, and copyable single-gate CI/publish workflow templates.
 
 ```bash
-npx ys-dufflebag install image-to-code
+npx agent-outfit install image-to-code
 ```
 
 ## Source-of-truth map
@@ -40,9 +40,9 @@ Public feature and installed-skill IDs are decoded catalog data and can differ f
 | `src/install/` | Install planning, package preparation, transactional apply, receipts, and agent formats |
 | `src/hooks/lib/` | Dependency-free code shared by every installed hook (`hookConfig`, `hookOutput`) |
 | `src/skills/<sourceDirectory>/` | Authored skill payload copied verbatim into an installed skill directory (`SKILL.md`, `reference/`, `scripts/`, `templates/`) |
-| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `lib/`, `command/`) compiled and installed to `.claude/dufflebag/hooks/` |
-| `src/doctor/` | Structured installation health checks behind `dufflebag doctor` |
-| `src/workflows/` | Copies the workflow templates into another repository (`dufflebag workflow scaffold`) |
+| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `lib/`, `command/`) compiled and installed to `.claude/agent-outfit/hooks/` |
+| `src/doctor/` | Structured installation health checks behind `agent-outfit doctor` |
+| `src/workflows/` | Copies the workflow templates into another repository (`agent-outfit workflow scaffold`) |
 | `src/scripts/` | Outer-ring tooling only: package build (`generateReadme`), style contract (`checkCodeStyle` + `reportCodeStyle`), rule-card format (`checkRuleCards` + `reportRuleCards`), never imported by product code |
 | `src/templates/` | Files intentionally copied into another repository |
 | `src/statuslines/` | Agent status-line presets installed by their own shell script (not receipt-owned) |
@@ -101,6 +101,6 @@ pnpm --dir src/skills/imageToCode/scripts typecheck
 
 ## Issues
 
-- Issues live on GitHub (`YosefHayim/dufflebag`); use the `gh` CLI.
+- Issues live on GitHub (`YosefHayim/agent-outfit`); use the `gh` CLI.
 - Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
 - Before changing image-to-code, read `src/skills/imageToCode/CONTEXT.md` and `TECH-GLOSSARY.md`.

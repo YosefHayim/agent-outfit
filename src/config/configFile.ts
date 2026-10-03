@@ -8,7 +8,7 @@ import { type WriteOperation, writeOperationSchema } from "../install/plan.js";
 import { scopeSchema } from "../install/receipt.js";
 import { type Config, configSchema, defaultConfig } from "./configSchema.js";
 
-export const managedConfigPath = ".claude/dufflebag/config.json";
+export const managedConfigPath = ".claude/agent-outfit/config.json";
 
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const textEncoder = new TextEncoder();

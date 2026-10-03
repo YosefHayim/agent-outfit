@@ -1,4 +1,4 @@
-/** `dufflebag config show|set|reset` — managed configuration as explicit verbs. */
+/** `agent-outfit config show|set|reset` — managed configuration as explicit verbs. */
 
 import { Args, Command } from "@effect/cli";
 import { Effect, Option } from "effect";

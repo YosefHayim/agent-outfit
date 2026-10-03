@@ -61,7 +61,7 @@ Both need a `name` equal to the catalog id (lowercase letters, digits, hyphens; 
 
 ## Registration checklist
 
-All paths are in the dufflebag repo. Put the new skill next to related skills and use the same position in every list.
+All paths are in the agent-outfit repo. Put the new skill next to related skills and use the same position in every list.
 
 1. **Skill files** — `src/skills/<sourceDirectory>/SKILL.md`, plus every extra file the proposal named. Mirror `src/skills/githubRepoAbout/` for a one-file skill.
 2. **Catalog** — one entry in `src/catalog/featureCatalog.ts`:
@@ -86,10 +86,10 @@ All paths are in the dufflebag repo. Put the new skill next to related skills an
 
 ## Install
 
-Explicit feature IDs replace the installed selection, so always pass what is already installed plus the new id. Run from the dufflebag repo after `pnpm verify` (it builds `dist/`, which the hooks install from):
+Explicit feature IDs replace the installed selection, so always pass what is already installed plus the new id. Run from the agent-outfit repo after `pnpm verify` (it builds `dist/`, which the hooks install from):
 
 ```bash
-receipt=~/.claude/dufflebag/receipt.json
+receipt=~/.claude/agent-outfit/receipt.json
 if [ -f "$receipt" ]; then
   pnpm cli install $(node -p "require('$receipt').features.join(' ')") <id>
 else
@@ -98,4 +98,4 @@ fi
 ls ~/.claude/skills/<id>/SKILL.md
 ```
 
-For a project install, run the same commands from the target repo: set `receipt=.claude/dufflebag/receipt.json`, replace `pnpm cli` with `node <dufflebag repo>/dist/src/cli/main.js` (the project is the current folder), add `--scope project` to both `install` lines, and check `.claude/skills/<id>/SKILL.md`.
+For a project install, run the same commands from the target repo: set `receipt=.claude/agent-outfit/receipt.json`, replace `pnpm cli` with `node <agent-outfit repo>/dist/src/cli/main.js` (the project is the current folder), add `--scope project` to both `install` lines, and check `.claude/skills/<id>/SKILL.md`.

@@ -68,7 +68,7 @@ export const configSchema = Schema.Struct({
   idleCompactAfter: withDefault(durationSchema, "off").annotations({
     title: "idle compact after",
     description:
-      "How long an agent session sits idle before dufflebag submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h.",
+      "How long an agent session sits idle before agent-outfit submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h.",
   }),
   duplicateCodeMode: withDefault(trimmed(Schema.Literal("block", "warn", "off")), "block").annotations({
     title: "duplicate code mode",
@@ -93,7 +93,7 @@ export const configSchema = Schema.Struct({
   }),
   debugLogs: withDefault(Schema.Boolean, false).annotations({
     title: "debug logs",
-    description: "Print dufflebag hook errors to stderr.",
+    description: "Print agent-outfit hook errors to stderr.",
   }),
 }).pipe(
   Schema.filter((config) => [

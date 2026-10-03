@@ -112,7 +112,7 @@ export const normalizeIdleCompactEvent = (request: {
 }): IdleCompactEvent | null => {
   if (typeof request.input !== "object" || request.input === null) return null;
 
-  const agentId = request.environment.DUFFLEBAG_AGENT_ID;
+  const agentId = request.environment.AGENT_OUTFIT_AGENT_ID;
   if (!agentId) return null;
 
   const agentEventCandidate =

@@ -1,5 +1,5 @@
 // Matches declarations against the repo index: those in one pending edit (the hook), or every group of copies
-// already in the repo (`dufflebag duplicates`).
+// already in the repo (`agent-outfit duplicates`).
 
 import type * as TS from "typescript";
 

@@ -13,7 +13,7 @@ and not coding rules.
 | `CODE-STYLE.md` / `AGENTS.md` | How to write code / how to work in the repo |
 
 **Canonical exemplar:** `ai-browser-bridge/CONTEXT.md` (orientation sections; no
-glossary blocks). Dufflebag's own `CONTEXT.md` is a second good short example.
+glossary blocks). agent-outfit's own `CONTEXT.md` is a second good short example.
 
 ## Why this differs from upstream Matt Pocock
 

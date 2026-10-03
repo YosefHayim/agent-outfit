@@ -85,7 +85,7 @@ In the agent era every project earns a **CLI that both humans and agents drive**
 
 - **Have/need one?** Default to yes — a dev+ops CLI (scaffold, run, check, deploy). A pure library or Worker may lean on its framework CLI instead — if so, say why and skip.
 - **Command surface** — the verbs/nouns and their shape.
-- **Dual-mode contract** — one code path serves both audiences: a bare invocation in a TTY opens an interactive menu; any flag or non-TTY stdin defers to flags and **never hangs**; both routes call the **same functions** (the `dufflebag` "interactive front door" pattern). Prompt wrappers return a fallback off-TTY so scripts don't block.
+- **Dual-mode contract** — one code path serves both audiences: a bare invocation in a TTY opens an interactive menu; any flag or non-TTY stdin defers to flags and **never hangs**; both routes call the **same functions** (the `agent-outfit` "interactive front door" pattern). Prompt wrappers return a fallback off-TTY so scripts don't block.
 
 Record the command surface as an **ADR** (the "why this surface"); the CLI conventions become `CODE-STYLE.md` rules + a recipe.
 

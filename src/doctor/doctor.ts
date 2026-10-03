@@ -166,7 +166,7 @@ const healthReportSchema = Schema.Struct({
     description: "Deterministic diagnostic differences observed without authorizing mutation.",
   }),
 }).annotations({
-  description: "Complete read-only dufflebag health report.",
+  description: "Complete read-only agent-outfit health report.",
 });
 
 export type HealthReport = Schema.Schema.Type<typeof healthReportSchema>;
@@ -177,7 +177,7 @@ export class HealthCheckError extends Schema.TaggedError<HealthCheckError>()("He
   }),
 }) {
   get message(): string {
-    return `Cannot inspect dufflebag: ${this.issue}`;
+    return `Cannot inspect agent-outfit: ${this.issue}`;
   }
 }
 

@@ -4,11 +4,11 @@ import { Schema } from "effect";
 
 import { absoluteRootSchema } from "./plan.js";
 
-export const receiptPath = ".claude/dufflebag/receipt.json";
+export const receiptPath = ".claude/agent-outfit/receipt.json";
 export const settingsPath = ".claude/settings.json";
-export const hooksPath = ".claude/dufflebag/hooks";
+export const hooksPath = ".claude/agent-outfit/hooks";
 // Hook state that no receipt owns: autorun, context-guard, idle-compact, session-rehome.
-export const statePath = ".claude/dufflebag/state";
+export const statePath = ".claude/agent-outfit/state";
 
 // Generated hook commands embed the root inside double quotes, so shell-expanding characters are refused.
 const isUnsafeRootCharacter = (character: string): boolean =>

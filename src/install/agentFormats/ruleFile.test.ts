@@ -28,7 +28,7 @@ const imageToCodeSkill = installedSkillFor("image-to-code");
 
 const ruleFileRequest = {
   agent: cursor,
-  controlScript: "/workspace/.claude/dufflebag/hooks/contextGuard/hooks/autorunControl.js",
+  controlScript: "/workspace/.claude/agent-outfit/hooks/contextGuard/hooks/autorunControl.js",
   skills: [
     {
       installedSkill: autorunSkill,
@@ -62,7 +62,7 @@ describe("planRuleFiles", () => {
       ".cursor/rules/image-to-code.mdc",
     ]);
     expect(plan.writes.map((write) => textDecoder.decode(write.bytes))).toEqual([
-      "Start with /workspace/.claude/dufflebag/hooks/contextGuard/hooks/autorunControl.js.\n",
+      "Start with /workspace/.claude/agent-outfit/hooks/contextGuard/hooks/autorunControl.js.\n",
       "Convert a PNG.\n\n---\nThis divider is body content.\n",
     ]);
 

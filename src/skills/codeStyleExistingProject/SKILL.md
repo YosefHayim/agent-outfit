@@ -112,7 +112,7 @@ Every project earns a **CLI both humans and agents drive**. If the repo already 
 
 - **Have/need one?** Default yes — a dev+ops surface.
 - **Command surface** — verbs/nouns.
-- **Dual-mode contract** — a bare invocation in a TTY opens a menu; flags or non-TTY defer and **never hang**; both routes call the **same functions** (the `dufflebag` "interactive front door" pattern).
+- **Dual-mode contract** — a bare invocation in a TTY opens a menu; flags or non-TTY defer and **never hang**; both routes call the **same functions** (the `agent-outfit` "interactive front door" pattern).
 
 Record the command surface as an **ADR**; the conventions become `CODE-STYLE.md` rules + a recipe.
 

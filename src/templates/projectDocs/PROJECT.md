@@ -1,7 +1,7 @@
 # Project — Purpose & Direction
 
 Replace this guidance with the product-specific purpose of the repository that
-receives the template. This file is intentionally generic; Dufflebag's own purpose
+receives the template. This file is intentionally generic; agent-outfit's own purpose
 lives only in its root `PROJECT.md`.
 
 ## The problem

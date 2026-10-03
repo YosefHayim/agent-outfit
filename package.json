@@ -1,10 +1,10 @@
 {
-  "name": "ys-dufflebag",
-  "version": "0.14.0",
-  "description": "TypeScript CLI that installs and surgically updates coding-agent skills, native hooks, managed configuration, and copyable workflows for Claude Code, Codex, Grok, Kimi, Kiro, and more.",
+  "name": "agent-outfit",
+  "version": "0.1.0",
+  "description": "TypeScript CLI that installs, updates, diagnoses, configures, and removes a coding-agent setup: skills, guard hooks, agent configuration, workflow templates, and status lines for Claude Code, Codex, Grok, Kimi, Kiro, and more.",
   "type": "module",
   "bin": {
-    "dufflebag": "dist/src/cli/main.js"
+    "agent-outfit": "dist/src/cli/main.js"
   },
   "files": [
     "dist",
@@ -54,13 +54,13 @@
   ],
   "author": "Yosef Hayim Sabag",
   "license": "MIT",
-  "homepage": "https://github.com/YosefHayim/dufflebag#readme",
+  "homepage": "https://github.com/YosefHayim/agent-outfit#readme",
   "bugs": {
-    "url": "https://github.com/YosefHayim/dufflebag/issues"
+    "url": "https://github.com/YosefHayim/agent-outfit/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YosefHayim/dufflebag.git"
+    "url": "git+https://github.com/YosefHayim/agent-outfit.git"
   },
   "engines": {
     "node": ">=22"

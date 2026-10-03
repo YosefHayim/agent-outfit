@@ -1,4 +1,4 @@
-/** `dufflebag install [feature-id...]` — thin adapter over the install capability. */
+/** `agent-outfit install [feature-id...]` — thin adapter over the install capability. */
 
 import { Args, Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -25,7 +25,7 @@ export const showInstallation = (installation: {
 
 const featureIdsArgument = Args.text({ name: "feature-id" }).pipe(
   Args.repeated,
-  Args.withDescription("Feature IDs from `dufflebag catalog`; omitted means catalog defaults"),
+  Args.withDescription("Feature IDs from `agent-outfit catalog`; omitted means catalog defaults"),
 );
 
 export const installCommand = Command.make(

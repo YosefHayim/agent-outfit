@@ -76,7 +76,7 @@ describe("preparePackage", () => {
         expect(existsSync(path.join(contextGuardRoot, "lib/transcriptReader.js"))).toBe(true);
 
         // The hook reads its transcript under HOME, so give it a throwaway one.
-        const hookHome = mkdtempSync(path.join(tmpdir(), "dufflebag-prepared-home-"));
+        const hookHome = mkdtempSync(path.join(tmpdir(), "agent-outfit-prepared-home-"));
         try {
           const execution = spawnSync(process.execPath, [contextGuard], {
             input: '{"hook_event_name":"UserPromptSubmit","session_id":"prepared-package-test"}',

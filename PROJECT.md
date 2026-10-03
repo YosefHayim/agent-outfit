@@ -1,4 +1,4 @@
-# PROJECT.md — dufflebag
+# PROJECT.md — agent-outfit
 
 What an agent reads to understand product intent before changing behavior. The
 human-facing introduction lives in `README.md`; runtime boundaries live in
@@ -10,18 +10,18 @@ human-facing introduction lives in `README.md`; runtime boundaries live in
 Coding-agent workflows accumulate the same recurring friction across repositories:
 long sessions exhaust their usable context, agents duplicate existing code, local
 skills and hooks drift between tools, and every repository rebuilds the same CI and
-publishing setup. Dufflebag packages one owned set of guardrails, skills, agent
+publishing setup. agent-outfit packages one owned set of guardrails, skills, agent
 configuration, and workflow templates behind a surgical installer.
 
 ## Who it is for
 
-Dufflebag serves its owner first and other coding-agent users who deliberately want
+agent-outfit serves its owner first and other coding-agent users who deliberately want
 this exact set. It is not a plugin marketplace, a hosted agent platform, or a team
 service with compatibility guarantees.
 
 ## Product promise
 
-A user can install, update, diagnose, configure, and remove what dufflebag installed
+A user can install, update, diagnose, configure, and remove what agent-outfit installed
 without losing unowned bytes. Catalog entries declare what may ship; receipts declare what may be
 removed. Installed hooks run without package dependencies and fail open so a guard
 cannot block the editor because its own execution failed.

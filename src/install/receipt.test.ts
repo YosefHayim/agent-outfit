@@ -27,7 +27,7 @@ import {
 
 const installedHash = "a".repeat(64);
 const installedValueHash = "b".repeat(64);
-const receiptPath = "/workspace/.dufflebag/receipt.json";
+const receiptPath = "/workspace/.agent-outfit/receipt.json";
 const textEncoder = new TextEncoder();
 
 const missingPrevious = { _tag: "missing" };
@@ -40,8 +40,8 @@ const wholeFileOwnership = { _tag: "wholeFile", installedHash, previous: missing
 const managedBlockOwnership = {
   _tag: "managedBlock",
   filePreviouslyPresent: true,
-  startMarker: "<!-- dufflebag:start -->",
-  endMarker: "<!-- dufflebag:end -->",
+  startMarker: "<!-- agent-outfit:start -->",
+  endMarker: "<!-- agent-outfit:end -->",
   installedBodyHash: installedHash,
 };
 
@@ -94,7 +94,7 @@ const completeReceiptInput = {
   artifacts: [
     ownedFile("runtime", {
       owner: applicationOwner,
-      path: ".claude/dufflebag/hooks/contextGuard/hooks/contextGuard.js",
+      path: ".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js",
       ownership: { ...wholeFileOwnership, previous: { _tag: "priorFile", bytes: "AQID" } },
     }),
     ownedFile("skill", { owner: agentOwner, path: ".claude/skills/autorun/SKILL.md", ownership: wholeFileOwnership }),
@@ -109,7 +109,7 @@ const completeReceiptInput = {
     }),
     ownedFile("managedConfig", {
       owner: applicationOwner,
-      path: ".dufflebag/config.json",
+      path: ".agent-outfit/config.json",
       ownership: wholeFileOwnership,
     }),
   ],
@@ -198,7 +198,7 @@ describe("receiptSchema", () => {
     ];
     const receiptEntry = ownedFile("receipt", {
       owner: applicationOwner,
-      path: ".dufflebag/receipt.json",
+      path: ".agent-outfit/receipt.json",
       ownership: wholeFileOwnership,
     });
 

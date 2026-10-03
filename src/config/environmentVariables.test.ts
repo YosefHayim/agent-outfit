@@ -9,8 +9,8 @@ import { environmentVariables } from "./environmentVariables.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const LIST_FILES = new Set(["src/config/environmentVariables.ts", "src/config/environmentVariables.test.ts"]);
-// e.g. "DUFFLEBAG_IDLE_COMPACT_AFTER" inside TypeScript, Python, shell, or their docs
-const ENVIRONMENT_VARIABLE_NAME = /DUFFLEBAG_[A-Z_]+/g;
+// e.g. "AGENT_OUTFIT_IDLE_COMPACT_AFTER" inside TypeScript, Python, shell, or their docs
+const ENVIRONMENT_VARIABLE_NAME = /AGENT_OUTFIT_[A-Z_]+/g;
 
 const namesBySourceFile = (): ReadonlyMap<string, ReadonlySet<string>> =>
   new Map(
@@ -27,7 +27,7 @@ const namesBySourceFile = (): ReadonlyMap<string, ReadonlySet<string>> =>
   );
 
 describe("environmentVariables", () => {
-  it("lists every DUFFLEBAG_* name that code or docs under src/ use", () => {
+  it("lists every AGENT_OUTFIT_* name that code or docs under src/ use", () => {
     const listed = new Set(environmentVariables.map((variable) => variable.name));
     const unlisted = [...namesBySourceFile()].flatMap(([file, names]) =>
       [...names].filter((name) => !listed.has(name)).map((name) => `${file}: ${name}`),

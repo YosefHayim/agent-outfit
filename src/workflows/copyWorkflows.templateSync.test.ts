@@ -1,4 +1,4 @@
-// report-failure.yml ships twice: as dufflebag's own workflow and as the template `workflow scaffold` copies.
+// report-failure.yml ships twice: as agent-outfit's own workflow and as the template `workflow scaffold` copies.
 // ci.yml and publish.yml differ on purpose: the templates carry setup notes and placeholders the copying repo fills in.
 
 import { readFileSync } from "node:fs";

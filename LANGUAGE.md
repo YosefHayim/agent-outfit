@@ -1,4 +1,4 @@
-# LANGUAGE.md — dufflebag
+# LANGUAGE.md — agent-outfit
 
 The human↔agent glossary: names only. Use these exact terms in code, comments,
 commits, and docs; avoid the listed aliases. Orientation lives in `CONTEXT.md`.
@@ -9,7 +9,7 @@ and a command file is named after its command.
 ## Terms
 
 **owned file**
-A file the installer manages, recorded in the receipt or marked by the `/dufflebag/` path.
+A file the installer manages, recorded in the receipt or marked by the `/agent-outfit/` path.
 _Avoid_: "managed" (without receipt context).
 
 **feature**
@@ -29,7 +29,7 @@ Approved compound for authored content under `src/skills/` copied verbatim into 
 _Avoid_: standalone "payload", "skill code".
 
 **hook code**
-Executable dependency-free code under `src/hooks/<sourceDirectory>/` plus the shared `src/hooks/lib/`. Compiled and installed to `.claude/dufflebag/hooks/`.
+Executable dependency-free code under `src/hooks/<sourceDirectory>/` plus the shared `src/hooks/lib/`. Compiled and installed to `.claude/agent-outfit/hooks/`.
 _Avoid_: "skills", "payload".
 
 **hook**
@@ -53,7 +53,7 @@ The allowlist in `src/catalog/featureCatalog.ts` that declares every feature and
 _Avoid_: "registry", "manifest", "`FEATURES`" alone.
 
 **receipt**
-Ownership record at `.claude/dufflebag/receipt.json` authorizing install/update/uninstall changes.
+Ownership record at `.claude/agent-outfit/receipt.json` authorizing install/update/uninstall changes.
 _Avoid_: "manifest".
 
 **ships / shippedPaths**
@@ -69,7 +69,7 @@ One `config.json` key defined in `src/config/configSchema.ts`. The key starts wi
 _Avoid_: "option", "flag" (those are CLI arguments).
 
 **environment variable**
-A `DUFFLEBAG_<AREA>_<SETTING>` name listed in `src/config/environmentVariables.ts`, for example `DUFFLEBAG_IDLE_COMPACT_AFTER`.
+A `AGENT_OUTFIT_<AREA>_<SETTING>` name listed in `src/config/environmentVariables.ts`, for example `AGENT_OUTFIT_IDLE_COMPACT_AFTER`.
 _Avoid_: "env key".
 
 **context-guard**
@@ -89,7 +89,7 @@ Session-start proof binding automation to one stable Ghostty terminal ID, includ
 _Avoid_: "focused pane", "front window".
 
 **duplicate-code-guard**
-Guard that blocks a copied function body or type shape at write time. `dufflebag duplicates` runs the same check from the CLI or CI.
+Guard that blocks a copied function body or type shape at write time. `agent-outfit duplicates` runs the same check from the CLI or CI.
 _Avoid_: "duplicate checker".
 
 **scratch-folder-guard**

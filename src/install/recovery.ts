@@ -15,7 +15,7 @@ const normalizedRecoveryPath = (filePath: string): string => {
 const childPathPrefix = (root: string): string => (root.endsWith("/") ? root : `${root}/`);
 
 const transactionDirectoryNamePattern =
-  /^\.dufflebag-transaction-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  /^\.agent-outfit-transaction-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 const isCanonicalAbsolutePath = (filePath: string): boolean => {
   const driveQualified = /^[A-Za-z]:[\\/]/.test(filePath);

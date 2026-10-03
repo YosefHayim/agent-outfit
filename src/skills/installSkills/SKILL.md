@@ -11,7 +11,7 @@ Synchronize from canonical skill source through each agent's supported native fo
 ## Safety
 
 - Identify the canonical source and its revision before touching provider projections. Never edit generated installed copies as source.
-- Prefer a receipt-backed installer such as Dufflebag. Preserve the existing selected feature set and make additions explicit; do not replace the user's installed features with only the newly named skills.
+- Prefer a receipt-backed installer such as agent-outfit. Preserve the existing selected feature set and make additions explicit; do not replace the user's installed features with only the newly named skills.
 - Detect providers from the installer's catalog and live evidence. Never invent a dot-directory or claim support for an uncataloged agent such as Grok without an official, verified integration surface.
 - Plan before apply. Preserve non-owned provider instructions and config byte-for-byte; only the receipt authorizes updates or deletion.
 - Do not expose tokens or modify unrelated agent, MCP, model, or permission settings.
@@ -27,7 +27,7 @@ Synchronize from canonical skill source through each agent's supported native fo
 7. Run the installer's doctor. Then perform provider-level discovery smoke checks when the CLI or application exposes them; note when restart or a fresh session is required.
 8. Report unsupported, undetected, skipped, installed, and failed providers separately. Give an exact follow-up for providers that require an official adapter.
 
-For Dufflebag, inspect `dufflebag install --help` or the repository CLI rather than relying on remembered flags. Global synchronization must use the built source requested by the user, especially before a package release.
+For agent-outfit, inspect `agent-outfit install --help` or the repository CLI rather than relying on remembered flags. Global synchronization must use the built source requested by the user, especially before a package release.
 
 ## Verification
 

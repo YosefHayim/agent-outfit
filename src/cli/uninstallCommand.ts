@@ -1,4 +1,4 @@
-/** `dufflebag uninstall` — remove only files authorized by the receipt. */
+/** `agent-outfit uninstall` — remove only files authorized by the receipt. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -26,7 +26,7 @@ export const uninstallCommand = Command.make(
       if (args.format === "text") yield* TerminalUI.intro("uninstall");
       const confirmed = yield* confirmDestructive({
         yes: args.yes,
-        question: `Uninstall dufflebag from ${args.scope} scope?`,
+        question: `Uninstall agent-outfit from ${args.scope} scope?`,
         missingYesIssue: "Non-interactive uninstall requires --yes.",
       });
       if (!confirmed) {

@@ -1,4 +1,4 @@
-/** `dufflebag menu` — pick an action, gather the options its CLI command takes, approve a plan, then run the same work. */
+/** `agent-outfit menu` — pick an action, gather the options its CLI command takes, approve a plan, then run the same work. */
 
 import { Command } from "@effect/cli";
 import { Path } from "@effect/platform";
@@ -132,7 +132,7 @@ const runUninstall = Effect.gen(function* () {
       { label: "Destination", detail: destination.root },
       { label: "Safety", detail: "only receipt-authorized files are removed" },
     ],
-    confirmMessage: `Uninstall dufflebag from ${scope}?`,
+    confirmMessage: `Uninstall agent-outfit from ${scope}?`,
     apply: uninstall({ destination, host: { homeRoot: host.homeRoot }, interaction: { _tag: "interactive" } }).pipe(
       Effect.flatMap(showUninstallation),
     ),

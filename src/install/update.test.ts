@@ -20,8 +20,8 @@ const packageFiles = {
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-update-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-update-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-update-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-update-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {
@@ -77,7 +77,7 @@ layer(NodeContext.layer)("update", (it) => {
       expect(yield* readText(".claude/settings.json")).toContain('"theme": "dark"');
       expect(yield* readText(".claude/settings.json")).toContain("SessionStart");
 
-      const receipt = JSON.parse(yield* readText(".claude/dufflebag/receipt.json"));
+      const receipt = JSON.parse(yield* readText(".claude/agent-outfit/receipt.json"));
       expect(receipt.features).toEqual(["context-guard"]);
       // context-guard's own autorunControl.js stays; only the autorun skill's files must go.
       const autorunSkillFile = /(?:^|\/)autorun(?:\/|\.)/;
@@ -89,13 +89,13 @@ layer(NodeContext.layer)("update", (it) => {
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText } = yield* workspace;
       yield* install({ ...request({ root, preparedRoot, features: ["autorun"] }), configuration: selectedDefaults });
-      const originalReceipt = yield* readText(".claude/dufflebag/receipt.json");
+      const originalReceipt = yield* readText(".claude/agent-outfit/receipt.json");
       yield* writeFiles(root, { "AGENTS.md": (yield* readText("AGENTS.md")).replace("Run", "Changed") });
 
       const exit = yield* Effect.exit(update(request({ root, preparedRoot, features: ["context-guard"] })));
 
       expect(exit._tag).toBe("Failure");
-      expect(yield* readText(".claude/dufflebag/receipt.json")).toBe(originalReceipt);
+      expect(yield* readText(".claude/agent-outfit/receipt.json")).toBe(originalReceipt);
       expect(yield* readText("AGENTS.md")).toContain("Changed");
     }),
   );
@@ -138,7 +138,7 @@ layer(NodeContext.layer)("update", (it) => {
   it.scoped("resets a receipted config.json that no longer decodes and records the new bytes", () =>
     Effect.gen(function* () {
       const { fileSystem, path, root, preparedRoot, writeFiles, readText } = yield* workspace;
-      const configPath = ".claude/dufflebag/config.json";
+      const configPath = ".claude/agent-outfit/config.json";
       const baseRequest = request({ root, preparedRoot, features: ["context-guard"] });
       yield* install({
         ...baseRequest,
@@ -156,7 +156,7 @@ layer(NodeContext.layer)("update", (it) => {
 
       const configBytes = yield* fileSystem.readFile(path.join(root, configPath));
       expect(JSON.parse(new TextDecoder().decode(configBytes))).toEqual(defaultConfig);
-      const receipt = JSON.parse(yield* readText(".claude/dufflebag/receipt.json"));
+      const receipt = JSON.parse(yield* readText(".claude/agent-outfit/receipt.json"));
       const managedConfigFile = receipt.artifacts.find((file: { path: string }) => file.path === configPath);
       expect(managedConfigFile.ownership.installedHash).toBe(createHash("sha256").update(configBytes).digest("hex"));
       expect(managedConfigFile.ownership.previous).toEqual({ _tag: "missing" });

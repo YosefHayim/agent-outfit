@@ -23,7 +23,7 @@ const agentFrom = (agentId: string | undefined): string =>
   agentId === "claude-code" || agentId === "codex" ? agentId : "";
 
 const handOverEndedSession = (): void => {
-  const agent = agentFrom(process.env.DUFFLEBAG_AGENT_ID);
+  const agent = agentFrom(process.env.AGENT_OUTFIT_AGENT_ID);
   const sessionId = sessionIdFrom(JSON.parse(readFileSync(0, "utf8")));
   if (!agent || !sessionId) {
     return;

@@ -26,7 +26,7 @@ Read 2–3 existing posts in `blog.ts` first to calibrate. The rules that make i
 - **First person, raw, honest, a little defiant.** He's a self-taught freelance AI engineer; ex-IDF, ex-security-guard. He earned it and it shows.
 - **Short, punchy, declarative.** Fragments for emphasis. "That scared me more than the plastic chair ever did." Vary rhythm; never corporate.
 - **Open with a hook or a confession**, not a preamble. First line earns the second.
-- **Concrete specifics** — real tool names, real numbers, real projects (eBay MCP, ai-browser-bridge, dufflebag, planpage, Effect, SmallBites, Bolt ASINs, Predicto, IITC, Gdud 931). No vague "leveraging synergies."
+- **Concrete specifics** — real tool names, real numbers, real projects (eBay MCP, ai-browser-bridge, agent-outfit, planpage, Effect, SmallBites, Bolt ASINs, Predicto, IITC, Gdud 931). No vague "leveraging synergies."
 - **Land one hard, quotable lesson at the end.** Every post pays off with a line worth screenshotting.
 - **Em-dashes yes. Emojis never.** Sparing profanity is on-brand but rare (one, maybe, for impact).
 - **~2–4 minute read.** Tight. Cut filler.

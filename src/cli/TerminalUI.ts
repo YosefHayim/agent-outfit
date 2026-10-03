@@ -14,7 +14,7 @@ const writeLine = (message: string) => appendChatText(`${message}\n`);
 
 export const isInteractiveTerminal = Effect.flatMap(Terminal.Terminal, (terminal) => terminal.isTTY);
 
-export const intro = (title: string) => writeLine(`\n  dufflebag · ${title}\n`);
+export const intro = (title: string) => writeLine(`\n  agent-outfit · ${title}\n`);
 
 export const outro = (message: string) => writeLine(`\n  ${message}\n`);
 

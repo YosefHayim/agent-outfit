@@ -46,7 +46,7 @@ describe("reading transcript files", () => {
   let folder: string;
   let transcript: string;
   beforeAll(() => {
-    folder = mkdtempSync(path.join(tmpdir(), "dufflebag-transcript-"));
+    folder = mkdtempSync(path.join(tmpdir(), "agent-outfit-transcript-"));
     transcript = path.join(folder, "session.jsonl");
     const filler = Array.from({ length: 4_000 }, (_, index) =>
       JSON.stringify({ type: "user", filler: "x".repeat(80), index }),

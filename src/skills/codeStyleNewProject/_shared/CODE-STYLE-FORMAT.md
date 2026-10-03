@@ -11,7 +11,7 @@ recommended — see `## Enforce the format` below.
 
 **SSOT root (this package only — never a product repo):**
 
-| Layer | Path in dufflebag |
+| Layer | Path in agent-outfit |
 | --- | --- |
 | Format (how to write the guide) | this file — `CODE-STYLE-FORMAT.md` |
 | Living exemplar (real project guide) | repo root `CODE-STYLE.md` (its cards are the rule index; no JSON mirror) |
@@ -152,11 +152,11 @@ rules). Convert those into rule cards under `## Rules`.
 A documented format that only agents are asked to follow is the format that most
 repositories ignore. Wire it to the gate:
 
-- Copy `src/scripts/checkRuleCards.ts` from dufflebag. It is a pure function over
+- Copy `src/scripts/checkRuleCards.ts` from agent-outfit. It is a pure function over
   the guide text with no repo-specific assumptions.
 - Add a test that runs it against the repo's **real** `CODE-STYLE.md` and asserts
   zero violations.
-- Check any repository from dufflebag without installing anything:
+- Check any repository from agent-outfit without installing anything:
   `pnpm style:guide /path/to/repo`.
 
 The linter catches: a missing or malformed metadata line, a multi-sentence assertion,

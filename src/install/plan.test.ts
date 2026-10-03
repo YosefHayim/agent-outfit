@@ -19,7 +19,7 @@ const expectedMissing = { _tag: "missing" };
 const expectedPresent = { _tag: "file", sha256: oldHash };
 
 const runtimeFile = {
-  path: ".claude/dufflebag/hooks/contextGuard.js",
+  path: ".claude/agent-outfit/hooks/contextGuard.js",
   kind: { _tag: "runtime" },
   owner: applicationOwner,
   ownership: { _tag: "wholeFile", installedHash: oldHash, previous: missingPrevious },
@@ -46,8 +46,8 @@ const instructionFileEntry = {
   ownership: {
     _tag: "managedBlock",
     filePreviouslyPresent: true,
-    startMarker: "<!-- dufflebag:skills start -->",
-    endMarker: "<!-- dufflebag:skills end -->",
+    startMarker: "<!-- agent-outfit:skills start -->",
+    endMarker: "<!-- agent-outfit:skills end -->",
     installedBodyHash: oldHash,
   },
 };
@@ -98,7 +98,7 @@ const settingsFile = {
 };
 
 const managedConfigFile = {
-  path: ".claude/dufflebag/config.json",
+  path: ".claude/agent-outfit/config.json",
   kind: { _tag: "managedConfig" },
   owner: applicationOwner,
   ownership: { _tag: "wholeFile", installedHash: oldHash, previous: missingPrevious },
@@ -115,7 +115,7 @@ const desiredFiles = [
   managedConfigFile,
 ];
 
-const receiptTarget = { path: ".claude/dufflebag/receipt.json", kind: { _tag: "receipt" }, owner: applicationOwner };
+const receiptTarget = { path: ".claude/agent-outfit/receipt.json", kind: { _tag: "receipt" }, owner: applicationOwner };
 
 const desiredReceipt = {
   version: "0.12.0",
@@ -345,8 +345,8 @@ describe("checkPlan", () => {
     {
       name: "parent and child targets",
       operations: [
-        write({ ...managedConfigFile, path: ".claude/dufflebag" }),
-        write({ ...runtimeFile, path: ".claude/dufflebag/hooks/contextGuard.js" }),
+        write({ ...managedConfigFile, path: ".claude/agent-outfit" }),
+        write({ ...runtimeFile, path: ".claude/agent-outfit/hooks/contextGuard.js" }),
       ],
       message: "conflicts with",
     },
@@ -358,8 +358,8 @@ describe("checkPlan", () => {
   });
 
   it("rejects case-folded target collisions on common macOS and Windows filesystems", () => {
-    const first = { ...runtimeFile, path: ".Dufflebag/Hooks/contextGuard.js" };
-    const second = { ...managedConfigFile, path: ".dufflebag/hooks/CONTEXTGUARD.JS" };
+    const first = { ...runtimeFile, path: ".agent-outfit/Hooks/contextGuard.js" };
+    const second = { ...managedConfigFile, path: ".agent-outfit/hooks/CONTEXTGUARD.JS" };
 
     expect(issues(checkPlan(removalPlan([remove(first), remove(second)])))).toContain(
       '["operations"][1]["file"]["path"]',
@@ -399,7 +399,7 @@ describe("checkPlan", () => {
   });
 
   it("requires the canonical receipt.json basename", () => {
-    const target = { ...receiptTarget, path: ".claude/dufflebag/manifest.json" };
+    const target = { ...receiptTarget, path: ".claude/agent-outfit/manifest.json" };
 
     expect(issues(checkPlan({ ...completePlan, receipt: { ...completePlan.receipt, target } }))).toContain(
       "receipt.json",
@@ -407,8 +407,8 @@ describe("checkPlan", () => {
   });
 
   it.each([
-    { reservedPath: ".claude/dufflebag/receipt.json", label: "receipt" },
-    { reservedPath: ".claude/dufflebag/recovery.json", label: "recovery" },
+    { reservedPath: ".claude/agent-outfit/receipt.json", label: "receipt" },
+    { reservedPath: ".claude/agent-outfit/recovery.json", label: "recovery" },
   ])("rejects an operation conflicting with the reserved $label path", ({ reservedPath }) => {
     const checked = issues(checkPlan(removalPlan([remove({ ...runtimeFile, path: reservedPath })])));
 
@@ -417,7 +417,7 @@ describe("checkPlan", () => {
   });
 
   it("rejects a published file conflicting with the reserved recovery path", () => {
-    const file = { ...runtimeFile, path: ".claude/dufflebag/recovery.json/snapshot" };
+    const file = { ...runtimeFile, path: ".claude/agent-outfit/recovery.json/snapshot" };
     const checked = issues(checkPlan(publishPlan([write(file)], [file])));
 
     expect(checked).toContain('["receipt"]["receipt"]["artifacts"][0]["path"]');
@@ -425,7 +425,7 @@ describe("checkPlan", () => {
   });
 
   it("reserves receipt and recovery paths case-insensitively", () => {
-    const file = { ...runtimeFile, path: ".CLAUDE/DUFFLEBAG/RECOVERY.JSON" };
+    const file = { ...runtimeFile, path: ".CLAUDE/AGENT-OUTFIT/RECOVERY.JSON" };
 
     expect(issues(checkPlan(removalPlan([remove(file)])))).toContain("recovery.json");
   });
@@ -545,7 +545,7 @@ describe("planInstall", () => {
     const previousYaml = withOwnership(yamlReferenceFile, { previouslyPresent: true });
     const desiredYaml = withOwnership(yamlReferenceFile, {
       filePreviouslyPresent: false,
-      reference: "DUFFLEBAG.md",
+      reference: "AGENT-OUTFIT.md",
       previouslyPresent: false,
     });
     const preservedYaml = withOwnership(desiredYaml, { filePreviouslyPresent: true });
@@ -654,7 +654,10 @@ describe("planInstall", () => {
   it.each([
     {
       name: "the ownership tag",
-      desiredFile: { ...jsonReferenceFile, ownership: { ...yamlReferenceFile.ownership, reference: "DUFFLEBAG.md" } },
+      desiredFile: {
+        ...jsonReferenceFile,
+        ownership: { ...yamlReferenceFile.ownership, reference: "AGENT-OUTFIT.md" },
+      },
       issuePath: '["desired"]["receipt"]["artifacts"][0]["ownership"]["_tag"]',
     },
     {

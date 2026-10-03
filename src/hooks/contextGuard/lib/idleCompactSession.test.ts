@@ -56,7 +56,7 @@ describe("idle compact lifecycle events", () => {
     },
   ])("normalizes provider payload %#", ({ input, agentId, event }) => {
     expect(
-      normalizeIdleCompactEvent({ input, environment: { DUFFLEBAG_AGENT_ID: agentId }, occurredAtMs: 5_000 }),
+      normalizeIdleCompactEvent({ input, environment: { AGENT_OUTFIT_AGENT_ID: agentId }, occurredAtMs: 5_000 }),
     ).toEqual({
       agentId,
       sessionId: "sessionId" in input ? input.sessionId : input.session_id,
@@ -70,7 +70,7 @@ describe("idle compact lifecycle events", () => {
       normalizeIdleCompactEvent({
         input: {},
         environment: {
-          DUFFLEBAG_AGENT_ID: "grok",
+          AGENT_OUTFIT_AGENT_ID: "grok",
           GROK_HOOK_EVENT: "session_start",
           GROK_SESSION_ID: "grok-env",
         },
@@ -80,12 +80,12 @@ describe("idle compact lifecycle events", () => {
   });
 
   it.each([
-    { name: "invalid JSON shape", input: null, env: { DUFFLEBAG_AGENT_ID: "codex" } },
+    { name: "invalid JSON shape", input: null, env: { AGENT_OUTFIT_AGENT_ID: "codex" } },
     { name: "missing agent", input: { hookEventName: "Stop", sessionId: "one" }, env: {} },
     {
       name: "unknown event",
       input: { hookEventName: "SubagentStop", sessionId: "one" },
-      env: { DUFFLEBAG_AGENT_ID: "codex" },
+      env: { AGENT_OUTFIT_AGENT_ID: "codex" },
     },
   ])("refuses $name", ({ input, env }) => {
     expect(normalizeIdleCompactEvent({ input, environment: env, occurredAtMs: 1_000 })).toBeNull();

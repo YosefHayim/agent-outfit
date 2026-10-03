@@ -105,7 +105,8 @@ const hookRegistrationSchema = Schema.Struct({
   matcher: hookMatcherSchema,
   entrypoint: registrationEntrypointSchema,
   readsAgentId: Schema.Boolean.annotations({
-    description: "Whether the hook reads DUFFLEBAG_AGENT_ID, so its command starts with DUFFLEBAG_AGENT_ID=<agent>.",
+    description:
+      "Whether the hook reads AGENT_OUTFIT_AGENT_ID, so its command starts with AGENT_OUTFIT_AGENT_ID=<agent>.",
   }),
 });
 
@@ -320,7 +321,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     installedSkill: { _tag: "none" },
     title: "Duplicate code guard",
     summary:
-      "Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `dufflebag config set duplicate-code-mode warn`). Agents without edit hooks can run `dufflebag duplicates` as a pre-commit or CI check.",
+      "Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `agent-outfit config set duplicate-code-mode warn`). Agents without edit hooks can run `agent-outfit duplicates` as a pre-commit or CI check.",
     selectedByDefault: false,
     dependencies: [],
     platform: "any",

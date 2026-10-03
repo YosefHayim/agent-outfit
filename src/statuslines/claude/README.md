@@ -6,9 +6,9 @@ Segments fill the terminal width and wrap only when they run out of room, into t
 even length. Context use and the 5-hour and weekly limits are green below 50%, yellow from 50%, and red from 80%.
 `Tools` counts the distinct tools Claude used and `Calls` counts every tool call. Message, compact, tool, and
 token counts come from the session transcript and are cached per session under
-`~/.claude/dufflebag/state/statusline/`, so each refresh reads only new lines.
+`~/.claude/agent-outfit/state/statusline/`, so each refresh reads only new lines.
 
-From the `dufflebag` repository root, run:
+From the `agent-outfit` repository root, run:
 
 ```sh
 ./src/statuslines/claude/install.sh

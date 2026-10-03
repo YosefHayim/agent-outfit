@@ -17,9 +17,9 @@ describe("Ghostty terminal control", () => {
   });
 
   it("claims exactly one temporary terminal title and returns its stable ID", () => {
-    const script = claimTerminalScript("dufflebag-session-1");
+    const script = claimTerminalScript("agent-outfit-session-1");
 
-    expect(script).toContain('whose name is "dufflebag-session-1"');
+    expect(script).toContain('whose name is "agent-outfit-session-1"');
     expect(script).toContain('if n is 0 then return "NONE"');
     expect(script).toContain('if n > 1 then return "AMBIGUOUS"');
     expect(script).toContain("id of target");

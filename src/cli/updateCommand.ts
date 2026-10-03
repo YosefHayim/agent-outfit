@@ -1,4 +1,4 @@
-/** `dufflebag update [feature-id...]` — preserve installed features unless IDs are explicit. */
+/** `agent-outfit update [feature-id...]` — preserve installed features unless IDs are explicit. */
 
 import { Args, Command } from "@effect/cli";
 import { Effect } from "effect";

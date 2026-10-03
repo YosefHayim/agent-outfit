@@ -15,7 +15,7 @@ const inputs = { owner: "Acme", repo: "widget", packageName: "widget-cli" };
 // A temporary repository whose package.json names "test-pkg".
 const makeRepository = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
-  const targetRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-workflows-" });
+  const targetRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-workflows-" });
   yield* fileSystem.writeFileString(path.join(targetRoot, "package.json"), JSON.stringify({ name: "test-pkg" }));
   return targetRoot;
 });
@@ -60,7 +60,7 @@ layer(NodeContext.layer)("copyWorkflows", (it) => {
       expect(copied.written).toEqual(["ci.yml", "publish.yml", "report-failure.yml"]);
       expect((yield* fileSystem.readDirectory(workflows)).sort()).toEqual(copied.written);
       expect(ciYml).toContain("run: pnpm verify");
-      expect(ciYml).not.toContain("YosefHayim/dufflebag");
+      expect(ciYml).not.toContain("YosefHayim/agent-outfit");
       expect(ciYml).not.toContain("setup-uv");
       expect(publishYml).toContain("test-pkg");
       expect(publishYml).not.toMatch(/\{\{\s*(OWNER|REPO|PACKAGE)\s*\}\}/);
