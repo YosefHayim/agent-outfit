@@ -1,0 +1,96 @@
+{
+  "name": "ys-dufflebag",
+  "version": "0.14.0",
+  "description": "TypeScript CLI that installs and surgically updates coding-agent skills, native hooks, managed configuration, and copyable workflows for Claude Code, Codex, Grok, Kimi, Kiro, and more.",
+  "type": "module",
+  "exports": {
+    "./provider-routing": "./dist/src/providerRouting/providerRouting.js"
+  },
+  "bin": {
+    "dufflebag": "dist/src/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "src/skills",
+    "src/hooks",
+    "src/templates",
+    "README.md",
+    "LICENSE",
+    "!src/skills/**/node_modules",
+    "!src/skills/**/node_modules/**",
+    "!src/hooks/**/*.ts",
+    "!src/hooks/voice/worker",
+    "!src/hooks/voice/worker/**",
+    "!dist/src/scripts"
+  ],
+  "scripts": {
+    "cli": "tsx src/cli/main.ts",
+    "prepare": "husky",
+    "prebuild": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "tsc && node -e \"require('node:fs').chmodSync('dist/src/cli/main.js',0o755)\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "style": "tsx src/scripts/reportCodeStyle.ts",
+    "style:guide": "tsx src/scripts/reportRuleCards.ts",
+    "python:check": "uvx ruff@0.16.0 check src/hooks/voice src/scripts/checkPythonNames.py && uvx ruff@0.16.0 format --check src/hooks/voice src/scripts/checkPythonNames.py && uv run --python 3.10 src/scripts/checkPythonNames.py",
+    "python:fix": "uvx ruff@0.16.0 check --fix src/hooks/voice src/scripts/checkPythonNames.py && uvx ruff@0.16.0 format src/hooks/voice src/scripts/checkPythonNames.py",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "verify": "biome ci . && pnpm python:check && tsc --noEmit && pnpm style && pnpm style:guide . && vitest run && pnpm build && pnpm generate-readme:check",
+    "prepublishOnly": "npm run build",
+    "generate-readme": "tsx src/scripts/generateReadme.ts",
+    "generate-readme:check": "tsx src/scripts/generateReadme.ts --check"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "codex",
+    "grok",
+    "skills",
+    "hooks",
+    "cli",
+    "context-window",
+    "handoff",
+    "autonomous",
+    "agent",
+    "ai",
+    "developer-tools",
+    "macos",
+    "svg",
+    "image-to-code"
+  ],
+  "author": "Yosef Hayim Sabag",
+  "license": "MIT",
+  "homepage": "https://github.com/YosefHayim/dufflebag#readme",
+  "bugs": {
+    "url": "https://github.com/YosefHayim/dufflebag/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YosefHayim/dufflebag.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.18.0",
+  "dependencies": {
+    "@effect/cli": "0.76.0",
+    "@effect/platform": "0.97.0",
+    "@effect/platform-node": "0.108.0",
+    "effect": "3.22.0",
+    "jsonc-parser": "3.3.1",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.2",
+    "@effect/vitest": "0.30.0",
+    "@types/node": "22.20.0",
+    "glob": "13.0.6",
+    "husky": "9.1.7",
+    "tsx": "4.22.4",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

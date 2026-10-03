@@ -1,0 +1,61 @@
+name: Sync README
+
+# Auto-regenerate README.md (feature table, skills and settings sections)
+# on every push to main. If the generated output differs from what's committed, push an
+# auto-commit so the documents never drift from their source of truth (feature catalog,
+# SKILL.md files, config schema, environment variable list).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/readme-sync.yml"
+      - "src/catalog/featureCatalog.ts"
+      - "src/skills/**/SKILL.md"
+      - "src/config/configSchema.ts"
+      - "src/config/environmentVariables.ts"
+      - "src/scripts/generateReadme.ts"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-readme:
+    name: Generate & commit README
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate README
+        run: pnpm generate-readme
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git diff --quiet README.md && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit & push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: sync README from its sources"
+          git push

@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+*.tsbuildinfo
+src/hooks/voice/dufflebag-voice
+
+# Caches, coverage and logs
+.ruff_cache/
+__pycache__/
+coverage/
+*.log
+
+# Local environment
+.env
+.env.*
+.DS_Store
+.worktrees/
+
+# Agent folders made when dufflebag installs into this repo.
+# AGENTS.md is the only instructions file we commit.
+.agents/
+.claude/
+.cursor/
+.devin/
+.grok/
+.kimi-code/
+.kiro/
+/CLAUDE.md
+/GEMINI.md
+
+# Local scratch scripts (see AGENTS.md)
+src/scripts/dev/
