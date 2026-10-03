@@ -34,7 +34,7 @@ const writeConfigContents = (contents: Uint8Array | string) =>
 
 const bytesWithInvalidUtf8 = () => {
   const marker = "replacement-marker";
-  const json = JSON.stringify({ ...defaultConfig, speechVoice: marker });
+  const json = JSON.stringify({ ...defaultConfig, duplicateCodeSkipFolders: [marker] });
   const markerIndex = json.indexOf(marker);
   return new Uint8Array([
     ...textEncoder.encode(json.slice(0, markerIndex)),
@@ -83,9 +83,9 @@ layer(NodeContext.layer)("readConfigFile", (it) => {
     },
     {
       name: "an out-of-bounds value",
-      contents: JSON.stringify({ ...defaultConfig, speechWordsPerMinute: 79 }),
+      contents: JSON.stringify({ ...defaultConfig, autorunMaxCycles: 1001 }),
       error: ConfigFileSchemaError,
-      mentions: "speechWordsPerMinute",
+      mentions: "autorunMaxCycles",
     },
     {
       name: "a broken cross-field invariant",
@@ -172,7 +172,7 @@ const expectPlanFailure = (request: unknown, mentions: string) => {
 
 describe("planManagedConfig", () => {
   it("copies the global snapshot once for a first project install and otherwise uses defaults", () => {
-    const globalConfig = { ...defaultConfig, speechVoice: "Ava", debugLogs: true };
+    const globalConfig = { ...defaultConfig, duplicateCodeSkipFolders: ["fixtures"], debugLogs: true };
     const copied = unwrap(
       planManagedConfig({
         scope: "project",
@@ -195,8 +195,11 @@ describe("planManagedConfig", () => {
   });
 
   it("rejects a global snapshot whose decoded config does not match its source bytes", () => {
-    const sourceConfig = { ...defaultConfig, speechVoice: "Ava" };
-    const globalConfig = { ...presentConfigSnapshot(sourceConfig), config: { ...sourceConfig, speechVoice: "Daniel" } };
+    const sourceConfig = { ...defaultConfig, duplicateCodeSkipFolders: ["fixtures"] };
+    const globalConfig = {
+      ...presentConfigSnapshot(sourceConfig),
+      config: { ...sourceConfig, duplicateCodeSkipFolders: ["vendor"] },
+    };
 
     expectPlanFailure(
       {
@@ -231,11 +234,15 @@ describe("planManagedConfig", () => {
   });
 
   it("keeps later global and project selections independent", () => {
-    const global = unwrap(planManagedConfig(selectedRequest("global", { ...defaultConfig, speechVoice: "Daniel" })));
-    const project = unwrap(planManagedConfig(selectedRequest("project", { ...defaultConfig, speechVoice: "Moira" })));
+    const global = unwrap(
+      planManagedConfig(selectedRequest("global", { ...defaultConfig, duplicateCodeSkipFolders: ["vendor"] })),
+    );
+    const project = unwrap(
+      planManagedConfig(selectedRequest("project", { ...defaultConfig, duplicateCodeSkipFolders: ["generated"] })),
+    );
 
-    expect(global.config.speechVoice).toBe("Daniel");
-    expect(project.config.speechVoice).toBe("Moira");
+    expect(global.config.duplicateCodeSkipFolders).toEqual(["vendor"]);
+    expect(project.config.duplicateCodeSkipFolders).toEqual(["generated"]);
     expect(global.managedConfigWrite).not.toEqual(project.managedConfigWrite);
   });
 
@@ -264,7 +271,9 @@ describe("planManagedConfig", () => {
 
   it("rejects managed plan data whose config and write drift apart", () => {
     const plan = unwrap(planManagedConfig(selectedRequest("project", defaultConfig)));
-    const bytes = textEncoder.encode(`${JSON.stringify({ ...defaultConfig, speechVoice: "Different" }, null, 2)}\n`);
+    const bytes = textEncoder.encode(
+      `${JSON.stringify({ ...defaultConfig, duplicateCodeSkipFolders: ["different"] }, null, 2)}\n`,
+    );
 
     const decoded = Schema.validateEither(managedConfigPlanSchema, { onExcessProperty: "error" })({
       ...plan,

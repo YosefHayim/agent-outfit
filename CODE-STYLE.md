@@ -544,7 +544,7 @@ Interfaces appear only for declaration merging or an external interoperability c
 // ✓ src/types/environment.d.ts
 declare global {
   interface ProcessEnv {
-    DUFFLEBAG_VOICE_DIR?: string;
+    DUFFLEBAG_REHOME_STATE_DIR?: string;
   }
 }
 
@@ -1010,17 +1010,17 @@ The slop fingerprint for this repository. Each entry is a concrete shape, not an
 
 ## Formatting and verification
 
-Biome owns 2-space indentation, double quotes, semicolons, trailing commas, 120-column width, organized imports, and the nested-ternary ban across maintained TS, TSX, JS, MJS, JSON, and JSONC; `pnpm style` owns the nullish-operator ban. Pinned Ruff owns Python linting and formatting for the voice feature's scripts.
+Biome owns 2-space indentation, double quotes, semicolons, trailing commas, 120-column width, organized imports, and the nested-ternary ban across maintained TS, TSX, JS, MJS, JSON, and JSONC; `pnpm style` owns the nullish-operator ban.
 
 | Command | Covers |
 | --- | --- |
-| `pnpm verify` | Biome → Ruff → typecheck → code-style contract → style-guide contract → tests → build → generated-document check. |
+| `pnpm verify` | Biome → typecheck → code-style contract → style-guide contract → tests → build → generated-document check. |
 | `pnpm style` | Repository-specific architecture, path, declaration, `??`, and import-graph checks over every maintained runtime tree. |
 
 The complete target verification order is:
 
 ```text
-Biome → Ruff → typecheck → code-style contract → style-guide contract → tests → build → generated-document check
+Biome → typecheck → code-style contract → style-guide contract → tests → build → generated-document check
 ```
 
-The custom checker does not duplicate ordinary syntax checks that Biome, TypeScript, or Ruff already own. Hook code findings gate with application and tooling findings. Broad legacy allowlists are forbidden; the only exception is the one exact path in `NULLISH_EXCEPTION`.
+The custom checker does not duplicate ordinary syntax checks that Biome or TypeScript already own. Hook code findings gate with application and tooling findings. Broad legacy allowlists are forbidden; the only exception is the one exact path in `NULLISH_EXCEPTION`.

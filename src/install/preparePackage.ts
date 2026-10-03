@@ -1,14 +1,12 @@
 // Prepare the package that install, update, and doctor read: compiled hook code from dist/src/hooks/<sourceDirectory>/
 // goes to dist/prepared/hooks/<sourceDirectory>/, and each catalog skill allowlist to dist/prepared/skills/<id>/.
 
-import { spawnSync } from "node:child_process";
-
 import { FileSystem, Path } from "@effect/platform";
 import type { PlatformError } from "@effect/platform/Error";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 import { featureCatalog } from "../catalog/featureCatalog.js";
-import { errorMessage, type preparedPackageSchema } from "./installRequest.js";
+import type { preparedPackageSchema } from "./installRequest.js";
 import { findPackageRoot, readPackageVersion } from "./packageRoot.js";
 
 class PreparePackageError extends Schema.TaggedError<PreparePackageError>()("PreparePackageError", {
@@ -28,13 +26,7 @@ const copyFile = (input: { source: string; destination: string }) =>
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     yield* fileSystem.makeDirectory(path.dirname(input.destination), { recursive: true });
-    const bytes = yield* fileSystem.readFile(input.source);
-    const executable = path.basename(input.source) === "dufflebag-voice";
-    yield* fileSystem.writeFile(input.destination, bytes, executable ? { mode: 0o755 } : undefined);
-    if (executable) {
-      // Some platforms ignore write mode; force the worker bit after the write.
-      yield* fileSystem.chmod(input.destination, 0o755);
-    }
+    yield* fileSystem.writeFile(input.destination, yield* fileSystem.readFile(input.source));
   });
 
 // Never copy install junk even when a catalog path is a directory allowlist.
@@ -106,87 +98,11 @@ const rewriteSharedLibImports = (input: { partRoot: string; runtimeImport: strin
     return sharedRuntimeImports.some(Boolean);
   });
 
-const buildVoiceWorker = (packageRoot: string) =>
-  Effect.gen(function* () {
-    const fileSystem = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const script = path.join(packageRoot, "src", "scripts", "buildVoiceWorker.sh");
-    if (!(yield* fileSystem.exists(script))) {
-      return yield* new PreparePackageError({
-        issue: `Native voice worker is missing and ${script} was not found to build it.`,
-      });
-    }
-
-    yield* Effect.try({
-      try: () => {
-        const voiceBuild = spawnSync("bash", [script], { cwd: packageRoot, encoding: "utf8", env: process.env });
-        if (voiceBuild.status !== 0) {
-          throw new Error(
-            voiceBuild.stderr || voiceBuild.stdout || `buildVoiceWorker.sh exited ${String(voiceBuild.status)}`,
-          );
-        }
-      },
-      catch: (error) => new PreparePackageError({ issue: `Could not build dufflebag-voice: ${errorMessage(error)}` }),
-    });
-  });
-
-// A worker binary older than any file in its crate would ship old code, so it is rebuilt.
-// A published package has no crate beside the binary and keeps its prebuilt worker.
-const voiceWorkerIsStale = (binary: string) =>
-  Effect.gen(function* () {
-    const fileSystem = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const crate = path.join(path.dirname(binary), "worker");
-    if (!(yield* fileSystem.exists(crate))) {
-      return false;
-    }
-    const builtAt = Option.getOrElse((yield* fileSystem.stat(binary)).mtime, () => new Date(0));
-    const sources = (yield* fileSystem.readDirectory(crate, { recursive: true })).filter(
-      (file) => !file.startsWith("target"),
-    );
-    for (const file of sources) {
-      const sourceFile = yield* fileSystem.stat(path.join(crate, file));
-      if (sourceFile.type === "File" && Option.getOrElse(sourceFile.mtime, () => new Date(0)) > builtAt) {
-        return true;
-      }
-    }
-    return false;
-  });
-
-const ensureShippedRuntimeSource = (input: {
-  source: string;
-  shippedPath: string;
-  authoredFeatureRoot: string;
-  packageRoot: string;
-}) =>
-  Effect.gen(function* () {
-    const fileSystem = yield* FileSystem.FileSystem;
-    const isVoiceWorker = input.shippedPath === "dufflebag-voice";
-    if ((yield* fileSystem.exists(input.source)) && !(isVoiceWorker && (yield* voiceWorkerIsStale(input.source)))) {
-      return;
-    }
-    if (isVoiceWorker) {
-      yield* buildVoiceWorker(input.packageRoot);
-    }
-    if (yield* fileSystem.exists(input.source)) {
-      return;
-    }
-    return yield* new PreparePackageError({
-      issue: `Catalog-shipped runtime path ${input.shippedPath} is missing under ${input.authoredFeatureRoot}.`,
-    });
-  });
-
-const copyHookFeature = (input: {
-  packageRoot: string;
-  preparedRoot: string;
-  sourceDirectory: string;
-  shippedPaths: ReadonlyArray<string>;
-}) =>
+const copyHookFeature = (input: { packageRoot: string; preparedRoot: string; sourceDirectory: string }) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const compiledFeatureRoot = path.join(input.packageRoot, "dist", "src", "hooks", input.sourceDirectory);
-    const authoredFeatureRoot = path.join(input.packageRoot, "src", "hooks", input.sourceDirectory);
     const preparedFeatureRoot = path.join(input.preparedRoot, "hooks", input.sourceDirectory);
     if (!(yield* fileSystem.exists(compiledFeatureRoot))) {
       return;
@@ -207,12 +123,6 @@ const copyHookFeature = (input: {
         source: path.join(input.packageRoot, "dist", "src", "hooks", "lib"),
         destination: path.join(preparedFeatureRoot, "lib"),
       });
-    }
-
-    for (const shippedPath of input.shippedPaths) {
-      const source = path.join(authoredFeatureRoot, shippedPath);
-      yield* ensureShippedRuntimeSource({ source, shippedPath, authoredFeatureRoot, packageRoot: input.packageRoot });
-      yield* copyTree({ source, destination: path.join(preparedFeatureRoot, shippedPath) });
     }
   });
 
@@ -266,7 +176,6 @@ export const preparePackage = Effect.gen(function* () {
         packageRoot,
         preparedRoot,
         sourceDirectory: feature.sourceDirectory,
-        shippedPaths: feature.runtime.shippedPaths,
       });
     }
 

@@ -610,7 +610,7 @@ export const checkCodeStyle = (repositoryRoot: string): ReadonlyArray<CodeStyleV
   const files = globSync(["src/**/*.{ts,tsx,js,mjs,mts,cts}", "*.{ts,tsx,js,mjs,mts,cts}"], {
     cwd: repositoryRoot,
     nodir: true,
-    ignore: ["**/node_modules/**", "**/dist/**", "**/target/**", "src/scripts/dev/**"],
+    ignore: ["**/node_modules/**", "**/dist/**", "src/scripts/dev/**"],
   });
   const program = ts.createProgram({
     rootNames: files.map((file) => join(repositoryRoot, file)),

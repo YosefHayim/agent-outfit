@@ -53,17 +53,10 @@ describe("CLI help", () => {
   it.each([
     {
       args: ["--help"],
-      shows: ["dufflebag", "install", "catalog", "workflow scaffold", "voice speak", "stt", "tts"],
-      hides: ["voice example", "--wizard", "--log-level", "--completions"],
+      shows: ["dufflebag", "install", "catalog", "workflow scaffold"],
+      hides: ["voice", "--wizard", "--log-level", "--completions"],
     },
-    {
-      args: ["voice", "--help"],
-      shows: ["speak", "refine", "devin"],
-      hides: ["--example"],
-    },
-    { args: ["stt", "--help"], shows: ["on", "off", "keep-listening", "lang", "hold Shift"], hides: [] },
-    { args: ["tts", "--help"], shows: ["on", "off", "narration", "speech-mode"], hides: [] },
-    { args: ["config", "--help"], shows: ["pick-refine", "Set one managed setting"], hides: [] },
+    { args: ["config", "--help"], shows: ["Set one managed setting"], hides: ["pick-refine"] },
     { args: ["openrouter", "--help"], shows: ["connect", "smoke", "chat", "OAuth"], hides: [] },
     {
       args: ["free", "--help"],
@@ -186,30 +179,6 @@ describe("config reset", () => {
         expect(refusedSet.exitCode).not.toBe(0);
         expect(execution.exitCode).toBe(0);
         expect(JSON.parse(readFileSync(configPath, "utf8"))).toEqual(defaultConfig);
-      }),
-    CLI_TEST_TIMEOUT,
-  );
-});
-
-describe("tts off", () => {
-  it(
-    "saves speech-mode off and stops only the narration worker",
-    () =>
-      withFreshDirectory(async (homeRoot) => {
-        const workerLog = path.join(homeRoot, "worker.log");
-        const worker = path.join(homeRoot, ".claude/dufflebag/hooks/voice/dufflebag-voice");
-        mkdirSync(path.dirname(worker), { recursive: true });
-        writeFileSync(worker, `#!/bin/sh\necho "$*" >> "${workerLog}"\n`, { mode: 0o755 });
-
-        const execution = await runCli(["tts", "off"], { HOME: homeRoot });
-        const config = JSON.parse(readFileSync(path.join(homeRoot, ".claude/dufflebag/config.json"), "utf8"));
-
-        expect(execution.exitCode).toBe(0);
-        expect(readFileSync(workerLog, "utf8")).toBe("stop-narration\n");
-        expect(execution.stdout).toContain(
-          "Stopped the narration worker and TTS server; dictation worker left running.",
-        );
-        expect(config.speechMode).toBe("off");
       }),
     CLI_TEST_TIMEOUT,
   );

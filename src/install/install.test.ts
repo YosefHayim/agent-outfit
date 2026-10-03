@@ -141,14 +141,17 @@ layer(NodeContext.layer)("install", (it) => {
     }),
   );
 
-  it.scoped("passes the agent id to the voice hook for Claude, Codex, and Grok", () =>
+  it.scoped("passes the agent id to the session-rehome hooks for Claude, Codex, and Grok", () =>
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText } = yield* workspace;
-      yield* writeFiles(preparedRoot, { "hooks/voice/hooks/speakReply.js": "export {};\n" });
+      yield* writeFiles(preparedRoot, {
+        "hooks/sessionRehome/hooks/rehomeEndedSession.js": "export {};\n",
+        "hooks/sessionRehome/hooks/announceMovedSession.js": "export {};\n",
+      });
 
       yield* install({
         ...installRequest({ root, preparedRoot }),
-        features: { _tag: "selected", ids: ["voice"] },
+        features: { _tag: "selected", ids: ["session-rehome"] },
         agents: { _tag: "selected", ids: ["claude-code", "codex", "grok"] },
       });
 
@@ -299,7 +302,7 @@ layer(NodeContext.layer)("install", (it) => {
     Effect.gen(function* () {
       const { fileSystem, root: homeRoot, preparedRoot, writeFiles } = yield* workspace;
       const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-install-project-" });
-      const globalConfig = { ...defaultConfig, speechVoice: "Daniel" };
+      const globalConfig = { ...defaultConfig, duplicateCodeSkipFolders: ["vendor"] };
       const writeGlobalConfig = (config: object) =>
         writeFiles(homeRoot, { ".claude/dufflebag/config.json": `${JSON.stringify(config, null, 2)}\n` });
       const request = {
@@ -311,7 +314,7 @@ layer(NodeContext.layer)("install", (it) => {
       yield* writeGlobalConfig(globalConfig);
 
       yield* install(request);
-      yield* writeGlobalConfig({ ...globalConfig, speechVoice: "Moira" });
+      yield* writeGlobalConfig({ ...globalConfig, duplicateCodeSkipFolders: ["generated"] });
       yield* install(request);
 
       expect(JSON.parse(yield* fileSystem.readFileString(`${projectRoot}/.claude/dufflebag/config.json`))).toEqual(
@@ -340,8 +343,8 @@ layer(NodeContext.layer)("install", (it) => {
   it.scoped("removes installer-created whole files even when they drifted or vanished", () =>
     Effect.gen(function* () {
       const { root, writeFiles } = yield* workspace;
-      const driftedPath = ".claude/dufflebag/hooks/voice/hooks/speakReply.js";
-      const exactPath = ".claude/dufflebag/hooks/voice/text_to_speech.py";
+      const driftedPath = ".claude/dufflebag/hooks/contextGuard/hooks/contextGuard.js";
+      const exactPath = ".claude/dufflebag/hooks/contextGuard/lib/hookConfig.js";
       yield* writeFiles(root, { [driftedPath]: "drifted after install\n", [exactPath]: "exact\n" });
       const wholeFile = (filePath: string, hash: string) => ({
         owner: { _tag: "application" as const },
@@ -354,7 +357,7 @@ layer(NodeContext.layer)("install", (it) => {
         root,
         files: [
           wholeFile(driftedPath, sha256("old\n")),
-          wholeFile(".claude/dufflebag/hooks/voice/refine_prompt.py", sha256("old\n")),
+          wholeFile(".claude/dufflebag/hooks/contextGuard/lib/stateFiles.js", sha256("old\n")),
           wholeFile(exactPath, sha256("exact\n")),
         ],
       });

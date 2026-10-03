@@ -1,8 +1,7 @@
 name: CI
 
 # One install and one `pnpm verify` run cover formatting, types, tests, the
-# production build, and repository gates. Dufflebag additionally needs uv for
-# its shipped voice integration test.
+# production build, and repository gates.
 
 on:
   push:
@@ -36,11 +35,6 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Setup uv and Python
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: "3.12"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

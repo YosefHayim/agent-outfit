@@ -31,18 +31,6 @@ describe("configSchema", () => {
       autorunCheckEverySeconds: 5,
       autorunIdleAfterSeconds: 8,
       idleCompactAfter: "off",
-      speechVoice: "F4",
-      speechWordsPerMinute: 230,
-      speechMode: "auto",
-      refineMode: "off",
-      refineProvider: "codex",
-      refinePressEnter: false,
-      refineSendTo: "caret",
-      refineCmuxCommand: "",
-      refineCmuxPressEnter: false,
-      dictationReplacements: "",
-      dictationKeepListeningSeconds: 0.2,
-      dictationLanguage: "en",
       duplicateCodeMode: "block",
       duplicateCodeSkipFolders: [],
       sessionRehomeRoots: ["Desktop/Code", "Code", "Projects", "dev", "src", "repos"],
@@ -63,16 +51,15 @@ describe("configSchema", () => {
     expect(settingNamed("context-warn-percent").kind).toBe("number");
     expect(settingNamed("debug-logs").kind).toBe("boolean");
     expect(settingNamed("duplicate-code-skip-folders").kind).toBe("list");
-    expect(settingNamed("refine-mode").kind).toBe("text");
-    expect(settingNamed("refine-mode").choices).toEqual(["off", "clipboard", "dictation", "both"]);
-    expect(settingNamed("refine-effort").optional).toBe(true);
-    expect(settingNamed("refine-provider").optional).toBe(false);
+    expect(settingNamed("duplicate-code-mode").kind).toBe("text");
+    expect(settingNamed("duplicate-code-mode").choices).toEqual(["block", "warn", "off"]);
+    expect(settingNamed("duplicate-code-mode").optional).toBe(false);
   });
 
   it("fills omitted properties but rejects excess properties", () => {
-    expect(decodeConfig({ speechVoice: "Ava" })).toEqual({
+    expect(decodeConfig({ duplicateCodeMode: "warn" })).toEqual({
       ...defaultConfig,
-      speechVoice: "Ava",
+      duplicateCodeMode: "warn",
     });
     expect(() => decodeConfig({ unknownProperty: true })).toThrow();
   });
@@ -90,8 +77,6 @@ describe("configSchema", () => {
         autorunMaxCycles: 1000,
         autorunCheckEverySeconds: 1,
         autorunIdleAfterSeconds: 600,
-        speechWordsPerMinute: 80,
-        dictationKeepListeningSeconds: 0,
       }),
     ).toMatchObject({
       contextWarnPercent: 1,
@@ -100,10 +85,7 @@ describe("configSchema", () => {
       autorunMaxCycles: 1000,
       autorunCheckEverySeconds: 1,
       autorunIdleAfterSeconds: 600,
-      speechWordsPerMinute: 80,
-      dictationKeepListeningSeconds: 0,
     });
-    expect(decodeConfig({ dictationKeepListeningSeconds: 2 }).dictationKeepListeningSeconds).toBe(2);
   });
 
   it.each([
@@ -119,29 +101,23 @@ describe("configSchema", () => {
     ["autorunCheckEverySeconds above", { autorunCheckEverySeconds: 600.001 }],
     ["autorunIdleAfterSeconds below", { autorunIdleAfterSeconds: 0.999 }],
     ["autorunIdleAfterSeconds above", { autorunIdleAfterSeconds: 600.001 }],
-    ["speechWordsPerMinute below", { speechWordsPerMinute: 79.999 }],
-    ["speechWordsPerMinute above", { speechWordsPerMinute: 720.001 }],
-    ["dictationKeepListeningSeconds below", { dictationKeepListeningSeconds: -0.001 }],
-    ["dictationKeepListeningSeconds above", { dictationKeepListeningSeconds: 2.001 }],
   ])("rejects rather than clamps %s", (_case, input) => {
     expect(() => decodeConfig(input)).toThrow();
   });
 
-  it("permits fractional counts, seconds, and words per minute", () => {
+  it("permits fractional counts and seconds", () => {
     expect(
       decodeConfig({
         autorunDefaultCycles: 10.5,
         autorunMaxCycles: 50.5,
         autorunCheckEverySeconds: 5.5,
         autorunIdleAfterSeconds: 8.5,
-        speechWordsPerMinute: 230.5,
       }),
     ).toMatchObject({
       autorunDefaultCycles: 10.5,
       autorunMaxCycles: 50.5,
       autorunCheckEverySeconds: 5.5,
       autorunIdleAfterSeconds: 8.5,
-      speechWordsPerMinute: 230.5,
     });
   });
 
@@ -152,65 +128,21 @@ describe("configSchema", () => {
     expect(() => decodeConfig(settings)).toThrow(property);
   });
 
-  it("trims documented text and preserves an empty voice", () => {
-    expect(
-      decodeConfig({
-        speechVoice: "  Ava  ",
-        speechMode: " immediate ",
-        refineMode: " clipboard ",
-        refineProvider: " auto ",
-        refineModel: "  gpt-5.3-codex-spark  ",
-        refineEffort: " low ",
-        dictationReplacements: "  Joseph=Yosef; type script=TypeScript  ",
-        duplicateCodeMode: " warn ",
-      }),
-    ).toMatchObject({
-      speechVoice: "Ava",
-      speechMode: "immediate",
-      refineMode: "clipboard",
-      refineProvider: "auto",
-      refineModel: "gpt-5.3-codex-spark",
-      refineEffort: "low",
-      dictationReplacements: "Joseph=Yosef; type script=TypeScript",
-      duplicateCodeMode: "warn",
-    });
-    expect(decodeConfig({ speechVoice: "   " }).speechVoice).toBe("");
+  it("trims documented text", () => {
+    expect(decodeConfig({ duplicateCodeMode: " warn " })).toMatchObject({ duplicateCodeMode: "warn" });
   });
 
-  it.each([
-    { refineMode: "dictation" },
-    { refineMode: "both" },
-    { refineProvider: "local" },
-    { refineProvider: "grok" },
-    { refineProvider: "ollama" },
-    { refineSendTo: "cmux-new" },
-    { refineSendTo: "cmux-resume" },
-    {
-      refineModel: "grok-4.5",
-      refineEffort: "low",
-      refinePressEnter: true,
-      refineCmuxCommand: 'codex --yolo -- "$(cat {{prompt_file}})"',
-      refineCmuxPressEnter: true,
+  it("accepts a list of skip folders", () => {
+    expect(decodeConfig({ duplicateCodeSkipFolders: ["templates", "fixtures"] })).toMatchObject({
       duplicateCodeSkipFolders: ["templates", "fixtures"],
-    },
-  ])("accepts %o", (settings) => {
-    expect(decodeConfig(settings)).toMatchObject(settings);
+    });
   });
 
-  it.each([
-    { refineModel: "" },
-    { refineEffort: "" },
-    { refineProvider: "" },
-    { duplicateCodeSkipFolders: [""] },
-  ])("rejects the empty value in %o, where the setting is optional instead", (settings) => {
-    expect(() => decodeConfig(settings)).toThrow();
+  it("rejects an empty skip folder", () => {
+    expect(() => decodeConfig({ duplicateCodeSkipFolders: [""] })).toThrow();
   });
 
-  it.each([
-    { duplicateCodeMode: "BLOCK" },
-    { speechMode: "AUTO" },
-    { refineMode: "CLIPBOARD" },
-  ])("does not case-fold %o", (settings) => {
+  it.each([{ duplicateCodeMode: "BLOCK" }])("does not case-fold %o", (settings) => {
     expect(() => decodeConfig(settings)).toThrow();
   });
 });
@@ -231,14 +163,9 @@ describe("setting values from CLI text", () => {
     }),
   );
 
-  it.effect("clears an optional setting from empty text and its absent default", () =>
-    Effect.gen(function* () {
-      expect((yield* applyText("refine-model", "grok-4.5")).refineModel).toBe("grok-4.5");
-      expect("refineModel" in (yield* applyText("refine-model", ""))).toBe(false);
-      expect(defaultSettingValue("refineModel")).toEqual(Option.none());
-      expect(defaultSettingValue("refineProvider")).toEqual(Option.some("codex"));
-    }),
-  );
+  it("reads a setting's schema default", () => {
+    expect(defaultSettingValue("duplicateCodeMode")).toEqual(Option.some("block"));
+  });
 
   it.effect("rejects text the setting cannot hold", () =>
     Effect.gen(function* () {
@@ -253,6 +180,6 @@ describe("configJsonSchema", () => {
     const json = Schema.encodeSync(configJsonSchema)(defaultConfig);
 
     expect(JSON.parse(json)).toEqual(defaultConfig);
-    expect(Object.keys(JSON.parse(json))).toHaveLength(23);
+    expect(Object.keys(JSON.parse(json))).toHaveLength(11);
   });
 });

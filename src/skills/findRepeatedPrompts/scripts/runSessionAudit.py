@@ -83,8 +83,8 @@ INTENT_RULES: list[tuple[str, re.Pattern[str]]] = [
         r"pnpm for each repo)", re.I)),
     ("manage_cloudflare", re.compile(
         r"\b(wrangler|d1\b|cloudflare|kv namespace|r2 bucket|workers\.dev)", re.I)),
-    ("voice_dufflebag", re.compile(
-        r"\b(tts|stt|voice worker|dictation|dufflebag (install|voice|tts)|hold.?control)", re.I)),
+    ("voice_voxkey", re.compile(
+        r"\b(tts|stt|voice worker|dictation|voxkey|hold.?control)", re.I)),
     ("check_website_quality", re.compile(
         r"\b(accessibility|a11y|csp\b|security headers|semantic html|core web vitals|"
         r"lighthouse|website speed)\b", re.I)),
@@ -111,7 +111,7 @@ INTENT_TO_SKILL: dict[str, list[str]] = {
     "free_ports": ["free-ports"],
     "clone_all_repos": ["clone-all-repos"],
     "manage_cloudflare": ["manage-cloudflare", "deploy-and-check"],
-    "voice_dufflebag": [],
+    "voice_voxkey": [],
     "check_website_quality": ["check-website-quality", "website-speed-ci"],
 }
 

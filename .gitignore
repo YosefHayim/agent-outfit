@@ -3,12 +3,9 @@ node_modules/
 
 # Build output
 dist/
-target/
 *.tsbuildinfo
-src/hooks/voice/dufflebag-voice
 
 # Caches, coverage and logs
-.ruff_cache/
 __pycache__/
 coverage/
 *.log
@@ -33,3 +30,6 @@ coverage/
 
 # Local scratch scripts (see AGENTS.md)
 src/scripts/dev/
+
+# Agent working notes (progress logs, reports)
+docs/agent/

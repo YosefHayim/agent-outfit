@@ -40,12 +40,11 @@ Public feature and installed-skill IDs are decoded catalog data and can differ f
 | `src/install/` | Install planning, package preparation, transactional apply, receipts, and agent formats |
 | `src/hooks/lib/` | Dependency-free code shared by every installed hook (`hookConfig`, `hookOutput`) |
 | `src/skills/<sourceDirectory>/` | Authored skill payload copied verbatim into an installed skill directory (`SKILL.md`, `reference/`, `scripts/`, `templates/`) |
-| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `lib/`, `command/`) compiled and installed to `.claude/dufflebag/hooks/`; `src/hooks/voice/worker/` is the Rust voice worker |
+| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `lib/`, `command/`) compiled and installed to `.claude/dufflebag/hooks/` |
 | `src/doctor/` | Structured installation health checks behind `dufflebag doctor` |
 | `src/workflows/` | Copies the workflow templates into another repository (`dufflebag workflow scaffold`) |
-| `src/voiceControl/` | Turns the voice worker on and off and picks the refine model, for the `voice` and `config` commands |
 | `src/providerRouting/` | Free provider routing: provider catalog, chat formats, HTTP, health file, credentials, and the OpenRouter Keychain entry (exported as `ys-dufflebag/provider-routing`) |
-| `src/scripts/` | Outer-ring tooling only: package build (`generateReadme`, `buildVoiceWorker`), style contract (`checkCodeStyle` + `reportCodeStyle`), rule-card format (`checkRuleCards` + `reportRuleCards`), never imported by product code |
+| `src/scripts/` | Outer-ring tooling only: package build (`generateReadme`), style contract (`checkCodeStyle` + `reportCodeStyle`), rule-card format (`checkRuleCards` + `reportRuleCards`), never imported by product code |
 | `src/templates/` | Files intentionally copied into another repository |
 | `src/statuslines/` | Agent status-line presets installed by their own shell script (not receipt-owned) |
 | `public/` | README image assets; referenced by absolute URL so npm renders them |
@@ -62,7 +61,7 @@ Names are plain English, one word per idea; the approved words live in [`LANGUAG
 
 Hard rules agents must hold every turn. Full prescription: [`CODE-STYLE.md`](CODE-STYLE.md).
 
-- **Verify gate** — `pnpm verify` = Biome + pinned Ruff + typecheck + `style` + `style:guide` + tests + build + generated-document check. One root `tsconfig`; the image-to-code harness under `src/skills/imageToCode/scripts/` is the single sanctioned exception.
+- **Verify gate** — `pnpm verify` = Biome + typecheck + `style` + `style:guide` + tests + build + generated-document check. One root `tsconfig`; the image-to-code harness under `src/skills/imageToCode/scripts/` is the single sanctioned exception.
 - **Effect / Schema** — capabilities return Effect; only `src/cli/main.ts` starts the runtime. Runtime, persisted, catalog, CLI, and agent-format data begin as Effect Schema. Application failures use `Schema.TaggedError`. No hand-rolled `isX` / `parseX` pairs for literals and numbers.
 - **Hooks** — installed hooks stay dependency-free plain Node (`node:*`, `src/hooks/lib/**`, own feature code only), **fail-open**. Application code imports hook code only through a feature's `command/` module.
 - **Ownership** — inspect → plan → validate → apply → write receipt last. A receipt is the only deletion authority. Catalog-closed shipping: the feature catalog owns exact shipped paths.

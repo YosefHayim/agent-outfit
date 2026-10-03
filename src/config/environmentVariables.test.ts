@@ -9,15 +9,15 @@ import { environmentVariables } from "./environmentVariables.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const LIST_FILES = new Set(["src/config/environmentVariables.ts", "src/config/environmentVariables.test.ts"]);
-// e.g. "DUFFLEBAG_VOICE_DIR" inside TypeScript, Rust, Python, shell, or their docs
+// e.g. "DUFFLEBAG_IDLE_COMPACT_AFTER" inside TypeScript, Python, shell, or their docs
 const ENVIRONMENT_VARIABLE_NAME = /DUFFLEBAG_[A-Z_]+/g;
 
 const namesBySourceFile = (): ReadonlyMap<string, ReadonlySet<string>> =>
   new Map(
-    globSync("src/**/*.{ts,tsx,js,mjs,rs,py,sh,swift,md}", {
+    globSync("src/**/*.{ts,tsx,js,mjs,py,sh,md}", {
       cwd: packageRoot,
       nodir: true,
-      ignore: ["**/node_modules/**", "**/dist/**", "**/target/**", "src/scripts/dev/**"],
+      ignore: ["**/node_modules/**", "**/dist/**", "src/scripts/dev/**"],
     })
       .filter((file) => !LIST_FILES.has(file))
       .map((file) => [

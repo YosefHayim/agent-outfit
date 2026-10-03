@@ -12,15 +12,11 @@
   "files": [
     "dist",
     "src/skills",
-    "src/hooks",
     "src/templates",
     "README.md",
     "LICENSE",
     "!src/skills/**/node_modules",
     "!src/skills/**/node_modules/**",
-    "!src/hooks/**/*.ts",
-    "!src/hooks/voice/worker",
-    "!src/hooks/voice/worker/**",
     "!dist/src/scripts"
   ],
   "scripts": {
@@ -33,12 +29,10 @@
     "typecheck": "tsc --noEmit",
     "style": "tsx src/scripts/reportCodeStyle.ts",
     "style:guide": "tsx src/scripts/reportRuleCards.ts",
-    "python:check": "uvx ruff@0.16.0 check src/hooks/voice src/scripts/checkPythonNames.py && uvx ruff@0.16.0 format --check src/hooks/voice src/scripts/checkPythonNames.py && uv run --python 3.10 src/scripts/checkPythonNames.py",
-    "python:fix": "uvx ruff@0.16.0 check --fix src/hooks/voice src/scripts/checkPythonNames.py && uvx ruff@0.16.0 format src/hooks/voice src/scripts/checkPythonNames.py",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "verify": "biome ci . && pnpm python:check && tsc --noEmit && pnpm style && pnpm style:guide . && vitest run && pnpm build && pnpm generate-readme:check",
+    "verify": "biome ci . && tsc --noEmit && pnpm style && pnpm style:guide . && vitest run && pnpm build && pnpm generate-readme:check",
     "prepublishOnly": "npm run build",
     "generate-readme": "tsx src/scripts/generateReadme.ts",
     "generate-readme:check": "tsx src/scripts/generateReadme.ts --check"

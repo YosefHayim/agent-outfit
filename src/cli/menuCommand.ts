@@ -16,7 +16,7 @@ import { showFeatureList } from "./catalogCommand.js";
 import { checkBothScopes, showScopeHealth } from "./doctorCommand.js";
 import { findDuplicates } from "./duplicatesCommand.js";
 import { showInstallation } from "./installCommand.js";
-import { applyIfApproved, pickScope, runConfig, runStt, runTts, runVoice } from "./menuSettings.js";
+import { applyIfApproved, pickScope, runConfig } from "./menuSettings.js";
 import * as TerminalUI from "./TerminalUI.js";
 import { showUninstallation } from "./uninstallCommand.js";
 import { showUpdate } from "./updateCommand.js";
@@ -207,9 +207,6 @@ const screens = {
   catalog: TerminalUI.intro("catalog").pipe(Effect.zipRight(showFeatureList)),
   workflow: runWorkflow,
   duplicates: runDuplicates,
-  voice: runVoice,
-  stt: runStt,
-  tts: runTts,
 };
 
 export const menuCommand = Command.make("menu", {}, () =>
@@ -226,9 +223,6 @@ export const menuCommand = Command.make("menu", {}, () =>
         { title: "Catalog", value: "catalog", description: "list feature IDs" },
         { title: "Workflow scaffold", value: "workflow", description: "CI + publish templates" },
         { title: "Duplicates", value: "duplicates", description: "duplicate-code scan" },
-        { title: "Voice", value: "voice", description: "on / off / status" },
-        { title: "STT", value: "stt", description: "dictation on / off / lang" },
-        { title: "TTS", value: "tts", description: "narration on / off" },
         { title: "Exit", value: "exit", description: "close the menu" },
       ],
       initial: "install",

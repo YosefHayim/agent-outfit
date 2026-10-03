@@ -17,13 +17,5 @@
     "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/skills/imageToCode",
-    "src/scripts/dev",
-    "src/**/*.test.ts",
-    "src/hooks/voice/worker/target",
-    "src/hooks/voice/worker/**/target"
-  ]
+  "exclude": ["node_modules", "dist", "src/skills/imageToCode", "src/scripts/dev", "src/**/*.test.ts"]
 }

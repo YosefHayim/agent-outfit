@@ -104,17 +104,16 @@ const settingsSection = (): string =>
         `| \`${setting.name}\` | \`${setting.key}\` | ${defaultText(defaultConfig[setting.key])} | ${tableCell(setting.description)} |`,
     ),
     "",
-    "Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line. An empty value clears a setting whose default is absent.",
+    "Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line.",
     "",
     "### Environment variables",
     "",
     "Provider API keys (`GROQ_API_KEY`, `GEMINI_API_KEY`, …) keep their vendor names and are listed by `dufflebag free models`.",
     "",
-    "| Variable | Default | What it does | Read by |",
-    "| --- | --- | --- | --- |",
+    "| Variable | Default | What it does |",
+    "| --- | --- | --- |",
     ...environmentVariables.map(
-      (variable) =>
-        `| \`${variable.name}\` | ${tableCell(variable.defaultValue)} | ${tableCell(variable.purpose)} | ${variable.readBy.join(", ")} |`,
+      (variable) => `| \`${variable.name}\` | ${tableCell(variable.defaultValue)} | ${tableCell(variable.purpose)} |`,
     ),
   ].join("\n");
 

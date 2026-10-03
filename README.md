@@ -115,94 +115,7 @@ browser-cookie replay and synthetic CLI identities are listed as unavailable.
 The estimate is not a grant or guarantee: actual access depends on credentials,
 current provider terms, model availability, and live quotas.
 
-### Natural voice and dictation
-
-Turn on complete-response narration and play a first example:
-
-```bash
-dufflebag voice on
-dufflebag voice speak "Read this number one. Now read this number two."
-```
-
-Claude Code, Codex, and Grok use native end-of-turn hooks. Run Devin through its
-official ATIF export wrapper so only completed responses are narrated:
-
-```bash
-dufflebag voice devin -- <devin arguments>
-```
-
-Markdown is translated into speech instead of read as punctuation: tables name
-their columns and cells, links stay understandable, and code blocks are announced
-and read in full. Nothing is truncated.
-
-Inside Cmux, each response is bound to its originating workspace and surface. A
-background response remains silent until that surface is focused and Cmux is the
-frontmost app; older unread responses from the same surface coalesce into the
-latest one. If Cmux does not answer, the response is spoken at once. Use
-`dufflebag config set speech-mode immediate` to speak every reply at once, or
-`dufflebag config set speech-mode off` to suppress narration without uninstalling voice.
-
-Tap Shift to stop narration. Hold Shift on its own for 300 ms to dictate
-locally into the active caret. Pressing any other key while Shift is down
-cancels, so typing capital letters and Shift shortcuts never start dictation.
-A small bottom-center pill moves through **Listening** and **Finishing**;
-release Shift to finish the phrase. Dufflebag keeps a short
-release tail so the final word is not clipped. Say punctuation and structure
-directly, for example:
-
-```text
-hello comma my name is Joseph period
-bullet fix authentication next bullet add tests
-numbered list fix login next item deploy
-use literal comma as the field name period
-```
-
-Add machine-specific corrections without an LLM:
-
-```bash
-dufflebag config set dictation-replacements "Joseph=Yosef;type script=TypeScript"
-```
-
-On macOS 26+, prompt refinement can use Apple's on-device Foundation Models
-framework. Enable clipboard mode, copy a draft, then double-tap Shift. Dufflebag
-preserves code, commands, paths, URLs, and quoted literals; copies only the
-validated refined draft; and reads it with the same active-word highlight. Press
-Command-V to paste and review it—the feature never submits for you.
-
-```bash
-dufflebag config set refine-mode clipboard
-dufflebag voice refine "please make this request precise" --speak
-```
-
-Apple Intelligence must be enabled and its local model ready. If it is not,
-the original clipboard remains untouched and the overlay reports why refinement
-is unavailable. Disable the gesture with `dufflebag config set refine-mode off`.
-
-```bash
-dufflebag voice status
-dufflebag voice speak "Release status: Devin is ready."
-dufflebag voice off
-```
-
-Narration and dictation support macOS, Windows, and Linux. Narration requires only
-[`uv`](https://docs.astral.sh/uv/); with `speech-mode off`, dictation runs without it.
-`dufflebag voice on` uses the adjacent lockfile
-to prepare a compatible Python, pinned packages, and both local speech models
-before starting the worker. Later runs reuse uv and model caches; narration and
-transcription stay on the machine.
-
-There is intentionally no Docker image. Global Shift capture, the host
-microphone, the focused caret, and the desktop listening pill must run in the
-host session; a container would add a second dependency/model cache while still
-requiring platform-specific host access. Grant microphone and input-control
-permissions when your OS asks. Linux desktop and Wayland security policy can
-restrict global key capture or caret typing. If Tkinter or a graphical desktop
-is unavailable, dictation continues without the visual pill.
-
-The installed voice hook code has one zero-dependency Stop hook, the
-`dufflebag-voice` Rust worker, the Python text-to-speech script with its uv
-lockfile, and the Python refine script. Apple prompt refinement is a macOS-only extension; speech
-remains local and cross-platform.
+### Idle compact
 
 Idle compact is off by default (`idle-compact-after off`). On macOS with Ghostty 1.3+, verified native
 hooks for Claude Code, Codex, and Grok bind each session to its exact terminal.
@@ -214,8 +127,7 @@ Override one launched agent without changing persistent config, for example
 This release renames features, a command, settings, environment variables, and state
 folders, and it keeps no old names. An existing install cannot update in place:
 
-1. With the version you have now, run `dufflebag voice off` if voice is on, then
-   uninstall. Run the project uninstall in each project that has its own install.
+1. With the version you have now, uninstall. Run the project uninstall in each project that has its own install.
    Uninstall also removes the old `config.json`, which the new version cannot read.
 
    ```bash
@@ -237,10 +149,6 @@ folders, and it keeps no old names. An existing install cannot update in place:
    | --- | --- |
    | `DUFFLEBAG_CLAUDE_CODE_AUTO_COMPACT`, `DUFFLEBAG_CODEX_AUTO_COMPACT`, `DUFFLEBAG_GROK_AUTO_COMPACT` | `DUFFLEBAG_IDLE_COMPACT_AFTER` |
    | `dufflebagDaemonDryrun` | `DUFFLEBAG_AUTORUN_DRY_RUN` |
-   | `DUFFLEBAG_VOICE_HOME` | `DUFFLEBAG_VOICE_DIR` |
-   | `DUFFLEBAG_WHISPER_MODEL` | `DUFFLEBAG_DICTATION_MODEL` |
-   | `DUFFLEBAG_LIVE_PREVIEW` | `DUFFLEBAG_DICTATION_LIVE_PREVIEW` |
-   | `DUFFLEBAG_REFINE_NO_PICKER=1` | `DUFFLEBAG_REFINE_PICKER=off` |
    | `DUFFLEBAG_PROVIDER_STATE_PATH` | `DUFFLEBAG_PROVIDER_HEALTH_FILE` |
    | `DUFFLEBAG_AGENT_COMMAND`, `DUFFLEBAG_COMPACT_COMMAND` | removed: the agent command comes from `DUFFLEBAG_AGENT_ID`, and compact is always `/compact` |
 
@@ -263,28 +171,25 @@ Renamed features and commands:
 | Old | New |
 | --- | --- |
 | `autonomous-loop` | `autorun` |
-| `speak-response` | `voice` |
 | `dedup-guard` | `duplicate-code-guard` |
 | `dufflebag dedup`, `dedup check` | `dufflebag duplicates` |
 | `install --features a,b` | `install a b` |
 | `--project` / `--global` | `--scope project` / `--scope global` |
 | `config --warn 0.15` | `config set context-warn-percent 15` |
 | `scaffold-ci` | `workflow scaffold` |
-| `voice example "text"` | `voice speak "text"` |
 | `// dup-ignore` comment | `// allow-duplicate` comment |
 
 Every copied skill also has a new plain name; [What it installs](#what-it-installs) lists them.
 
 ## What it installs
 
-`context-guard` and `scratch-folder-guard` are the safe defaults: `scratch-folder-guard` keeps agents from writing into `/tmp`, `/private/tmp`, or the macOS temporary folder and clears each ended Claude Code session's scratch folder. `duplicate-code-guard` blocks duplicate TypeScript functions and type shapes at write time where the agent platform supports it. `autorun` is a macOS-specific convenience driven in-session by `/autorun`; `voice` is cross-platform. The remaining entries are pure skills with no hooks — no configuration needed, just ask your agent to do the thing (e.g. "convert this PNG to code"). Skills authored by others are bundled too, but credited separately under [Recommended community skills](#recommended-community-skills).
+`context-guard` and `scratch-folder-guard` are the safe defaults: `scratch-folder-guard` keeps agents from writing into `/tmp`, `/private/tmp`, or the macOS temporary folder and clears each ended Claude Code session's scratch folder. `duplicate-code-guard` blocks duplicate TypeScript functions and type shapes at write time where the agent platform supports it. `autorun` is a macOS-specific convenience driven in-session by `/autorun`. The remaining entries are pure skills with no hooks — no configuration needed, just ask your agent to do the thing (e.g. "convert this PNG to code"). Skills authored by others are bundled too, but credited separately under [Recommended community skills](#recommended-community-skills).
 
 <!-- AUTO:FEATURES:START -->
 | Feature | What it does | Runs on |
 | --- | --- | --- |
 | **context-guard** | Guard long sessions near their context cap and optionally compact idle Claude Code, Codex, or Grok sessions in their exact Ghostty terminal. | 🟢 any OS |
 | **autorun** | Let the agent keep working alone. When the context is almost full and a fresh handoff note exists, it runs /compact and continues the task. macOS + Ghostty only (it types into your terminal). The hook code lives in context-guard. | 🔴 macOS + Ghostty |
-| **voice** | Read complete agent responses with local speech, hold-Shift dictation via whisper.cpp large-v3-turbo (Metal), Cmux focus gating, and optional on-device prompt refinement on macOS. | 🟢 any OS |
 | **duplicate-code-guard** | Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `dufflebag config set duplicate-code-mode warn`). Agents without edit hooks can run `dufflebag duplicates` as a pre-commit or CI check. | 🟢 any OS |
 | **scratch-folder-guard** | Block every agent write into system temporary folders (/tmp, /private/tmp, /var/tmp, /dev/shm, $TMPDIR) — files, edits, shell redirects, copies, and mktemp — so logs and scratch files stay in a gitignored repo folder. Also deletes each ended Claude Code session's own scratch folder. | 🟢 any OS |
 | **session-rehome** | Move each ended Claude Code session and Codex thread into the repo it was about, so `/resume` and `codex resume` in that repo list it. Sessions started in ~/Desktop/Code, ~, /tmp, or a deleted worktree move when one repo clearly dominates their work; resuming a moved session from its old folder says where it went. | 🟢 any OS |
@@ -363,43 +268,24 @@ dufflebag keeps one `config.json` in its install root: `~/.claude/dufflebag/conf
 | `autorun-check-every-seconds` | `autorunCheckEverySeconds` | `5` | Seconds between the autorun watcher's checks. |
 | `autorun-idle-after-seconds` | `autorunIdleAfterSeconds` | `8` | Seconds without transcript activity before autorun treats the turn as idle. |
 | `idle-compact-after` | `idleCompactAfter` | `"off"` | How long an agent session sits idle before dufflebag submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h. |
-| `speech-voice` | `speechVoice` | `"F4"` | Supertonic voice ID (F1-F5 or M1-M5); unsupported names fall back to F4. |
-| `speech-words-per-minute` | `speechWordsPerMinute` | `230` | Speech rate for read-aloud replies, in words per minute. |
-| `speech-mode` | `speechMode` | `"auto"` | When agent replies are read aloud: auto holds a Cmux reply until its surface is focused and Cmux is in front, and speaks other replies at once; immediate speaks every reply at once; off reads nothing. |
-| `refine-mode` | `refineMode` | `"off"` | Prompt refine: off; clipboard = double-tap Shift refines the copied prompt; dictation = refine the final dictation before it is typed; both. |
-| `refine-provider` | `refineProvider` | `"codex"` | Refine provider: codex \| local \| auto \| grok \| ollama \| opencode \| claude \| gemini \| pi. `dufflebag config pick-refine` lists only providers found on PATH. |
-| `refine-model` | `refineModel` | absent | Model id for the refine provider (e.g. gpt-5.3-codex-spark, grok-4.5, llama3.2). When absent the voice worker uses gpt-5.3-codex-spark. |
-| `refine-effort` | `refineEffort` | absent | Reasoning effort for providers that support it (grok --reasoning-effort, codex model_reasoning_effort). When absent the voice worker uses low so dictation refine stays fast. |
-| `refine-press-enter` | `refinePressEnter` | `false` | Press Enter after the refined text is typed at the caret. Independent of refineCmuxPressEnter. |
-| `refine-send-to` | `refineSendTo` | `"caret"` | Where refined text goes: caret (paste into the focused input), cmux-new (a new focused cmux workspace), or cmux-resume (the focused cmux surface). |
-| `refine-cmux-command` | `refineCmuxCommand` | `""` | Optional shell command run in the new cmux terminal for cmux-new. Placeholders: {{prompt_file}} (safe path), {{prompt}} (shell-escaped), {{cwd}}. Empty pastes the refined text only. |
-| `refine-cmux-press-enter` | `refineCmuxPressEnter` | `false` | Press Enter after injecting refined text into cmux (cmux-resume, or cmux-new without a command). |
-| `dictation-replacements` | `dictationReplacements` | `""` | Semicolon-separated speech replacements in heard=written form. |
-| `dictation-keep-listening-seconds` | `dictationKeepListeningSeconds` | `0.2` | Seconds the microphone stays open after Shift is released so trailing words are not cut off. |
-| `dictation-language` | `dictationLanguage` | `"en"` | Dictation speech language: en (default whisper.cpp) or he (ivrit.ai Hebrew whisper-large-v3-turbo ggml). |
 | `duplicate-code-mode` | `duplicateCodeMode` | `"block"` | What the duplicate-code guard does with a copied function or type shape: block the edit, warn, or off. |
 | `duplicate-code-skip-folders` | `duplicateCodeSkipFolders` | `[]` | Folder names the duplicate-code guard skips, on top of its built-in skips such as node_modules. |
 | `session-rehome-roots` | `sessionRehomeRoots` | `["Desktop/Code","Code","Projects","dev","src","repos"]` | Folders (home-relative or absolute) whose git repos session-rehome may move Claude Code and Codex sessions into. Repos are found one and two levels deep. |
 | `debug-logs` | `debugLogs` | `false` | Print dufflebag hook errors to stderr. |
 
-Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line. An empty value clears a setting whose default is absent.
+Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line.
 
 ### Environment variables
 
 Provider API keys (`GROQ_API_KEY`, `GEMINI_API_KEY`, …) keep their vendor names and are listed by `dufflebag free models`.
 
-| Variable | Default | What it does | Read by |
-| --- | --- | --- | --- |
-| `DUFFLEBAG_AGENT_ID` | set by dufflebag in hook commands | Which agent ran a hook (claude-code, codex, grok). Install writes DUFFLEBAG_AGENT_ID=<agent> in front of the hook commands that read it: idle compact, voice, and session rehome. | TypeScript |
-| `DUFFLEBAG_IDLE_COMPACT_AFTER` | unset (idleCompactAfter in config.json applies) | Overrides idleCompactAfter for one agent session: off, or a time like 30s. Set it when starting the agent, e.g. `DUFFLEBAG_IDLE_COMPACT_AFTER=30s codex`. | TypeScript |
-| `DUFFLEBAG_AUTORUN_DRY_RUN` | off | When 1, true, or yes, the autorun watcher logs the keystrokes it would type instead of typing them (safe manual testing). | TypeScript |
-| `DUFFLEBAG_VOICE_DIR` | ~/Library/Application Support/dufflebag/voice on macOS | Folder for voice state: Whisper models, the narration inbox, worker status, and saved refine choices. The Stop hook, the voice worker, and the refiner all use it. | TypeScript, Rust, Python |
-| `DUFFLEBAG_VOICE_CONFIG_FILE` | unset (the install's config.json, then ~/.claude/dufflebag/config.json) | Path to the config.json the voice Stop hook and voice worker read (for example speechMode). When set, it is the only file they read; tests use it to stay away from the real config. | TypeScript, Rust |
-| `DUFFLEBAG_DICTATION_MODEL` | unset (dictationLanguage picks turbo-q5 or the ivrit.ai Hebrew model) | Forces the Whisper model the dictation worker loads: turbo-q5, turbo-q8, turbo, small, base, tiny, or ivrit. | Rust |
-| `DUFFLEBAG_DICTATION_LIVE_PREVIEW` | on | Set to off (or 0, false, no) to stop the live caption preview while Shift is held. | Rust |
-| `DUFFLEBAG_REFINE_PICKER` | on | Set to off (or 0, false, no) so a failed refine never opens the macOS model picker (CI, headless machines). | Python |
-| `DUFFLEBAG_REHOME_STATE_DIR` | ~/.claude/dufflebag/state/session-rehome | Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder. | TypeScript |
-| `DUFFLEBAG_PROVIDER_HEALTH_FILE` | ~/.claude/dufflebag/state/provider-health.json | File where `dufflebag free` keeps provider health records and the accepted terms version. | TypeScript |
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `DUFFLEBAG_AGENT_ID` | set by dufflebag in hook commands | Which agent ran a hook (claude-code, codex, grok). Install writes DUFFLEBAG_AGENT_ID=<agent> in front of the hook commands that read it: idle compact and session rehome. |
+| `DUFFLEBAG_IDLE_COMPACT_AFTER` | unset (idleCompactAfter in config.json applies) | Overrides idleCompactAfter for one agent session: off, or a time like 30s. Set it when starting the agent, e.g. `DUFFLEBAG_IDLE_COMPACT_AFTER=30s codex`. |
+| `DUFFLEBAG_AUTORUN_DRY_RUN` | off | When 1, true, or yes, the autorun watcher logs the keystrokes it would type instead of typing them (safe manual testing). |
+| `DUFFLEBAG_REHOME_STATE_DIR` | ~/.claude/dufflebag/state/session-rehome | Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder. |
+| `DUFFLEBAG_PROVIDER_HEALTH_FILE` | ~/.claude/dufflebag/state/provider-health.json | File where `dufflebag free` keeps provider health records and the accepted terms version. |
 <!-- AUTO:SETTINGS:END -->
 
 ## Scope

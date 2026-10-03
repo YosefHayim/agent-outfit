@@ -13,7 +13,7 @@ A file the installer manages, recorded in the receipt or marked by the `/duffleb
 _Avoid_: "managed" (without receipt context).
 
 **feature**
-An installable unit such as `context-guard`, `duplicate-code-guard`, `autorun`, `voice`, or `image-to-code` (public kebab-case IDs).
+An installable unit such as `context-guard`, `duplicate-code-guard`, `autorun`, or `image-to-code` (public kebab-case IDs).
 _Avoid_: "plugin", "extension".
 
 **sourceDirectory**
@@ -42,10 +42,6 @@ _Avoid_: "payload", "bundle", "binary".
 
 **watcher**
 Background Node process a hook starts so it can act later: the autorun watcher and the idle compact watcher.
-_Avoid_: "service", "background job".
-
-**worker**
-Background process of the Rust voice binary: the dictation worker and the narration worker.
 _Avoid_: "service", "background job".
 
 **decision**
@@ -112,10 +108,6 @@ _Avoid_: "log", "history" (Claude Code's `history.jsonl` is a different file).
 Feature and skill that arms the context-guard autorun watcher for hands-free compact/resume (`stop`/`exit` verbs). Its hook code is owned by **context-guard**.
 _Avoid_: "auto-compact", "autopilot".
 
-**voice**
-Public feature ID for local voice: the stop hook that reads a complete agent reply aloud, dictation, and prompt refinement. Internal code uses domain terms such as `agentReply`.
-_Avoid_: standalone "response" in authored identifiers.
-
 **image-to-code**
 Image (PNG, screenshot, design) → measured pixel-perfect code skill (SVG/HTML/CSS) with screenshot-diff harness.
 
@@ -128,7 +120,7 @@ Hooks must exit successfully on any error so a guard bug never blocks the user.
 _Avoid_: "graceful degrade".
 
 **capability layout**
-Folders group by product capability (`cli`, `catalog`, `config`, `install`, `hooks`, `skills`, `doctor`, `workflows`, `voiceControl`, `providerRouting`).
+Folders group by product capability (`cli`, `catalog`, `config`, `install`, `hooks`, `skills`, `doctor`, `workflows`, `providerRouting`).
 _Avoid_: "src/core layers", pure-core/imperative-shell folders.
 
 **biome**

@@ -45,7 +45,7 @@ const installRequest = (input: { root: string; preparedRoot: string }) => ({
   features: { _tag: "selected", ids: ["autorun"] },
   agents: { _tag: "selected", ids: ["claude-code", "cursor", "codex", "aider", "continue"] },
   interaction: { _tag: "scripted" },
-  configuration: { _tag: "selected", config: { ...defaultConfig, speechVoice: "Daniel" } },
+  configuration: { _tag: "selected", config: { ...defaultConfig, duplicateCodeSkipFolders: ["vendor"] } },
 });
 
 const uninstallRequest = (root: string) => ({

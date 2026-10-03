@@ -142,10 +142,12 @@ layer(NodeContext.layer)("update", (it) => {
       const baseRequest = request({ root, preparedRoot, features: ["context-guard"] });
       yield* install({
         ...baseRequest,
-        configuration: { _tag: "selected", config: { ...defaultConfig, speechVoice: "M2" } },
+        configuration: { _tag: "selected", config: { ...defaultConfig, duplicateCodeSkipFolders: ["fixtures"] } },
       });
       // Neither decodable nor the receipted bytes: both guards that used to block a reset.
-      yield* writeFiles(root, { [configPath]: '{ "speechVoice": "M2", "unknownSetting": true,\n' });
+      yield* writeFiles(root, {
+        [configPath]: '{ "duplicateCodeSkipFolders": ["fixtures"], "unknownSetting": true,\n',
+      });
 
       const refused = yield* Effect.exit(update({ ...baseRequest, features: { _tag: "preserve" } }));
       expect(refused._tag).toBe("Failure");

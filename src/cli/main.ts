@@ -19,18 +19,13 @@ import { freeProviderCommand } from "./freeProviderCommand.js";
 import { installCommand } from "./installCommand.js";
 import { menuCommand } from "./menuCommand.js";
 import { openRouterCommand } from "./openRouterCommand.js";
-import { sttCommand } from "./sttCommand.js";
 import * as TerminalUI from "./TerminalUI.js";
-import { ttsCommand } from "./ttsCommand.js";
 import { uninstallCommand } from "./uninstallCommand.js";
 import { updateCommand } from "./updateCommand.js";
-import { voiceCommand } from "./voiceCommand.js";
 import { workflowCommand } from "./workflowCommand.js";
 
 const dufflebag = Command.make("dufflebag").pipe(
-  Command.withDescription(
-    "Install a personal set of AI coding-agent skills, hooks, natural voice, and copyable workflows.",
-  ),
+  Command.withDescription("Install a personal set of AI coding-agent skills, hooks, and copyable workflows."),
   Command.withSubcommands([
     installCommand,
     updateCommand,
@@ -41,9 +36,6 @@ const dufflebag = Command.make("dufflebag").pipe(
     doctorCommand,
     duplicatesCommand,
     workflowCommand,
-    sttCommand,
-    ttsCommand,
-    voiceCommand,
     openRouterCommand,
     freeProviderCommand,
   ]),
