@@ -43,7 +43,6 @@ Public feature and installed-skill IDs are decoded catalog data and can differ f
 | `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `lib/`, `command/`) compiled and installed to `.claude/dufflebag/hooks/` |
 | `src/doctor/` | Structured installation health checks behind `dufflebag doctor` |
 | `src/workflows/` | Copies the workflow templates into another repository (`dufflebag workflow scaffold`) |
-| `src/providerRouting/` | Free provider routing: provider catalog, chat formats, HTTP, health file, credentials, and the OpenRouter Keychain entry (exported as `ys-dufflebag/provider-routing`) |
 | `src/scripts/` | Outer-ring tooling only: package build (`generateReadme`), style contract (`checkCodeStyle` + `reportCodeStyle`), rule-card format (`checkRuleCards` + `reportRuleCards`), never imported by product code |
 | `src/templates/` | Files intentionally copied into another repository |
 | `src/statuslines/` | Agent status-line presets installed by their own shell script (not receipt-owned) |

@@ -46,9 +46,4 @@ export const environmentVariables = Schema.decodeUnknownSync(Schema.Array(enviro
     purpose:
       "Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder.",
   },
-  {
-    name: "DUFFLEBAG_PROVIDER_HEALTH_FILE",
-    defaultValue: "~/.claude/dufflebag/state/provider-health.json",
-    purpose: "File where `dufflebag free` keeps provider health records and the accepted terms version.",
-  },
 ]);

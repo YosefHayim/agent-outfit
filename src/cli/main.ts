@@ -15,10 +15,8 @@ import { CliUsageError } from "./cliOptions.js";
 import { configCommand } from "./configCommand.js";
 import { doctorCommand } from "./doctorCommand.js";
 import { duplicatesCommand } from "./duplicatesCommand.js";
-import { freeProviderCommand } from "./freeProviderCommand.js";
 import { installCommand } from "./installCommand.js";
 import { menuCommand } from "./menuCommand.js";
-import { openRouterCommand } from "./openRouterCommand.js";
 import * as TerminalUI from "./TerminalUI.js";
 import { uninstallCommand } from "./uninstallCommand.js";
 import { updateCommand } from "./updateCommand.js";
@@ -36,8 +34,6 @@ const dufflebag = Command.make("dufflebag").pipe(
     doctorCommand,
     duplicatesCommand,
     workflowCommand,
-    openRouterCommand,
-    freeProviderCommand,
   ]),
 );
 

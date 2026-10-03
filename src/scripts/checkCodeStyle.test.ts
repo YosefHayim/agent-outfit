@@ -180,7 +180,7 @@ const REJECTED: ReadonlyArray<SingleFileCase & { ruleId: string; line?: number }
   },
   {
     name: "an exported object type mixing data and functions",
-    path: "src/providerRouting/healthStore.ts",
+    path: "src/doctor/healthStore.ts",
     source: "export type HealthStore = { filePath: string; readHealth: () => Effect.Effect<void> };\n",
     ruleId: "type.schema-owned-runtime",
   },
@@ -289,7 +289,7 @@ const ACCEPTED: ReadonlyArray<SingleFileCase> = [
   { name: "a type alias", source: "export type FeatureId = string;\n" },
   {
     name: "an exported object type holding only functions",
-    path: "src/providerRouting/healthStore.ts",
+    path: "src/doctor/healthStore.ts",
     source: "export type HealthStore = { readHealth: () => Effect.Effect<void>; writeHealth(record: string): void };\n",
   },
   { name: "assertion-looking string content", source: 'export const copy = "input as string";\n' },

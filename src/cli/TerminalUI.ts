@@ -8,7 +8,7 @@ import type { OutputFormat } from "./cliOptions.js";
 
 type PlanStep = { readonly label: string; readonly detail: string };
 
-export const appendChatText = (text: string) => Effect.flatMap(Terminal.Terminal, (terminal) => terminal.display(text));
+const appendChatText = (text: string) => Effect.flatMap(Terminal.Terminal, (terminal) => terminal.display(text));
 
 const writeLine = (message: string) => appendChatText(`${message}\n`);
 

@@ -108,8 +108,6 @@ const settingsSection = (): string =>
     "",
     "### Environment variables",
     "",
-    "Provider API keys (`GROQ_API_KEY`, `GEMINI_API_KEY`, …) keep their vendor names and are listed by `dufflebag free models`.",
-    "",
     "| Variable | Default | What it does |",
     "| --- | --- | --- |",
     ...environmentVariables.map(

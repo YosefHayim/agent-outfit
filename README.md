@@ -78,43 +78,6 @@ dufflebag workflow scaffold .
 dufflebag duplicates . --staged
 ```
 
-### Free provider routing
-
-Dufflebag exposes provider-neutral streaming adapters for OpenAI Chat, OpenAI
-Responses, Anthropic Messages, and Google Generative AI from
-`ys-dufflebag/provider-routing`. Compatible providers use declarations instead
-of provider-specific code.
-
-The CLI calls providers directly; it does not install, start, or proxy through
-OmniRoute. Inspect the 43-pool snapshot, credential readiness, and policy-held
-web/synthetic adapters before routing:
-
-```bash
-dufflebag free models
-dufflebag free credentials
-dufflebag free acknowledge
-dufflebag free chat "Explain this repository" --model auto-free
-dufflebag free chat "Explain this repository" --model groq/meta-llama/llama-4-scout-17b-16e-instruct
-```
-
-`free credentials` prints the exact environment variable accepted for each
-API-key provider. Dufflebag reads those values for the process and never writes
-them to disk. Cloudflare additionally needs `CLOUDFLARE_ACCOUNT_ID` so its
-account-scoped endpoint can be formed. The existing OpenRouter browser-consent
-command remains the keyless setup path for OpenRouter:
-
-```bash
-dufflebag openrouter connect
-dufflebag free chat "Explain this repository" --model openrouter/openrouter/free
-```
-
-The independently attributed OmniRoute v3.8.50 snapshot documents 43
-pool-deduplicated recurring/keyless pools and about 1.526B estimated recurring
-tokens. Dufflebag activates only official API or officially keyless contracts;
-browser-cookie replay and synthetic CLI identities are listed as unavailable.
-The estimate is not a grant or guarantee: actual access depends on credentials,
-current provider terms, model availability, and live quotas.
-
 ### Idle compact
 
 Idle compact is off by default (`idle-compact-after off`). On macOS with Ghostty 1.3+, verified native
@@ -149,7 +112,6 @@ folders, and it keeps no old names. An existing install cannot update in place:
    | --- | --- |
    | `DUFFLEBAG_CLAUDE_CODE_AUTO_COMPACT`, `DUFFLEBAG_CODEX_AUTO_COMPACT`, `DUFFLEBAG_GROK_AUTO_COMPACT` | `DUFFLEBAG_IDLE_COMPACT_AFTER` |
    | `dufflebagDaemonDryrun` | `DUFFLEBAG_AUTORUN_DRY_RUN` |
-   | `DUFFLEBAG_PROVIDER_STATE_PATH` | `DUFFLEBAG_PROVIDER_HEALTH_FILE` |
    | `DUFFLEBAG_AGENT_COMMAND`, `DUFFLEBAG_COMPACT_COMMAND` | removed: the agent command comes from `DUFFLEBAG_AGENT_ID`, and compact is always `/compact` |
 
 4. Delete the old state by hand. Nothing reads it any more, and the new state lives under
@@ -157,14 +119,11 @@ folders, and it keeps no old names. An existing install cannot update in place:
 
    ```bash
    rm -rf ~/.claude/.ctx-loop-state ~/.claude/.ctx-guard-state
-   rm -f ~/.claude/.ctx-guard-off ~/.dufflebag/provider-routing.json
+   rm -f ~/.claude/.ctx-guard-off
    ```
 
    `~/.claude/.ctx-loop-state/` also held the idle compact `idle-*.json` files. The
    context-guard off switch is now `~/.claude/dufflebag/state/context-guard-off`.
-
-5. Run `dufflebag free acknowledge` once more. Provider health moved to
-   `~/.claude/dufflebag/state/provider-health.json` and starts empty.
 
 Renamed features and commands:
 
@@ -277,15 +236,12 @@ Lists (`duplicate-code-skip-folders`) take comma-separated values on the command
 
 ### Environment variables
 
-Provider API keys (`GROQ_API_KEY`, `GEMINI_API_KEY`, …) keep their vendor names and are listed by `dufflebag free models`.
-
 | Variable | Default | What it does |
 | --- | --- | --- |
 | `DUFFLEBAG_AGENT_ID` | set by dufflebag in hook commands | Which agent ran a hook (claude-code, codex, grok). Install writes DUFFLEBAG_AGENT_ID=<agent> in front of the hook commands that read it: idle compact and session rehome. |
 | `DUFFLEBAG_IDLE_COMPACT_AFTER` | unset (idleCompactAfter in config.json applies) | Overrides idleCompactAfter for one agent session: off, or a time like 30s. Set it when starting the agent, e.g. `DUFFLEBAG_IDLE_COMPACT_AFTER=30s codex`. |
 | `DUFFLEBAG_AUTORUN_DRY_RUN` | off | When 1, true, or yes, the autorun watcher logs the keystrokes it would type instead of typing them (safe manual testing). |
 | `DUFFLEBAG_REHOME_STATE_DIR` | ~/.claude/dufflebag/state/session-rehome | Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder. |
-| `DUFFLEBAG_PROVIDER_HEALTH_FILE` | ~/.claude/dufflebag/state/provider-health.json | File where `dufflebag free` keeps provider health records and the accepted terms version. |
 <!-- AUTO:SETTINGS:END -->
 
 ## Scope

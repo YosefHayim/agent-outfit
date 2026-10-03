@@ -54,15 +54,9 @@ describe("CLI help", () => {
     {
       args: ["--help"],
       shows: ["dufflebag", "install", "catalog", "workflow scaffold"],
-      hides: ["voice", "--wizard", "--log-level", "--completions"],
+      hides: ["voice", "openrouter", "--wizard", "--log-level", "--completions"],
     },
     { args: ["config", "--help"], shows: ["Set one managed setting"], hides: ["pick-refine"] },
-    { args: ["openrouter", "--help"], shows: ["connect", "smoke", "chat", "OAuth"], hides: [] },
-    {
-      args: ["free", "--help"],
-      shows: ["models", "credentials", "acknowledge", "chat"],
-      hides: ["base-url", "OmniRoute"],
-    },
     {
       args: ["install", "--help"],
       shows: ["<feature-id>...", "--scope global | project", "global home installation root (default)"],
@@ -99,46 +93,6 @@ describe("CLI help", () => {
       expect(execution.exitCode).toBe(0);
       expect(execution.stdout).toContain(packageVersion);
     },
-    CLI_TEST_TIMEOUT,
-  );
-});
-
-describe("free providers", () => {
-  it(
-    "lists direct model identities, keyless readiness, credential variables, and unavailable pools",
-    async () => {
-      const execution = await runCli(["free", "models"], { GROQ_API_KEY: "" });
-
-      expect(execution.exitCode).toBe(0);
-      expect(execution.stdout).toContain("groq/meta-llama/llama-4-scout-17b-16e-instruct");
-      expect(execution.stdout).toContain("needs: export GROQ_API_KEY");
-      expect(execution.stdout).toContain("needs: export CLOUDFLARE_ACCOUNT_ID");
-      expect(execution.stdout).toContain("pollinations/openai");
-      expect(execution.stdout).toContain("needs: export POLLINATIONS_API_KEY");
-      expect(execution.stdout).toContain("ovhcloud/gpt-oss-120b");
-      expect(execution.stdout).toContain("ready: keyless");
-      expect(execution.stdout).toContain("huggingchat/baidu/ERNIE-4.5-VL-424B-A47B-Base-PT");
-      expect(execution.stdout).toContain("unavailable: browser-cookie");
-    },
-    CLI_TEST_TIMEOUT,
-  );
-
-  it(
-    "persists only the current terms acknowledgement and rejects malformed explicit model identities",
-    () =>
-      withFreshDirectory(async (stateDirectory) => {
-        const statePath = path.join(stateDirectory, "provider-health.json");
-        const acknowledgement = await runCli(["free", "acknowledge"], { DUFFLEBAG_PROVIDER_HEALTH_FILE: statePath });
-        const malformedModel = await runCli(["free", "chat", "say hi", "--model", "missing-separator"], {
-          DUFFLEBAG_PROVIDER_HEALTH_FILE: statePath,
-        });
-
-        expect(acknowledgement.exitCode).toBe(0);
-        expect(readFileSync(statePath, "utf8")).toContain("omniroute-3.8.50-2026-06-17");
-        expect(readFileSync(statePath, "utf8")).not.toContain("say hi");
-        expect(malformedModel.exitCode).toBe(2);
-        expect(malformedModel.stdout).toContain("--model must be auto-free or provider/model");
-      }),
     CLI_TEST_TIMEOUT,
   );
 });

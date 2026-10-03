@@ -28,7 +28,6 @@ Application code is grouped by capability, not by technical layer:
 - `src/hooks/<sourceDirectory>/` — feature-local executable hook code (`hooks/`, `lib/`, `command/`)
 - `src/doctor/` — installation health checks behind `dufflebag doctor`
 - `src/workflows/` — workflow template copying behind `dufflebag workflow scaffold`
-- `src/providerRouting/` — free provider routing: provider catalog, chat formats, HTTP, health file, and credentials
 - `src/scripts/` — outer-ring maintainer tooling (build, README generation, style contract); never imported by product code
 - `src/templates/` — copyable workflows and project docs
 - `src/statuslines/` — agent status-line presets with their own install script
@@ -43,7 +42,7 @@ A feature is either payload or hook code, never both: `src/skills/` holds only w
 - Hooks must be **fail-open** — any internal error allows the tool through.
 - Ownership is receipt-based: install/update/uninstall change only files the receipt owns.
 - Managed config lives at `.claude/dufflebag/config.json` and is schema-owned. Installed hooks read that same file.
-- Hook state lives under `.claude/dufflebag/state/` (`autorun/`, `context-guard/`, `context-guard-off`, `idle-compact/`). `dufflebag free` keeps provider health in `~/.claude/dufflebag/state/provider-health.json`.
+- Hook state lives under `.claude/dufflebag/state/` (`autorun/`, `context-guard/`, `context-guard-off`, `idle-compact/`).
 - Hook background processes are **watchers** (the autorun watcher, the idle compact watcher).
 - Idle compact is off by default, requires macOS + Ghostty 1.3+, and targets a stable terminal ID claimed by the session itself.
 - A `DUFFLEBAG_IDLE_COMPACT_AFTER` value set when starting an agent wins over the persistent `idleCompactAfter` config for that session.

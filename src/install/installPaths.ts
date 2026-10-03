@@ -7,7 +7,7 @@ import { absoluteRootSchema } from "./plan.js";
 export const receiptPath = ".claude/dufflebag/receipt.json";
 export const settingsPath = ".claude/settings.json";
 export const hooksPath = ".claude/dufflebag/hooks";
-// Hook and CLI state that no receipt owns: autorun, context-guard, idle-compact, provider health.
+// Hook state that no receipt owns: autorun, context-guard, idle-compact, session-rehome.
 export const statePath = ".claude/dufflebag/state";
 
 // Generated hook commands embed the root inside double quotes, so shell-expanding characters are refused.

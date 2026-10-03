@@ -120,7 +120,7 @@ Hooks must exit successfully on any error so a guard bug never blocks the user.
 _Avoid_: "graceful degrade".
 
 **capability layout**
-Folders group by product capability (`cli`, `catalog`, `config`, `install`, `hooks`, `skills`, `doctor`, `workflows`, `providerRouting`).
+Folders group by product capability (`cli`, `catalog`, `config`, `install`, `hooks`, `skills`, `doctor`, `workflows`).
 _Avoid_: "src/core layers", pure-core/imperative-shell folders.
 
 **biome**
