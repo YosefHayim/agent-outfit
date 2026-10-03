@@ -11,15 +11,9 @@ import {
   settingValueFromText,
   withSettingValue,
 } from "../config/configSchema.js";
-import { readConfig, resolveConfigTarget, saveConfig } from "../config/configSettings.js";
-import {
-  type CliScope,
-  confirmDestructive,
-  formatOption,
-  type OutputFormat,
-  scopeOption,
-  yesOption,
-} from "./cliOptions.js";
+import { readConfig, resolveConfigTarget, saveConfig } from "../config/scopeConfig.js";
+import type { Scope } from "../install/receipt.js";
+import { confirmDestructive, formatOption, type OutputFormat, scopeOption, yesOption } from "./cliOptions.js";
 import * as TerminalUI from "./TerminalUI.js";
 
 type ConfigSetting = (typeof configSettings)[number];
@@ -39,7 +33,7 @@ export const formatSettingValue = (request: { readonly config: Config; readonly 
 };
 
 export const showConfig = (request: {
-  readonly scope: CliScope;
+  readonly scope: Scope;
   readonly setting: Option.Option<ConfigSetting>;
   readonly format: OutputFormat;
 }) =>

@@ -12,7 +12,7 @@ import { update } from "./update.js";
 const packageFiles = {
   "hooks/contextGuard/hooks/contextGuard.js": "export {};\n",
   "hooks/contextGuard/hooks/startAutorunWatcher.js": "export {};\n",
-  "hooks/contextGuard/hooks/autorunControl.js": "export {};\n",
+  "hooks/contextGuard/command/autorunControl.js": "export {};\n",
   "hooks/contextGuard/hooks/recordIdleCompactEvent.js": "export {};\n",
   "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
 };
@@ -81,7 +81,7 @@ layer(NodeContext.layer)("update", (it) => {
       expect(receipt.features).toEqual(["context-guard"]);
       // context-guard's own autorunControl.js stays; only the autorun skill's files must go.
       const autorunSkillFile = /(?:^|\/)autorun(?:\/|\.)/;
-      expect(receipt.artifacts.some((file: { path: string }) => autorunSkillFile.test(file.path))).toBe(false);
+      expect(receipt.ownedFiles.some((file: { path: string }) => autorunSkillFile.test(file.path))).toBe(false);
     }),
   );
 
@@ -157,7 +157,7 @@ layer(NodeContext.layer)("update", (it) => {
       const configBytes = yield* fileSystem.readFile(path.join(root, configPath));
       expect(JSON.parse(new TextDecoder().decode(configBytes))).toEqual(defaultConfig);
       const receipt = JSON.parse(yield* readText(".claude/agent-outfit/receipt.json"));
-      const managedConfigFile = receipt.artifacts.find((file: { path: string }) => file.path === configPath);
+      const managedConfigFile = receipt.ownedFiles.find((file: { path: string }) => file.path === configPath);
       expect(managedConfigFile.ownership.installedHash).toBe(createHash("sha256").update(configBytes).digest("hex"));
       expect(managedConfigFile.ownership.previous).toEqual({ _tag: "missing" });
     }),

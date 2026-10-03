@@ -54,7 +54,7 @@ You say: "…" → it asks: … → it produces: …
 
 ## Choosing `type`
 
-- `type: flow` — a repeated workflow with steps and gates; most skills. The description must start with `Use when `, the body needs `## Safety`, `## Workflow`, and `## Verification`, and the file stays at 500 lines or fewer. `src/catalog/skillPayload.test.ts` enforces all of it.
+- `type: flow` — a repeated workflow with steps and gates; most skills. The description must start with `Use when `, the body needs `## Safety`, `## Workflow`, and `## Verification`, and the file stays at 500 lines or fewer. `src/catalog/featureCatalog.skillPayload.test.ts` enforces all of it.
 - No `type` — a short instruction such as `src/skills/questionMyPlan/SKILL.md`.
 
 Both need a `name` equal to the catalog id (lowercase letters, digits, hyphens; 64 characters at most) and a `description` of 1024 characters at most.
@@ -79,7 +79,7 @@ All paths are in the agent-outfit repo. Put the new skill next to related skills
    ```
 
 3. **Catalog tests** — `src/catalog/featureCatalog.test.ts` has three lists in catalog order: `expectedFeatureIds` (add `"<id>"`), `expectedSourceDirectories` (add `"<sourceDirectory>"`), and the shipped-paths list in "derives defaults, installed skills, and exact shipped allowlists" (add `["<id>", [<shippedPaths>]]`). With `dependencies`, also add `["<id>", [<dependencies>]]` to the list in "expands dependencies once and returns stable catalog order".
-   A skill that writes run records under `docs/agent/<id>/` also gets a row in the "agent run folder isolation" list of `src/catalog/skillPayload.test.ts` and in the `which-skill` REFERENCE "Agent artifact paths" table.
+   A skill that writes run records under `docs/agent/<id>/` also gets a row in the "agent run folder isolation" list of `src/catalog/featureCatalog.skillPayload.test.ts` and in the `which-skill` REFERENCE "Agent artifact paths" table.
 4. **Routing** — a row in the fitting table of `src/skills/whichSkill/REFERENCE.md`: the user's phrases → `` `<id>` ``.
 5. **Siblings** — when the new skill takes work from a sibling, add "For …, use <id>." to that sibling's description.
 6. **README** — run `pnpm generate-readme`. Never edit the generated sections by hand.

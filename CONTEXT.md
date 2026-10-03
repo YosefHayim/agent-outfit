@@ -25,7 +25,7 @@ Application code is grouped by capability, not by technical layer:
 - `src/install/` — install plans, package preparation, receipts, transactional apply, lifecycle
 - `src/hooks/lib/` — dependency-free code shared by every hook feature (`hookConfig` + `hookOutput`)
 - `src/skills/<sourceDirectory>/` — authored skill payload only (camelCase directories), shipped verbatim
-- `src/hooks/<sourceDirectory>/` — feature-local executable hook code (`hooks/`, `lib/`, `command/`)
+- `src/hooks/<sourceDirectory>/` — feature-local executable hook code: `hooks/` (registered agent hooks), `watchers/` (background processes a hook starts), `command/` (scripts the CLI or a skill runs), `lib/`
 - `src/doctor/` — installation health checks behind `agent-outfit doctor`
 - `src/workflows/` — workflow template copying behind `agent-outfit workflow scaffold`
 - `src/scripts/` — outer-ring maintainer tooling (build, README generation, style contract); never imported by product code

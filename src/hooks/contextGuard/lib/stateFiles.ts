@@ -56,7 +56,7 @@ export const readJson = (file: string): unknown => {
   }
 };
 
-export const remove = (file: string): void => {
+export const removeFile = (file: string): void => {
   try {
     rmSync(file, { force: true });
   } catch {

@@ -1,17 +1,21 @@
-/** Shared public options whose spelling and defaults are part of the CLI contract. */
+/** Shared public options and arguments whose spelling and defaults are part of the CLI contract. */
 
-import { Options } from "@effect/cli";
+import { Args, Options } from "@effect/cli";
 import { Effect, Schema } from "effect";
 
+import { scopeSchema } from "../install/receipt.js";
 import * as TerminalUI from "./TerminalUI.js";
 
-const scopes = ["global", "project"] as const;
-export type CliScope = (typeof scopes)[number];
-
-export const scopeOption = Options.choice("scope", scopes).pipe(
+export const scopeOption = Options.choice("scope", scopeSchema.literals).pipe(
   Options.withDefault("global"),
   Options.withDescription("Target the global home installation root (default)"),
 );
+
+export const featureIdsArgument = (description: string) =>
+  Args.text({ name: "feature-id" }).pipe(Args.repeated, Args.withDescription(description));
+
+export const workspaceArgument = (description: string) =>
+  Args.directory({ name: "workspace", exists: "either" }).pipe(Args.optional, Args.withDescription(description));
 
 export const yesOption = Options.boolean("yes").pipe(
   Options.withAlias("y"),

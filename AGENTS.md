@@ -40,7 +40,7 @@ Public feature and installed-skill IDs are decoded catalog data and can differ f
 | `src/install/` | Install planning, package preparation, transactional apply, receipts, and agent formats |
 | `src/hooks/lib/` | Dependency-free code shared by every installed hook (`hookConfig`, `hookOutput`) |
 | `src/skills/<sourceDirectory>/` | Authored skill payload copied verbatim into an installed skill directory (`SKILL.md`, `reference/`, `scripts/`, `templates/`) |
-| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `lib/`, `command/`) compiled and installed to `.claude/agent-outfit/hooks/` |
+| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `watchers/`, `command/`, `lib/`) compiled and installed to `.claude/agent-outfit/hooks/` |
 | `src/doctor/` | Structured installation health checks behind `agent-outfit doctor` |
 | `src/workflows/` | Copies the workflow templates into another repository (`agent-outfit workflow scaffold`) |
 | `src/scripts/` | Outer-ring tooling only: package build (`generateReadme`), style contract (`checkCodeStyle` + `reportCodeStyle`), rule-card format (`checkRuleCards` + `reportRuleCards`), never imported by product code |

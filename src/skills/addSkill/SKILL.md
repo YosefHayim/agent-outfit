@@ -56,7 +56,7 @@ Create branch `feat/<id>` from the default branch, then follow [REFERENCE.md →
 
 ### 7. Check
 
-Run `pnpm vitest run src/catalog/skillPayload.test.ts src/catalog/featureCatalog.test.ts`, then `pnpm verify`. Fix and re-run until both pass. Never skip or weaken a check to make it pass.
+Run `pnpm vitest run src/catalog/featureCatalog.skillPayload.test.ts src/catalog/featureCatalog.test.ts`, then `pnpm verify`. Fix and re-run until both pass. Never skip or weaken a check to make it pass.
 
 ### 8. Install and try it
 

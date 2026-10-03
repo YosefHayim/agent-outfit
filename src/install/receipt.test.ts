@@ -91,7 +91,7 @@ const completeReceiptInput = {
   version: "1.0.0",
   scope: "project",
   features: ["context-guard", "autorun"],
-  artifacts: [
+  ownedFiles: [
     ownedFile("runtime", {
       owner: applicationOwner,
       path: ".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js",
@@ -135,7 +135,7 @@ const receiptWithFiles = (files: ReadonlyArray<unknown>) => ({
   version: "1.0.0",
   scope: "project",
   features: ["context-guard"],
-  artifacts: files,
+  ownedFiles: files,
 });
 
 const roundTrip = (files: ReadonlyArray<unknown>) =>
@@ -157,7 +157,7 @@ const readFixtureReceipt = (bytes: Uint8Array) =>
 
 describe("receiptSchema", () => {
   it("decodes every receiptable file kind and all ownership tags", () => {
-    expect(completeReceipt.artifacts.map((file) => file.kind._tag)).toEqual([
+    expect(completeReceipt.ownedFiles.map((file) => file.kind._tag)).toEqual([
       "runtime",
       "skill",
       "rule",
@@ -167,7 +167,7 @@ describe("receiptSchema", () => {
       "settings",
       "managedConfig",
     ]);
-    expect(completeReceipt.artifacts.map((file) => file.ownership._tag)).toEqual([
+    expect(completeReceipt.ownedFiles.map((file) => file.ownership._tag)).toEqual([
       "wholeFile",
       "wholeFile",
       "wholeFile",
@@ -177,12 +177,12 @@ describe("receiptSchema", () => {
       "jsonValues",
       "wholeFile",
     ]);
-    expect(completeReceipt.artifacts[0]?.ownership).toMatchObject({
+    expect(completeReceipt.ownedFiles[0]?.ownership).toMatchObject({
       _tag: "wholeFile",
       previous: { _tag: "priorFile", bytes: new Uint8Array([1, 2, 3]) },
     });
     expectTypeOf(completeReceipt).toMatchTypeOf<Receipt>();
-    expectTypeOf(completeReceipt.artifacts).items.toMatchTypeOf<OwnedFile>();
+    expectTypeOf(completeReceipt.ownedFiles).items.toMatchTypeOf<OwnedFile>();
   });
 
   it("decodes all eight tagged file kinds while preventing receipt self-ownership", () => {
@@ -211,8 +211,8 @@ describe("receiptSchema", () => {
     Effect.gen(function* () {
       const encoded = JSON.parse(completeReceiptJson);
 
-      expect(Object.keys(encoded)).toEqual(["version", "scope", "features", "artifacts"]);
-      expect(encoded.artifacts[0].ownership.previous.bytes).toBe("AQID");
+      expect(Object.keys(encoded)).toEqual(["version", "scope", "features", "ownedFiles"]);
+      expect(encoded.ownedFiles[0].ownership.previous.bytes).toBe("AQID");
       expect(yield* decodeReceiptJson(completeReceiptJson)).toEqual(completeReceipt);
     }),
   );
@@ -233,7 +233,7 @@ describe("receiptSchema", () => {
         ownedFile("instructionLink", { owner: agentOwner, path: ".aider.conf.yml", ownership: yamlSequenceOwnership }),
       ]);
 
-      expect(receipt.artifacts.map((file) => file.ownership)).toMatchObject([
+      expect(receipt.ownedFiles.map((file) => file.ownership)).toMatchObject([
         { _tag: "managedBlock", filePreviouslyPresent: true },
         { _tag: "jsonValues", filePreviouslyPresent: false },
         { _tag: "yamlSequenceValue", filePreviouslyPresent: true },
@@ -256,7 +256,7 @@ describe("receiptSchema", () => {
         }),
       ]);
 
-      expect(receipt.artifacts.map((file) => file.ownership)).toMatchObject([
+      expect(receipt.ownedFiles.map((file) => file.ownership)).toMatchObject([
         {
           _tag: "jsonValues",
           filePreviouslyPresent: false,
@@ -282,7 +282,7 @@ describe("receiptSchema", () => {
     { name: "kind", decode: () => decodeKind({ _tag: "runtime", extra: true }) },
     { name: "previous file", decode: () => decodePreviousFile({ _tag: "missing", extra: true }) },
     { name: "previous JSON value", decode: () => decodePreviousJson({ _tag: "value", value: null, extra: true }) },
-    { name: "owned file", decode: () => decodeEntry({ ...completeReceiptInput.artifacts[0], extra: true }) },
+    { name: "owned file", decode: () => decodeEntry({ ...completeReceiptInput.ownedFiles[0], extra: true }) },
     {
       name: "owned JSON value",
       decode: () => decodeJsonValues(jsonValues([{ ...ownedValue("/value"), extra: true }])),
@@ -505,7 +505,7 @@ describe("readReceipt", () => {
     {
       name: "a receipt schema failure",
       bytes: textEncoder.encode(
-        JSON.stringify({ version: "1.0.0", scope: "project", features: [], artifacts: [], unexpected: true }),
+        JSON.stringify({ version: "1.0.0", scope: "project", features: [], ownedFiles: [], unexpected: true }),
       ),
       fragments: ["unexpected"],
     },

@@ -1,16 +1,15 @@
 /** `agent-outfit duplicates [workspace]` — duplicate-code gate for local work and CI. */
 
-import { Args, Command, Options } from "@effect/cli";
+import { Command, Options } from "@effect/cli";
 import { Path } from "@effect/platform";
 import { Effect, Option } from "effect";
-
-import { readConfigAt } from "../config/configSettings.js";
 import { scanHost } from "../config/hostScan.js";
+import { readConfigAt } from "../config/scopeConfig.js";
 import { checkDuplicates } from "../hooks/duplicateCodeGuard/command/checkDuplicates.js";
-import { CliUsageError, formatOption, type OutputFormat } from "./cliOptions.js";
+import { CliUsageError, formatOption, type OutputFormat, workspaceArgument } from "./cliOptions.js";
 
 // Skip the folders the installed hooks skip: the workspace's own config.json, else the global one.
-export const findDuplicates = (request: {
+export const checkWorkspaceDuplicates = (request: {
   readonly workspace: string;
   readonly staged: boolean;
   readonly since: string | undefined;
@@ -21,11 +20,6 @@ export const findDuplicates = (request: {
     const config = yield* readConfigAt({ root: request.workspace, homeRoot: host.homeRoot });
     checkDuplicates({ ...request, skipFolders: config.duplicateCodeSkipFolders });
   });
-
-const workspaceArgument = Args.directory({ name: "workspace", exists: "either" }).pipe(
-  Args.optional,
-  Args.withDescription("Repository root to scan (default: current working directory)"),
-);
 
 const stagedOption = Options.boolean("staged").pipe(
   Options.withDefault(false),
@@ -39,7 +33,12 @@ const sinceOption = Options.text("since").pipe(
 
 export const duplicatesCommand = Command.make(
   "duplicates",
-  { workspace: workspaceArgument, staged: stagedOption, since: sinceOption, format: formatOption },
+  {
+    workspace: workspaceArgument("Repository root to scan (default: current working directory)"),
+    staged: stagedOption,
+    since: sinceOption,
+    format: formatOption,
+  },
   (args) =>
     Effect.gen(function* () {
       if (args.staged && Option.isSome(args.since)) {
@@ -47,7 +46,7 @@ export const duplicatesCommand = Command.make(
       }
 
       const path = yield* Path.Path;
-      yield* findDuplicates({
+      yield* checkWorkspaceDuplicates({
         workspace: path.resolve(Option.getOrElse(args.workspace, () => process.cwd())),
         staged: args.staged,
         since: Option.getOrUndefined(args.since),

@@ -13,9 +13,9 @@ import { movedSessionNotice } from "../lib/movedSessionNotice.js";
 import {
   claimSweepSlot,
   ledgerEntryFor,
-  type RehomeAgent,
   readLastMoves,
   recordLedgerEntry,
+  rehomeAgentFrom,
 } from "../lib/rehomeLedger.js";
 
 type SessionStartEvent = { readonly sessionId: string; readonly source: string; readonly cwd: string };
@@ -39,22 +39,19 @@ const decodeSessionStart = (candidate: unknown): SessionStartEvent | undefined =
   };
 };
 
-const agentFrom = (agentId: string | undefined): RehomeAgent | undefined =>
-  agentId === "claude-code" || agentId === "codex" ? agentId : undefined;
-
-// The watcher sits beside this file with the same extension: .js when installed, .ts under tsx in tests.
+// The watcher has this file's extension: .js when installed, .ts under tsx in tests.
 const startSweepIfDue = (): void => {
   if (!claimSweepSlot(SWEEP_EVERY_SECONDS)) {
     return;
   }
 
   const hookFile = fileURLToPath(import.meta.url);
-  const watcherFile = path.join(path.dirname(hookFile), `rehomeWatcher${path.extname(hookFile)}`);
+  const watcherFile = path.join(path.dirname(hookFile), "..", "watchers", `rehomeWatcher${path.extname(hookFile)}`);
   spawn(process.execPath, [...process.execArgv, watcherFile, "--sweep"], { detached: true, stdio: "ignore" }).unref();
 };
 
 const announceMovedSession = (): never => {
-  const agent = agentFrom(process.env.AGENT_OUTFIT_AGENT_ID);
+  const agent = rehomeAgentFrom(process.env.AGENT_OUTFIT_AGENT_ID);
   const sessionStart = decodeSessionStart(JSON.parse(readFileSync(0, "utf8")));
   if (!agent || !sessionStart) {
     return allowAndExit();

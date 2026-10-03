@@ -6,8 +6,8 @@ import path from "node:path";
 
 import { readConfig } from "../../lib/hookConfig.js";
 import { allowAndExit, printDecisionAndExit } from "../../lib/hookOutput.js";
-import { readContextUsage, resolveTranscript, windowFor } from "../lib/sessionTranscript.js";
-import { autorunFile, isArmed, KILL_SWITCH, nudgeFile, remove, writeText } from "../lib/stateFiles.js";
+import { contextWindowTokens, findTranscript, readContextUsage } from "../lib/sessionTranscript.js";
+import { autorunFile, isArmed, KILL_SWITCH, nudgeFile, removeFile, writeText } from "../lib/stateFiles.js";
 
 type HookInput = {
   transcript_path?: string;
@@ -95,7 +95,7 @@ const nudgeOnce = (request: { occupancy: Occupancy; eventName: string; warnPerce
   const { occupancy } = request;
   const nudgeFlag = nudgeFile(occupancy.sessionId);
   if (occupancy.percent < request.warnPercent) {
-    remove(nudgeFlag);
+    removeFile(nudgeFlag);
     return allowAndExit();
   }
 
@@ -114,14 +114,14 @@ const runContextGuard = (): never => {
   if (existsSync(KILL_SWITCH)) return allowAndExit();
 
   const hookInput = decodeHookInput(JSON.parse(readFileSync(0, "utf8")));
-  const transcript = hookInput ? resolveTranscript(hookInput) : null;
+  const transcript = hookInput ? findTranscript(hookInput) : null;
   if (!hookInput || !transcript) return allowAndExit();
 
   const usage = readContextUsage(transcript);
   if (usage.occupancy === null) return allowAndExit();
 
   const config = readConfig();
-  const contextWindow = windowFor(usage.model);
+  const contextWindow = contextWindowTokens(usage.model);
   const occupancy: Occupancy = {
     sessionId: hookInput.session_id === undefined ? "session" : hookInput.session_id,
     percent: (usage.occupancy * 100) / contextWindow,

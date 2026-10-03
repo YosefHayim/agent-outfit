@@ -3,15 +3,16 @@
 import { Effect } from "effect";
 
 import { configSettings, defaultSettingValue, settingValueFromText, withSettingValue } from "../config/configSchema.js";
-import { readConfig, resolveConfigTarget, saveConfig } from "../config/configSettings.js";
-import { type CliScope, CliUsageError } from "./cliOptions.js";
+import { readConfig, resolveConfigTarget, saveConfig } from "../config/scopeConfig.js";
+import type { Scope } from "../install/receipt.js";
+import { CliUsageError } from "./cliOptions.js";
 import { formatSettingValue, showConfig } from "./configCommand.js";
 import * as TerminalUI from "./TerminalUI.js";
 
 type ConfigSetting = (typeof configSettings)[number];
 
 export const pickScope = (verb: string) =>
-  TerminalUI.selectOne<CliScope>({
+  TerminalUI.selectOne<Scope>({
     message: `${verb} — which scope?`,
     choices: [
       { title: "global", value: "global", description: "home root · every session" },

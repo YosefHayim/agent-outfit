@@ -41,11 +41,11 @@ const configFile = (path: string, previous: object = { _tag: "missing" }) => ({
   ownership: { _tag: "wholeFile", installedHash, previous },
 });
 
-const receiptOf = (artifacts: ReadonlyArray<object>) => ({
+const receiptOf = (ownedFiles: ReadonlyArray<object>) => ({
   version: "0.12.0",
   scope: "project",
   features: [],
-  artifacts,
+  ownedFiles,
 });
 
 type WritePlanRequest = {
@@ -393,7 +393,7 @@ layer(NodeContext.layer)("applyPlan", (it) => {
       yield* workspace.expectBytes("write.txt", installedBytes);
       yield* workspace.expectBytes("restore.txt", originalBytes);
       yield* workspace.expectAbsent(["remove.txt"]);
-      expect((yield* workspace.publishedReceipt).artifacts.map((file) => file.path)).toEqual(["write.txt"]);
+      expect((yield* workspace.publishedReceipt).ownedFiles.map((file) => file.path)).toEqual(["write.txt"]);
     }),
   );
 

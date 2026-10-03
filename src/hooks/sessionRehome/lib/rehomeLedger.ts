@@ -20,6 +20,9 @@ import { appendJsonLine, decodeJsonLine } from "./jsonLines.js";
 
 export type RehomeAgent = "claude-code" | "codex";
 
+export const rehomeAgentFrom = (agentId: string | undefined): RehomeAgent | undefined =>
+  agentId === "claude-code" || agentId === "codex" ? agentId : undefined;
+
 export type LedgerDecision = "moved" | "stayed" | "uncertain" | "no-signal" | "deleted" | "conflict";
 
 export type LedgerEntry = {

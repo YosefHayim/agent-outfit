@@ -1,12 +1,12 @@
 /** `agent-outfit update [feature-id...]` — preserve installed features unless IDs are explicit. */
 
-import { Args, Command } from "@effect/cli";
+import { Command } from "@effect/cli";
 import { Effect } from "effect";
 
 import { destinationForScope, scanHost } from "../config/hostScan.js";
 import { preparePackage } from "../install/preparePackage.js";
 import { update } from "../install/update.js";
-import { formatOption, scopeOption } from "./cliOptions.js";
+import { featureIdsArgument, formatOption, scopeOption } from "./cliOptions.js";
 import * as TerminalUI from "./TerminalUI.js";
 
 export const showUpdate = (updateSummary: {
@@ -18,14 +18,13 @@ export const showUpdate = (updateSummary: {
   return TerminalUI.success(updateSummary._tag === "updated" ? `Updated ${features}` : `Already current: ${features}`);
 };
 
-const featureIdsArgument = Args.text({ name: "feature-id" }).pipe(
-  Args.repeated,
-  Args.withDescription("Replacement feature IDs; omitted preserves the receipt selection"),
-);
-
 export const updateCommand = Command.make(
   "update",
-  { featureIds: featureIdsArgument, scope: scopeOption, format: formatOption },
+  {
+    featureIds: featureIdsArgument("Replacement feature IDs; omitted preserves the receipt selection"),
+    scope: scopeOption,
+    format: formatOption,
+  },
   (args) =>
     Effect.gen(function* () {
       if (args.format === "text") yield* TerminalUI.intro("update");

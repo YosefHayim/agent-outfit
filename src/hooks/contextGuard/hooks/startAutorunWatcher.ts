@@ -15,15 +15,15 @@ const sessionIdFrom = (candidate: unknown): string => {
   return typeof sessionId === "string" ? sessionId : "";
 };
 
-const startWatcher = (): void => {
+const startAutorunWatcher = (): void => {
   const sessionId = sessionIdFrom(JSON.parse(readFileSync(0, "utf8")));
   if (!sessionId || existsSync(KILL_SWITCH)) return;
-  const watcherPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "autorunWatcher.js");
+  const watcherPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "watchers", "autorunWatcher.js");
   spawn("node", [watcherPath, sessionId], { detached: true, stdio: "ignore" }).unref();
 };
 
 try {
-  startWatcher();
+  startAutorunWatcher();
 } catch {
   // Never block session start.
 } finally {

@@ -14,7 +14,7 @@ import { update } from "../install/update.js";
 import { copyWorkflows } from "../workflows/copyWorkflows.js";
 import { showFeatureList } from "./catalogCommand.js";
 import { checkBothScopes, showScopeHealth } from "./doctorCommand.js";
-import { findDuplicates } from "./duplicatesCommand.js";
+import { checkWorkspaceDuplicates } from "./duplicatesCommand.js";
 import { showInstallation } from "./installCommand.js";
 import { applyIfApproved, pickScope, runConfig } from "./menuSettings.js";
 import * as TerminalUI from "./TerminalUI.js";
@@ -190,7 +190,7 @@ const runDuplicates = Effect.gen(function* () {
     ],
   });
   // A read-only scan, so the plan preview needs no approval.
-  yield* findDuplicates({
+  yield* checkWorkspaceDuplicates({
     workspace: targetRoot,
     staged: mode === "staged",
     since: Option.getOrUndefined(since),

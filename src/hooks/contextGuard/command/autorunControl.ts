@@ -10,8 +10,8 @@ import { fileURLToPath } from "node:url";
 
 import { readConfig } from "../../lib/hookConfig.js";
 import { isProcessAlive } from "../../lib/processAlive.js";
-import { resolveSessionId, sumTokens } from "../lib/sessionTranscript.js";
-import { autorunFile, KILL_SWITCH, readInt, readText, remove, writeText } from "../lib/stateFiles.js";
+import { findNewestSessionId, sumTokens } from "../lib/sessionTranscript.js";
+import { autorunFile, KILL_SWITCH, readInt, readText, removeFile, writeText } from "../lib/stateFiles.js";
 
 const DEFAULT_BUDGET = readConfig().autorunDefaultCycles;
 const RATE_LIMITS_FILE = path.join(homedir(), ".claude", "agent-outfit", "state", "rate-limits.json");
@@ -23,9 +23,9 @@ const HALT_REASONS: Record<string, string> = {
 };
 
 // The watcher reads config.json itself, so it only needs the session ID.
-const startWatcher = (sessionId: string): void => {
+const startWatcherUnlessAlive = (sessionId: string): void => {
   if (isProcessAlive(readInt(autorunFile(sessionId, "pid")))) return;
-  const watcherPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "autorunWatcher.js");
+  const watcherPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "watchers", "autorunWatcher.js");
   spawn("node", [watcherPath, sessionId], { detached: true, stdio: "ignore" }).unref();
 };
 
@@ -91,12 +91,12 @@ const armAutorun = (sessionId: string, budgetArgument: string | undefined): void
   const budget = Number.isFinite(requestedBudget) ? Math.max(1, requestedBudget) : DEFAULT_BUDGET;
   writeText(autorunFile(sessionId, "budget"), budget);
   writeText(autorunFile(sessionId, "cycles"), 0);
-  for (const suffix of ["done", "halted", "exit"]) remove(autorunFile(sessionId, suffix));
+  for (const suffix of ["done", "halted", "exit"]) removeFile(autorunFile(sessionId, suffix));
   if (!readInt(autorunFile(sessionId, "started"))) {
     writeText(autorunFile(sessionId, "started"), Math.floor(Date.now() / 1000));
   }
   writeText(autorunFile(sessionId, "armed"), "");
-  startWatcher(sessionId);
+  startWatcherUnlessAlive(sessionId);
   console.log(
     `🟢 Autorun ARMED — budget ${budget} cycle(s).\n` +
       "   The autorun watcher will /compact + auto-resume each time context nears the guardrail and a fresh handoff exists, " +
@@ -107,12 +107,12 @@ const armAutorun = (sessionId: string, budgetArgument: string | undefined): void
 };
 
 const pauseAutorun = (sessionId: string): void => {
-  remove(autorunFile(sessionId, "armed"));
+  removeFile(autorunFile(sessionId, "armed"));
   printReport(sessionId, "⏸️  Autorun PAUSED (/autorun stop) — the watcher is still observing; /autorun to resume.");
 };
 
 const exitAutorun = (sessionId: string): void => {
-  remove(autorunFile(sessionId, "armed"));
+  removeFile(autorunFile(sessionId, "armed"));
   writeText(autorunFile(sessionId, "exit"), "");
   printReport(sessionId, "🛑 Autorun EXITED (/autorun exit) — the watcher is shutting down for this session.");
 };
@@ -123,7 +123,7 @@ const runAutorunControl = (): void => {
     console.error("usage: autorunControl.js {arm <n>|stop|exit}");
     process.exit(2);
   }
-  const sessionId = resolveSessionId();
+  const sessionId = findNewestSessionId();
   if (!sessionId) {
     console.error("autorun: no active session transcript found.");
     process.exit(1);

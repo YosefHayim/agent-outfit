@@ -10,7 +10,7 @@ import { uninstall, uninstallRequestSchema } from "./uninstall.js";
 const packageFiles = {
   "hooks/contextGuard/hooks/contextGuard.js": "export {};\n",
   "hooks/contextGuard/hooks/startAutorunWatcher.js": "export {};\n",
-  "hooks/contextGuard/hooks/autorunControl.js": "export {};\n",
+  "hooks/contextGuard/command/autorunControl.js": "export {};\n",
   "hooks/contextGuard/hooks/recordIdleCompactEvent.js": "export {};\n",
   "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
 };

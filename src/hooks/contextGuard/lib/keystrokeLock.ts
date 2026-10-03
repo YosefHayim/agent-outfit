@@ -4,7 +4,7 @@ import { closeSync, mkdirSync, openSync, statSync, writeSync } from "node:fs";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
-import { KEYSTROKE_LOCK, remove } from "./stateFiles.js";
+import { KEYSTROKE_LOCK, removeFile } from "./stateFiles.js";
 
 // Typing takes well under a second, so a lock this old belongs to a watcher that died mid-send.
 const STALE_AFTER_MS = 30_000;
@@ -40,7 +40,7 @@ const acquireKeystrokeLock = async (): Promise<boolean> => {
     const attempt = tryLock();
     if (attempt === "acquired") return true;
     if (attempt === "failed") return false;
-    if (lockIsStale()) remove(KEYSTROKE_LOCK);
+    if (lockIsStale()) removeFile(KEYSTROKE_LOCK);
     else await sleep(RETRY_EVERY_MS);
   }
   return false;
@@ -52,6 +52,6 @@ export const withKeystrokeLock = async (send: () => boolean): Promise<boolean> =
   try {
     return send();
   } finally {
-    remove(KEYSTROKE_LOCK);
+    removeFile(KEYSTROKE_LOCK);
   }
 };

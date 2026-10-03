@@ -70,10 +70,10 @@ const projectTranscriptFiles = (): ReadonlyArray<TranscriptFile> => {
 const newestTranscript = (transcriptFiles: ReadonlyArray<TranscriptFile>): TranscriptFile | undefined =>
   [...transcriptFiles].sort((left, right) => right.modifiedAt - left.modifiedAt).at(0);
 
-export const windowFor = (model: string): number =>
+export const contextWindowTokens = (model: string): number =>
   SMALL_WINDOW_MODELS.some((modelName) => model.includes(modelName)) ? 200_000 : 1_000_000;
 
-export const resolveTranscript = (location: TranscriptLocation): string | null => {
+export const findTranscript = (location: TranscriptLocation): string | null => {
   if (location.transcript_path && existsSync(location.transcript_path)) return location.transcript_path;
   if (!location.cwd || !location.session_id) return null;
   const projectSlug = location.cwd.replace(/[^A-Za-z0-9]/gu, "-");
@@ -91,8 +91,7 @@ export const readContextUsage = (transcriptPath: string): { occupancy: number | 
   return { occupancy: null, model: "" };
 };
 
-// The session of the most recently written transcript.
-export const resolveSessionId = (): string | null => {
+export const findNewestSessionId = (): string | null => {
   const transcriptFile = newestTranscript(projectTranscriptFiles());
   return transcriptFile === undefined ? null : transcriptFile.sessionId;
 };

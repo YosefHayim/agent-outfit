@@ -4,7 +4,7 @@ import { Either, Option, Schema } from "effect";
 const FEATURE_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 // e.g. "contextGuard", "imageToCode" — not "context-guard" or "Context_Guard"
 const SOURCE_DIRECTORY_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
-// e.g. "SKILL.md", "hooks/autorunWatcher.ts" — not "/abs/path" or "a/../b"
+// e.g. "SKILL.md", "watchers/autorunWatcher.ts" — not "/abs/path" or "a/../b"
 const FEATURE_RELATIVE_PATH_PATTERN = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+$/;
 // e.g. "hooks/duplicateCodeGuard.ts" — feature-relative hook entrypoint only
 const HOOK_SOURCE_ENTRYPOINT_PATTERN = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+\.ts$/;

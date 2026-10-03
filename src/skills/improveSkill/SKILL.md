@@ -15,7 +15,7 @@ Improve an **existing** skill using concrete feedback. The skill file is the pro
 - Keep frontmatter valid: `description` ≤ 1024 chars; flow skills start with `Use when `; body has Safety / Workflow / Verification when `type: flow`.
 - Do not invent user requirements. If feedback is vague, ask one focused clarifying question or propose 2–3 concrete patches and wait for pick.
 - Do not delete safety gates, remote-delete bans, or main-branch protections to “make it easier.”
-- After edits, run the repo’s skill validation (`src/catalog/skillPayload.test.ts` / catalog checks) when this is the agent-outfit monorepo.
+- After edits, run the repo’s skill validation (`src/catalog/featureCatalog.skillPayload.test.ts` / catalog checks) when this is the agent-outfit monorepo.
 
 ## Workflow
 

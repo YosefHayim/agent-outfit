@@ -330,13 +330,13 @@ const isBindingName = (node: ts.Identifier): boolean => {
   );
 };
 
-type NodeCheck = { node: ts.Node; file: string; sourceFile: ts.SourceFile; typeChecker: ts.TypeChecker };
+type CheckedNode = { node: ts.Node; file: string; sourceFile: ts.SourceFile; typeChecker: ts.TypeChecker };
 
 type NodeRule = {
   ruleId: string;
   kinds: ReadonlyArray<FileKind>;
   message: string | ((node: ts.Node) => string);
-  matches: (check: NodeCheck) => boolean;
+  matches: (check: CheckedNode) => boolean;
 };
 
 const NODE_RULES: ReadonlyArray<NodeRule> = [
@@ -593,7 +593,7 @@ const inspectFile = (request: {
 
 // Skill payload is not scanned with the hook rules, so hook code hiding there is caught by its path.
 const misplacedHookFiles = (repositoryRoot: string): ReadonlyArray<CodeStyleViolation> =>
-  globSync("src/skills/*/{hooks,lib,command}/**/*.{ts,tsx,mts,cts}", {
+  globSync("src/skills/*/{hooks,watchers,command,lib}/**/*.{ts,tsx,mts,cts}", {
     cwd: repositoryRoot,
     nodir: true,
     ignore: ["**/node_modules/**", "**/dist/**"],

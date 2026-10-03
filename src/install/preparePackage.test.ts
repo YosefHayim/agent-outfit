@@ -58,6 +58,8 @@ describe("preparePackage", () => {
         expect(readFileSync(contextGuard, "utf8")).toContain("../lib/hookConfig.js");
         expect(existsSync(path.join(contextGuardRoot, "lib/hookConfig.js"))).toBe(true);
         expect(existsSync(path.join(contextGuardRoot, "lib/hookOutput.js"))).toBe(true);
+        expect(existsSync(path.join(contextGuardRoot, "watchers/autorunWatcher.js"))).toBe(true);
+        expect(existsSync(path.join(contextGuardRoot, "command/autorunControl.js"))).toBe(true);
 
         // lib files that use the shared runtime import the copy beside them.
         expect(readFileSync(path.join(contextGuardRoot, "lib/stateFiles.js"), "utf8")).toContain("./hookConfig.js");

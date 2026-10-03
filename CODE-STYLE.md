@@ -78,10 +78,10 @@ Why: the public hyphenated ID is decoded catalog data; letting it dictate direct
 Executable feature hook code lives under `src/hooks/`, never under `src/skills/`.
 
 ```ts
-// ✓ src/hooks/contextGuard/hooks/autorunWatcher.ts — compiled and installed
+// ✓ src/hooks/contextGuard/watchers/autorunWatcher.ts — compiled and installed
 // ✓ src/skills/imageToCode/scripts/src/bin/pixelDiff.ts — copied verbatim into the skill
 
-// ✗ src/skills/contextGuard/hooks/autorunWatcher.ts — hook code hiding in the payload tree
+// ✗ src/skills/contextGuard/watchers/autorunWatcher.ts — hook code hiding in the payload tree
 ```
 
 Why: the two trees ship by different mechanisms and answer to different rules, so mixing them is what let application rules be applied to standalone scripts and let an entry hook importing its own `lib/` look like a broken hook import.

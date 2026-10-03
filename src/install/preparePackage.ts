@@ -62,12 +62,13 @@ const copyTree = (input: {
   });
 
 // The shared hook lib is copied into each feature's lib/, so tsc's src/hooks/lib specifier becomes a
-// sibling of lib/ for hooks and commands, and a same-folder import for lib files themselves.
+// sibling of lib/ for hooks, watchers, and commands, and a same-folder import for lib files themselves.
 // e.g. "../../lib/hookConfig.js" from src/hooks/<feature>/hooks/ or src/hooks/<feature>/lib/
 const SHARED_HOOK_LIB_IMPORT = "../../lib/";
 
 const RUNTIME_IMPORT_PARTS: ReadonlyArray<{ readonly part: string; readonly runtimeImport: string }> = [
   { part: "hooks", runtimeImport: "../lib/" },
+  { part: "watchers", runtimeImport: "../lib/" },
   { part: "command", runtimeImport: "../lib/" },
   { part: "lib", runtimeImport: "./" },
 ];
@@ -108,7 +109,7 @@ const copyHookFeature = (input: { packageRoot: string; preparedRoot: string; sou
       return;
     }
 
-    for (const part of ["hooks", "lib", "command"]) {
+    for (const part of ["hooks", "watchers", "lib", "command"]) {
       yield* copyTree({
         source: path.join(compiledFeatureRoot, part),
         destination: path.join(preparedFeatureRoot, part),

@@ -5,7 +5,7 @@ import { Effect } from "effect";
 
 import { managedConfigPath } from "./configFile.js";
 import { defaultConfig } from "./configSchema.js";
-import { readConfigAt } from "./configSettings.js";
+import { readConfigAt } from "./scopeConfig.js";
 
 const writeConfig = (request: { readonly root: string; readonly config: object }) =>
   Effect.gen(function* () {

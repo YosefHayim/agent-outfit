@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
 const watcherPath = fileURLToPath(new URL("./rehomeWatcher.ts", import.meta.url));
-const endedHookPath = fileURLToPath(new URL("./rehomeEndedSession.ts", import.meta.url));
+const endedHookPath = fileURLToPath(new URL("../hooks/rehomeEndedSession.ts", import.meta.url));
 const packageRoot = path.resolve(path.dirname(watcherPath), "../../../..");
 const sessionId = "5cc2fa97-8a4b-4379-b0f0-4141d18275da";
 const threadId = "01a0e4bf-1e83-7532-9119-d78525246a31";

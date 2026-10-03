@@ -72,7 +72,7 @@ export const receiptSchema = Schema.Struct({
   version: versionSchema,
   scope: scopeSchema,
   features: featureListSchema,
-  artifacts: ownedFileListSchema,
+  ownedFiles: ownedFileListSchema,
 });
 
 export type Receipt = Schema.Schema.Type<typeof receiptSchema>;

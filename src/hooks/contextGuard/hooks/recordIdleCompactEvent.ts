@@ -74,7 +74,7 @@ const startSession = (event: IdleCompactEvent): void => {
     sessionEnded: false,
     lastEventAtMs: event.occurredAtMs,
   });
-  const watcher = path.join(path.dirname(fileURLToPath(import.meta.url)), "idleCompactWatcher.js");
+  const watcher = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "watchers", "idleCompactWatcher.js");
   spawn("node", [watcher, stateFile], { detached: true, stdio: "ignore", env: process.env }).unref();
 };
 

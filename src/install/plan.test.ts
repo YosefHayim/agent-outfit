@@ -121,7 +121,7 @@ const desiredReceipt = {
   version: "0.12.0",
   scope: "project",
   features: ["context-guard", "autorun"],
-  artifacts: desiredFiles,
+  ownedFiles: desiredFiles,
 };
 
 const write = (file: object, bytes = desiredBytes) => ({
@@ -150,7 +150,7 @@ const withOwnership = <File extends { readonly ownership: object }>(file: File, 
   ownership: { ...file.ownership, ...ownership },
 });
 
-const publishPlan = (operations: ReadonlyArray<object>, artifacts: ReadonlyArray<object>) => ({
+const publishPlan = (operations: ReadonlyArray<object>, ownedFiles: ReadonlyArray<object>) => ({
   scope: "project",
   root: "/workspace",
   operations,
@@ -158,7 +158,7 @@ const publishPlan = (operations: ReadonlyArray<object>, artifacts: ReadonlyArray
   receipt: {
     _tag: "receiptPublish",
     target: receiptTarget,
-    receipt: { ...desiredReceipt, artifacts },
+    receipt: { ...desiredReceipt, ownedFiles },
     expectedCurrent: expectedMissing,
   },
 });
@@ -194,25 +194,25 @@ const installRequest = ({
   previous:
     previous === undefined
       ? { _tag: "missing" }
-      : { _tag: "receipt", receipt: { ...desiredReceipt, artifacts: previous } },
+      : { _tag: "receipt", receipt: { ...desiredReceipt, ownedFiles: previous } },
   restorations,
-  desired: { receipt: { ...desiredReceipt, artifacts: desired }, writes },
+  desired: { receipt: { ...desiredReceipt, ownedFiles: desired }, writes },
   receiptTarget,
   receiptExpectedCurrent: previous === undefined ? expectedMissing : expectedPresent,
 });
 
-const uninstallRequest = (artifacts: ReadonlyArray<object>, restorations: ReadonlyArray<object>) => ({
+const uninstallRequest = (ownedFiles: ReadonlyArray<object>, restorations: ReadonlyArray<object>) => ({
   root: "/workspace",
-  receipt: { ...desiredReceipt, artifacts },
+  receipt: { ...desiredReceipt, ownedFiles },
   restorations,
   receiptTarget,
   receiptExpectedCurrent: expectedPresent,
 });
 
-const publishedReceipt = (artifacts: ReadonlyArray<object>) => ({
+const publishedReceipt = (ownedFiles: ReadonlyArray<object>) => ({
   _tag: "receiptPublish",
   target: receiptTarget,
-  receipt: { ...desiredReceipt, artifacts },
+  receipt: { ...desiredReceipt, ownedFiles },
   expectedCurrent: expectedPresent,
 });
 
@@ -278,13 +278,13 @@ describe("checkPlan", () => {
     expect(plan.root).toBe("/workspace");
     expect(plan.operations.map((operation) => operation._tag)).toEqual(Array(8).fill("write"));
     expect(plan.receipt._tag).toBe("receiptPublish");
-    expect(new Set(plan.receipt.receipt.artifacts.map((file) => file.kind._tag))).toEqual(
+    expect(new Set(plan.receipt.receipt.ownedFiles.map((file) => file.kind._tag))).toEqual(
       new Set(["runtime", "skill", "rule", "instruction", "instructionLink", "settings", "managedConfig"]),
     );
-    expect(new Set(plan.receipt.receipt.artifacts.map((file) => file.ownership._tag))).toEqual(
+    expect(new Set(plan.receipt.receipt.ownedFiles.map((file) => file.ownership._tag))).toEqual(
       new Set(["wholeFile", "managedBlock", "jsonValues", "yamlSequenceValue"]),
     );
-    expect(new Set(plan.receipt.receipt.artifacts.map((file) => file.owner._tag))).toEqual(
+    expect(new Set(plan.receipt.receipt.ownedFiles.map((file) => file.owner._tag))).toEqual(
       new Set(["application", "agent"]),
     );
     expect(plan.receipt.target.kind).toEqual({ _tag: "receipt" });
@@ -420,7 +420,7 @@ describe("checkPlan", () => {
     const file = { ...runtimeFile, path: ".claude/agent-outfit/recovery.json/snapshot" };
     const checked = issues(checkPlan(publishPlan([write(file)], [file])));
 
-    expect(checked).toContain('["receipt"]["receipt"]["artifacts"][0]["path"]');
+    expect(checked).toContain('["receipt"]["receipt"]["ownedFiles"][0]["path"]');
     expect(checked).toContain("recovery.json");
   });
 
@@ -606,7 +606,7 @@ describe("planInstall", () => {
     expect(plan.receipt).toMatchObject({
       _tag: "receiptPublish",
       receipt: {
-        artifacts: [
+        ownedFiles: [
           {
             ownership: {
               createdContainers: ["/hooks", "/permissions"],
@@ -658,12 +658,12 @@ describe("planInstall", () => {
         ...jsonReferenceFile,
         ownership: { ...yamlReferenceFile.ownership, reference: "AGENT-OUTFIT.md" },
       },
-      issuePath: '["desired"]["receipt"]["artifacts"][0]["ownership"]["_tag"]',
+      issuePath: '["desired"]["receipt"]["ownedFiles"][0]["ownership"]["_tag"]',
     },
     {
       name: "the file kind or owner",
       desiredFile: { ...settingsFile, path: jsonReferenceFile.path },
-      issuePath: 'artifacts"][0]["kind"]',
+      issuePath: 'ownedFiles"][0]["kind"]',
     },
   ])("rejects changing $name at an already receipted path", ({ desiredFile, issuePath }) => {
     const checked = issues(planInstall(installRequest({ previous: [jsonReferenceFile], desired: [desiredFile] })));
