@@ -831,7 +831,7 @@ Why: one presentation owner is what makes non-TTY behavior, quiet modes, and str
 ### Tests prove public behavior
 [rule:test.behavior] · verify: judgment
 
-Tests are colocated, name explicit scenarios, exercise public behavior in real temporary workspaces, and mock only external systems.
+Tests are co-located, name explicit scenarios, exercise public behavior in real temporary workspaces, and mock only external systems.
 
 ```ts
 // ✓ scenario states the contract and uses the capability surface
@@ -942,7 +942,7 @@ A **feature** is agent-outfit's unit of extension: a catalog entry plus the file
 2. Choose exactly one authored tree: copied skill content under `src/skills/<sourceDirectory>/` or executable hook code under `src/hooks/<sourceDirectory>/`.
 3. Build the smallest capability by mirroring `src/skills/githubRepoAbout/` for copied content or the canonical `src/hooks/duplicateCodeGuard/` slice for hook code.
 4. Register the feature once in `src/catalog/featureCatalog.ts` with exact shipped paths; workflow skills declare the existing `type: flow` frontmatter instead of joining a second repeated list.
-5. Prove public behavior, fail-open behavior when applicable, catalog closure, and receipt-last ownership with colocated tests and real temporary workspaces.
+5. Prove public behavior, fail-open behavior when applicable, catalog closure, and receipt-last ownership with co-located tests and real temporary workspaces.
 6. Update only the owning docs, regenerate README explicitly, and run the feature's narrow checks plus the image-to-code harness when that skill changes.
 7. Run `pnpm verify`, `npm pack --dry-run`, then inspect README, the package file list, index, and worktree.
 

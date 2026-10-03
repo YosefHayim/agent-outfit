@@ -10,6 +10,8 @@ Entrypoint for coding agents and maintainers. Claude Code, Codex, Cursor, Kiro, 
 npx agent-outfit install image-to-code
 ```
 
+Voice lives in **voxkey** and free provider routing in **free-model-router**, each in its own repository. Do not add either back here.
+
 ## Source-of-truth map
 
 Read these before changing code. This file is a routing digest — open the linked SSOT for details.
@@ -36,11 +38,11 @@ Public feature and installed-skill IDs are decoded catalog data and can differ f
 | --- | --- |
 | `src/cli/` | Effect CLI definitions (one file per command, named after it) and `TerminalUI` presentation |
 | `src/catalog/` | Decoded feature and agent catalogs |
-| `src/config/` | Schema-owned managed configuration (`configSchema.ts`) and the list of every environment variable (`environmentVariables.ts`) |
+| `src/config/` | Schema-owned managed configuration (`configSchema.ts`), config.json bytes and install plan (`configFile.ts`), one scope's config read and save (`scopeConfig.ts`), host scan (`hostScan.ts`), and the list of every environment variable (`environmentVariables.ts`) |
 | `src/install/` | Install planning, package preparation, transactional apply, receipts, and agent formats |
-| `src/hooks/lib/` | Dependency-free code shared by every installed hook (`hookConfig`, `hookOutput`) |
+| `src/hooks/lib/` | Dependency-free code shared by every installed hook: `hookConfig` (config.json and install root), `hookOutput` (hook decisions on stdout), `processAlive` (is a pid running), `transcriptReader` (agent transcript lines) |
 | `src/skills/<sourceDirectory>/` | Authored skill payload copied verbatim into an installed skill directory (`SKILL.md`, `reference/`, `scripts/`, `templates/`) |
-| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code (`hooks/`, `watchers/`, `command/`, `lib/`) compiled and installed to `.claude/agent-outfit/hooks/` |
+| `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code compiled and installed to `.claude/agent-outfit/hooks/`: `hooks/` (registered agent hooks), `watchers/` (background processes a hook starts), `command/` (scripts the CLI or a skill runs), `lib/` |
 | `src/doctor/` | Structured installation health checks behind `agent-outfit doctor` |
 | `src/workflows/` | Copies the workflow templates into another repository (`agent-outfit workflow scaffold`) |
 | `src/scripts/` | Outer-ring tooling only: package build (`generateReadme`), style contract (`checkCodeStyle` + `reportCodeStyle`), rule-card format (`checkRuleCards` + `reportRuleCards`), never imported by product code |

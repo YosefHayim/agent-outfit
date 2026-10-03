@@ -41,13 +41,13 @@ npx agent-outfit install duplicate-code-guard
 npx agent-outfit install image-to-code
 ```
 
-Keep an existing install and refresh the copied payload:
+Keep an existing install and refresh its copied skills and hooks:
 
 ```bash
 agent-outfit update
 ```
 
-Remove only agent-outfit-owned hooks, payload files, and installed skills:
+Remove only the hooks, skill files, and settings entries the receipt owns:
 
 ```bash
 agent-outfit uninstall
@@ -84,6 +84,15 @@ Idle compact is off by default (`idle-compact-after off`). On macOS with Ghostty
 hooks for Claude Code, Codex, and Grok bind each session to its exact terminal.
 Override one launched agent without changing persistent config, for example
 `AGENT_OUTFIT_IDLE_COMPACT_AFTER=30s codex` or `AGENT_OUTFIT_IDLE_COMPACT_AFTER=off grok`.
+
+### Status lines
+
+Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each installs with its own script from a clone of this repository, outside the receipt (see [Claude Code](src/statuslines/claude/README.md) and [Codex](src/statuslines/codex/README.md)):
+
+```bash
+./src/statuslines/claude/install.sh
+./src/statuslines/codex/install.sh
+```
 
 ## Moving from the old package
 

@@ -32,6 +32,7 @@ cannot block the editor because its own execution failed.
 - Restore prior bytes during receipt-authorized uninstallation.
 - Warn and wind down long sessions before they exhaust context.
 - Detect structurally duplicated TypeScript while edits are being made and in CI.
+- Keep agents out of system temporary folders and move ended sessions into the repo they worked in.
 - Turn image references into code through a measured screenshot-difference loop.
 - Scaffold owned CI and publishing workflows into another repository.
 - Keep every supported agent format catalog-driven and evidence-backed.
@@ -39,6 +40,7 @@ cannot block the editor because its own execution failed.
 ## Non-goals
 
 - Hosting or discovering third-party extensions.
+- Voice and free provider routing: they live in voxkey and free-model-router.
 - Preserving old command forms by default before version 1.0.
 - Adding runtime package dependencies to installed TypeScript hooks.
 - Guessing unsupported agent lifecycle integrations.
@@ -48,7 +50,7 @@ cannot block the editor because its own execution failed.
 ## Direction
 
 The current product owns installation lifecycle, managed configuration, diagnostics,
-feature and agent catalogs, dependency-free hooks, copied skills,
+feature and agent catalogs, dependency-free hooks, copied skills, status-line presets,
 and CI/publishing workflow scaffolding. Near-term work strengthens verified agent
 adapters, makes the command surface predictable for both people and automation, and
 keeps the authored skills and hooks consistent through one enforceable code-style contract.
