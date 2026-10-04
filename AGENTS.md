@@ -67,7 +67,7 @@ Hard rules agents must hold every turn. Full prescription: [`CODE-STYLE.md`](COD
 - **Hooks** — installed hooks stay dependency-free plain Node (`node:*`, `src/hooks/lib/**`, own feature code only), **fail-open**. Application code imports hook code only through a feature's `command/` module.
 - **Ownership** — inspect → plan → validate → apply → write receipt last. A receipt is the only deletion authority. Catalog-closed shipping: the feature catalog owns exact shipped paths.
 - **Shape** — capability-owned paths; camelCase authored directories; PascalCase UI files; kebab-case public IDs/flags. One command path; `TerminalUI` owns presentation; non-TTY never prompts.
-- **Local tooling** — gitignored `src/scripts/dev/` for personal/one-off scripts. All maintained build/verify tools live under `src/scripts/`, and product code never imports them.
+- **Local tooling** — local `src/scripts/dev/` for personal/one-off scripts. All maintained build/verify tools live under `src/scripts/`, and product code never imports them.
 - **Git hooks** — pre-commit runs `pnpm verify`; hooks report drift and never rewrite or stage files.
 - **Branching** — never commit product work on `main`/default; use a topic branch (`feat/…`, `fix/…`, `refactor/…`, `chore/…`). Refinements to an existing feature still get their own branch.
 - **Remote branches** — do not delete remote branches unless the user explicitly asks; leave them for handoff/CI after push or PR.

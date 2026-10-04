@@ -1,23 +1,21 @@
-# Dependencies
+# dependencies
 node_modules/
 
-# Build output
+# build
 dist/
-*.tsbuildinfo
 
-# Caches, coverage and logs
-__pycache__/
-coverage/
-*.log
-
-# Local environment
+# env
 .env
 .env.*
-.DS_Store
-.worktrees/
+!.env.example
 
-# Agent folders made when agent-outfit installs into this repo.
-# AGENTS.md is the only instructions file we commit.
+# logs
+*.log
+
+# testing
+coverage/
+
+# local install output (agent-outfit install --scope project run in this repo)
 .agents/
 .claude/
 .cursor/
@@ -25,11 +23,14 @@ coverage/
 .grok/
 .kimi-code/
 .kiro/
-/CLAUDE.md
 /GEMINI.md
 
-# Local scratch scripts (see AGENTS.md)
-src/scripts/dev/
+# editor and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
 
-# Agent working notes (progress logs, reports)
-docs/agent/
+# local
+.worktrees/
