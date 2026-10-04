@@ -71,9 +71,9 @@ layer(NodeContext.layer)("uninstall", (it) => {
       };
       const installerCreatedFiles = [
         ".claude/agent-outfit/receipt.json",
-        ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js",
-        ".claude/agent-outfit/hooks/contextGuard/watchers/autorunWatcher.js",
-        ".claude/agent-outfit/hooks/contextGuard/watchers/idleCompactWatcher.js",
+        ...Object.keys(packageFiles)
+          .filter((packagePath) => packagePath.startsWith("hooks/"))
+          .map((packagePath) => `.claude/agent-outfit/${packagePath}`),
         ".claude/skills/autorun/SKILL.md",
         ".cursor/rules/autorun.mdc",
       ];
