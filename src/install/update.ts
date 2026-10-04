@@ -19,7 +19,7 @@ const updateFeatureChoiceSchema = Schema.Union(
     description: "Reuse the dependency-resolved features recorded by the current receipt.",
   }),
   Schema.TaggedStruct("refresh", { ids: selectedFeatureChoiceSchema.fields.ids }).annotations({
-    description: "Refresh installed features by ID while keeping the receipt's whole selection.",
+    description: "Require the named features to be installed, then refresh the receipt's whole selection.",
   }),
   selectedFeatureChoiceSchema,
 ).annotations({

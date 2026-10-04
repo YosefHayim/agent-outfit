@@ -1,4 +1,4 @@
-/** `agent-outfit update [feature-id...]` — refresh installed features and keep the receipt selection. */
+/** `agent-outfit update [feature-id...]` — refresh every installed feature and keep the receipt selection. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -21,7 +21,7 @@ export const showUpdate = (updateSummary: {
 export const updateCommand = Command.make(
   "update",
   {
-    featureIds: featureIdsArgument("Installed feature IDs to refresh; omitted refreshes every installed feature"),
+    featureIds: featureIdsArgument("Feature IDs that must already be installed; the whole installation is refreshed"),
     scope: scopeOption,
     format: formatOption,
   },
@@ -46,4 +46,4 @@ export const updateCommand = Command.make(
       yield* showUpdate(updateSummary);
       yield* TerminalUI.outro("Done.");
     }),
-).pipe(Command.withDescription("Refresh installed features and keep the receipt selection"));
+).pipe(Command.withDescription("Refresh every installed feature and keep the receipt selection"));

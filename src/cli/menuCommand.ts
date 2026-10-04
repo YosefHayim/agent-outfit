@@ -8,7 +8,9 @@ import { detectAgents } from "../catalog/agentCatalog.js";
 import { defaultFeatureIds, featureCatalog } from "../catalog/featureCatalog.js";
 import { destinationForScope, type HostScan, scanHost } from "../config/hostScan.js";
 import { install } from "../install/install.js";
+import { receiptPath } from "../install/installPaths.js";
 import { preparePackage } from "../install/preparePackage.js";
+import { readReceipt } from "../install/receipt.js";
 import { uninstall } from "../install/uninstall.js";
 import { update } from "../install/update.js";
 import { copyWorkflows } from "../workflows/copyWorkflows.js";
@@ -86,13 +88,16 @@ const runUpdate = Effect.gen(function* () {
     message: "Feature selection",
     choices: [
       { title: "Preserve installed set", value: "preserve", description: "refresh payload only" },
-      { title: "Choose features", value: "selected", description: "replace receipt selection" },
+      { title: "Choose features", value: "selected", description: "unticked installed features are removed" },
     ],
     initial: "preserve",
   });
+  const path = yield* Path.Path;
+  const receiptSnapshot = yield* readReceipt(path.join(destination.root, receiptPath));
+  const installedIds = receiptSnapshot._tag === "present" ? receiptSnapshot.receipt.features : defaultFeatureIds;
   const features = yield* mode === "preserve"
     ? Effect.succeed({ _tag: "preserve" as const })
-    : pickFeatures(defaultFeatureIds).pipe(Effect.map((ids) => ({ _tag: "selected" as const, ids })));
+    : pickFeatures(installedIds).pipe(Effect.map((ids) => ({ _tag: "selected" as const, ids })));
   yield* applyIfApproved({
     title: "Update plan",
     steps: [

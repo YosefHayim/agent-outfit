@@ -41,14 +41,14 @@ npx agent-outfit install duplicate-code-guard
 npx agent-outfit install image-to-code
 ```
 
-Keep an existing install and refresh its copied skills and hooks. Named IDs must already be installed; the rest of the install is kept:
+Keep an existing install and refresh its copied skills and hooks. Named IDs must already be installed; every installed feature is refreshed and none is removed:
 
 ```bash
 agent-outfit update
 agent-outfit update context-guard
 ```
 
-To drop some features, open `agent-outfit menu`, pick Update, then Choose features: the set you pick replaces the installed one.
+To drop some features, open `agent-outfit menu`, pick Update, then Choose features: it starts from the installed set, and the features you untick are removed.
 
 Remove only the hooks, skill files, and settings entries the receipt owns:
 
