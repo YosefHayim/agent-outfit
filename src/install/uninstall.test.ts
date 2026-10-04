@@ -12,6 +12,8 @@ const packageFiles = {
   "hooks/contextGuard/hooks/startAutorunWatcher.js": "export {};\n",
   "hooks/contextGuard/command/autorunControl.js": "export {};\n",
   "hooks/contextGuard/hooks/recordIdleCompactEvent.js": "export {};\n",
+  "hooks/contextGuard/watchers/autorunWatcher.js": "export {};\n",
+  "hooks/contextGuard/watchers/idleCompactWatcher.js": "export {};\n",
   "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
 };
 
@@ -67,20 +69,26 @@ layer(NodeContext.layer)("uninstall", (it) => {
         ".aider.conf.yml": "model: sonnet\n",
         ".continue/config.json": '{\r\n\t"models": []\r\n}\r\n',
       };
+      const installerCreatedFiles = [
+        ".claude/agent-outfit/receipt.json",
+        ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js",
+        ".claude/agent-outfit/hooks/contextGuard/watchers/autorunWatcher.js",
+        ".claude/agent-outfit/hooks/contextGuard/watchers/idleCompactWatcher.js",
+        ".claude/skills/autorun/SKILL.md",
+        ".cursor/rules/autorun.mdc",
+      ];
       yield* writeFiles(root, originals);
       yield* install(installRequest({ root, preparedRoot }));
+      for (const created of installerCreatedFiles) {
+        expect(yield* exists(created)).toBe(true);
+      }
 
       expect(yield* uninstall(uninstallRequest(root))).toEqual(uninstalled);
       for (const [relativePath, contents] of Object.entries(originals)) {
         expect(yield* readText(relativePath)).toBe(contents);
       }
-      for (const removed of [
-        ".claude/agent-outfit/receipt.json",
-        ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js",
-        ".claude/skills/autorun/SKILL.md",
-        ".cursor/rules/autorun.mdc",
-      ]) {
-        expect(yield* exists(removed)).toBe(false);
+      for (const created of installerCreatedFiles) {
+        expect(yield* exists(created)).toBe(false);
       }
     }),
   );
