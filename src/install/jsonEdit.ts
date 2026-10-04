@@ -1,11 +1,10 @@
-/** Byte-preserving edits to one JSON object property, so a user's settings keep their own formatting. */
+/** Byte-preserving edits to one JSON object property or array item, so a user's settings keep their own formatting. */
 
 import { Either, Schema } from "effect";
 import { findNodeAtLocation, type Node, parseTree } from "jsonc-parser";
 
 import { hashBytes } from "./fileBytes.js";
 import { InstallError } from "./installRequest.js";
-import type { PreviousJsonLexical } from "./ownership.js";
 
 const textEncoder = new TextEncoder();
 const encodeJson = Schema.encodeSync(Schema.parseJson());
@@ -13,18 +12,13 @@ const encodeJson = Schema.encodeSync(Schema.parseJson());
 // Receipts record owned JSON values by the hash of their compact encoding.
 export const hashJsonValue = (value: unknown): string => hashBytes(textEncoder.encode(encodeJson(value)));
 
-const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
-
-export const jsonPointerPath = (pointer: string): ReadonlyArray<string> =>
-  pointer.slice(1).split("/").map(decodeJsonPointerSegment);
-
 export const jsonPropertyName = (property: Node): string | undefined => {
   const key = property.children?.[0];
 
   return typeof key?.value === "string" ? key.value : undefined;
 };
 
-export const objectProperties = (node: Node): ReadonlyArray<Node> => node.children || [];
+const objectProperties = (node: Node): ReadonlyArray<Node> => node.children || [];
 
 const commaBetween = (input: { source: string; start: number; end: number }): number | undefined => {
   const offset = input.source.indexOf(",", input.start);
@@ -142,40 +136,87 @@ export const editJsonValue = (input: {
   );
 };
 
-const locateValue = (input: { source: string; path: ReadonlyArray<string> }): Either.Either<Node, InstallError> => {
-  const property = locateProperty(input)?.property;
-  if (property === undefined) {
-    return Either.left(
-      new InstallError({ issue: `settings.json property /${input.path.join("/")} could not be located.` }),
-    );
-  }
+const locateArray = (input: { source: string; path: ReadonlyArray<string> }): Either.Either<Node, InstallError> => {
+  const root = parseTree(input.source);
+  const array = root === undefined ? undefined : findNodeAtLocation(root, [...input.path]);
 
-  const value = property.children?.[1];
-
-  return value === undefined
-    ? Either.left(new InstallError({ issue: `settings.json property /${input.path.join("/")} has no value.` }))
-    : Either.right(value);
+  return array?.type === "array"
+    ? Either.right(array)
+    : Either.left(new InstallError({ issue: `settings.json path /${input.path.join("/")} is not an array.` }));
 };
 
-export const captureJsonValueLexical = (input: {
+// A new item copies the spacing in front of the last item, so removing it again restores the exact bytes.
+export const appendJsonArrayItem = (input: {
   source: string;
   path: ReadonlyArray<string>;
-}): Either.Either<PreviousJsonLexical, InstallError> =>
-  Either.map(locateValue(input), (value) => ({
-    _tag: "value",
-    source: input.source.slice(value.offset, value.offset + value.length),
-  }));
+  value: unknown;
+}): Either.Either<string, InstallError> => {
+  const located = locateArray(input);
 
-export const restoreJsonLexical = (input: {
+  return Either.flatMap(located, (array) => {
+    const items = array.children || [];
+    const last = items.at(-1);
+    const encodedItem = encodeJson(input.value);
+    if (last === undefined) {
+      const opening = array.offset + 1;
+      const edited = spliceSource({ source: input.source, start: opening, end: opening, text: encodedItem });
+
+      return Either.right(edited);
+    }
+
+    const beforeLast = items.at(-2);
+    const separatorComma =
+      beforeLast === undefined
+        ? array.offset
+        : commaBetween({ source: input.source, start: beforeLast.offset + beforeLast.length, end: last.offset });
+    if (separatorComma === undefined) {
+      return Either.left(separatorError);
+    }
+
+    const leadingWhitespace = input.source.slice(separatorComma + 1, last.offset);
+    const lastEnd = last.offset + last.length;
+    const edited = spliceSource({
+      source: input.source,
+      start: lastEnd,
+      end: lastEnd,
+      text: `,${leadingWhitespace}${encodedItem}`,
+    });
+
+    return Either.right(edited);
+  });
+};
+
+export const removeJsonArrayItem = (input: {
   source: string;
   path: ReadonlyArray<string>;
-  lexical: PreviousJsonLexical;
-}): Either.Either<string, InstallError> =>
-  Either.map(locateValue(input), (value) =>
-    spliceSource({
-      source: input.source,
-      start: value.offset,
-      end: value.offset + value.length,
-      text: input.lexical.source,
-    }),
-  );
+  index: number;
+}): Either.Either<string, InstallError> => {
+  const located = locateArray(input);
+
+  return Either.flatMap(located, (array) => {
+    const items = array.children || [];
+    const item = items[input.index];
+    if (item === undefined) {
+      return Either.left(
+        new InstallError({ issue: `settings.json array /${input.path.join("/")} has no item ${input.index}.` }),
+      );
+    }
+
+    const previous = items[input.index - 1];
+    const next = items[input.index + 1];
+    const itemEnd = item.offset + item.length;
+    const previousComma =
+      previous === undefined
+        ? undefined
+        : commaBetween({ source: input.source, start: previous.offset + previous.length, end: item.offset });
+    if (previous !== undefined && previousComma === undefined) {
+      return Either.left(separatorError);
+    }
+
+    const start = previousComma === undefined ? item.offset : previousComma;
+    const end = previous === undefined && next !== undefined ? next.offset : itemEnd;
+    const edited = spliceSource({ source: input.source, start, end });
+
+    return Either.right(edited);
+  });
+};

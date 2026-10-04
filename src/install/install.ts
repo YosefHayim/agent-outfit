@@ -343,6 +343,9 @@ export const install = (input: unknown) =>
     const request = yield* decodeStrictly(installRequestSchema)(input);
     const path = yield* Path.Path;
     const receiptSnapshot = yield* readReceipt(path.join(request.destination.root, receiptPath));
+    const installedIds = receiptSnapshot._tag === "present" ? receiptSnapshot.receipt.features : [];
+    const requestedIds = request.features._tag === "defaults" ? defaultFeatureIds : request.features.ids;
+    const features = { _tag: "selected", ids: [...installedIds, ...requestedIds] } as const;
 
-    return yield* syncInstall({ request, receiptSnapshot });
+    return yield* syncInstall({ request: { ...request, features }, receiptSnapshot });
   }).pipe(Effect.mapError(toInstallError));

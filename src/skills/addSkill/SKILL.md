@@ -15,7 +15,6 @@ Turn a description into a working, installed skill. The user describes it; you a
 - Work on a topic branch `feat/<id>`, never on main or the default branch. Stop if tracked files have uncommitted changes or the skill's directory already exists.
 - Never put secrets, tokens, account IDs, absolute home paths, or customer data in a skill.
 - Give the new skill its own gates: a skill that deploys, deletes, merges, sends messages, or spends money must ask first in its Safety section.
-- Never run `agent-outfit install <id>` alone over an existing install: explicit IDs replace the installed selection and remove every other feature. Use the install command in [REFERENCE.md → Install](REFERENCE.md#install).
 - Commit, push, and open a PR only when the user asks, through `finish-and-push`.
 
 ## Workflow

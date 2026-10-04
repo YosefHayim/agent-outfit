@@ -57,7 +57,7 @@ const runInstall = Effect.gen(function* () {
   yield* applyIfApproved({
     title: "Install plan",
     steps: [
-      { label: "Action", detail: "install features + hooks" },
+      { label: "Action", detail: "add features + hooks; installed features are kept" },
       { label: "Scope", detail: scope },
       { label: "Destination", detail: destination.root },
       { label: "Features", detail: featureList(features) },

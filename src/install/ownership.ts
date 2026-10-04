@@ -158,8 +158,6 @@ const previousJsonLexicalSchema = Schema.TaggedStruct("value", {
   description: "Exact lexical evidence needed to restore one settings value without reformatting user bytes.",
 });
 
-export type PreviousJsonLexical = Schema.Schema.Type<typeof previousJsonLexicalSchema>;
-
 export const previousJsonValueSchema = Schema.Union(
   Schema.TaggedStruct("missing", {}),
   Schema.TaggedStruct("value", {
@@ -233,9 +231,9 @@ const nestedOrEqual = (left: string, right: string): boolean =>
 export const pathsConflict = (left: string, right: string): boolean =>
   nestedOrEqual(left.toLowerCase(), right.toLowerCase());
 
-const pointerConflictIssues = (values: ReadonlyArray<OwnedJsonValue>) =>
-  values.flatMap((value, index) =>
-    values.slice(index + 1).flatMap((candidate, offset) =>
+const pointerConflictIssues = (owned: ReadonlyArray<{ readonly pointer: string }>) =>
+  owned.flatMap((value, index) =>
+    owned.slice(index + 1).flatMap((candidate, offset) =>
       nestedOrEqual(value.pointer, candidate.pointer)
         ? [
             {
@@ -246,6 +244,27 @@ const pointerConflictIssues = (values: ReadonlyArray<OwnedJsonValue>) =>
         : [],
     ),
   );
+
+const createdContainerIssues = (ownership: {
+  readonly createdContainers: ReadonlyArray<string>;
+  readonly pointers: ReadonlyArray<string>;
+}) => [
+  ...ownership.createdContainers.flatMap((container, index) =>
+    ownership.createdContainers.indexOf(container) === index
+      ? []
+      : [{ path: ["createdContainers", index], message: `Created JSON container ${container} must be unique.` }],
+  ),
+  ...ownership.createdContainers.flatMap((container, index) =>
+    ownership.pointers.some((pointer) => pointer.startsWith(`${container}/`))
+      ? []
+      : [
+          {
+            path: ["createdContainers", index],
+            message: `Created JSON container ${container} must be a proper ancestor of an owned value.`,
+          },
+        ],
+  ),
+];
 
 const ownedJsonValuesSchema = Schema.Array(ownedJsonValueSchema).pipe(
   Schema.minItems(1, {
@@ -263,26 +282,63 @@ export const jsonValuesOwnershipSchema = Schema.TaggedStruct("jsonValues", {
   }),
   values: ownedJsonValuesSchema,
 }).pipe(
-  Schema.filter((ownership) => [
-    ...ownership.createdContainers.flatMap((container, index) =>
-      ownership.createdContainers.indexOf(container) === index
-        ? []
-        : [{ path: ["createdContainers", index], message: `Created JSON container ${container} must be unique.` }],
-    ),
-    ...ownership.createdContainers.flatMap((container, index) =>
-      ownership.values.some((value) => value.pointer.startsWith(`${container}/`))
-        ? []
-        : [
-            {
-              path: ["createdContainers", index],
-              message: `Created JSON container ${container} must be a proper ancestor of an owned value.`,
-            },
-          ],
-    ),
-  ]),
+  Schema.filter((ownership) =>
+    createdContainerIssues({
+      createdContainers: ownership.createdContainers,
+      pointers: ownership.values.map((value) => value.pointer),
+    }),
+  ),
 );
 
 export type JsonValuesOwnership = Schema.Schema.Type<typeof jsonValuesOwnershipSchema>;
+
+// e.g. "/hooks/Stop" — one hook event array, never a nested member such as "/hooks/Stop/0"
+const HOOK_EVENT_POINTER_PATTERN = /^\/hooks\/(?:[^~/]|~[01])+$/;
+
+const ownedHookEventSchema = Schema.Struct({
+  pointer: jsonPointerSchema.pipe(
+    Schema.pattern(HOOK_EVENT_POINTER_PATTERN, {
+      message: () => "Hook event pointers must name one /hooks/<event> array.",
+    }),
+  ),
+  previouslyPresent: Schema.Boolean.annotations({
+    description: "Whether the event array existed before agent-outfit first added an entry to it.",
+  }),
+  entries: Schema.Array(sha256Schema).pipe(
+    Schema.minItems(1, {
+      message: () => "Hook event ownership must record at least one entry.",
+    }),
+    Schema.annotations({
+      description: "Hash of each agent-outfit hook entry in the event array; other entries belong to the user.",
+    }),
+  ),
+});
+
+export type OwnedHookEvent = Schema.Schema.Type<typeof ownedHookEventSchema>;
+
+export const hookEntriesOwnershipSchema = Schema.TaggedStruct("hookEntries", {
+  filePreviouslyPresent: Schema.Boolean.annotations({
+    description: "Whether the host file existed before this receipt entry first managed it.",
+  }),
+  createdContainers: Schema.Array(jsonPointerSchema).annotations({
+    description: "Exact JSON object pointers created to reach owned events and removable only when empty.",
+  }),
+  events: Schema.Array(ownedHookEventSchema).pipe(
+    Schema.minItems(1, {
+      message: () => "Hook entry ownership must record at least one event.",
+    }),
+    Schema.filter(pointerConflictIssues),
+  ),
+}).pipe(
+  Schema.filter((ownership) =>
+    createdContainerIssues({
+      createdContainers: ownership.createdContainers,
+      pointers: ownership.events.map((event) => event.pointer),
+    }),
+  ),
+);
+
+export type HookEntriesOwnership = Schema.Schema.Type<typeof hookEntriesOwnershipSchema>;
 
 export const yamlSequenceValueOwnershipSchema = Schema.TaggedStruct("yamlSequenceValue", {
   filePreviouslyPresent: Schema.Boolean.annotations({
@@ -320,6 +376,7 @@ const ownershipSchema = Schema.Union(
   wholeFileOwnershipSchema,
   managedBlockOwnershipSchema,
   jsonValuesOwnershipSchema,
+  hookEntriesOwnershipSchema,
   yamlSequenceValueOwnershipSchema,
 );
 
@@ -353,7 +410,7 @@ const ownershipMatchesKind = (kind: FileKind, ownership: Ownership): boolean => 
     case "instructionLink":
       return ownership._tag === "jsonValues" || ownership._tag === "yamlSequenceValue";
     case "settings":
-      return ownership._tag === "jsonValues";
+      return ownership._tag === "hookEntries" || ownership._tag === "jsonValues";
   }
 };
 

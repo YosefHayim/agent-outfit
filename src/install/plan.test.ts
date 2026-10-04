@@ -97,6 +97,18 @@ const settingsFile = {
   },
 };
 
+const codexHooksFile = {
+  path: ".codex/hooks.json",
+  kind: { _tag: "settings" },
+  owner: applicationOwner,
+  ownership: {
+    _tag: "hookEntries",
+    filePreviouslyPresent: true,
+    createdContainers: [],
+    events: [{ pointer: "/hooks/Stop", previouslyPresent: true, entries: [oldHash] }],
+  },
+};
+
 const managedConfigFile = {
   path: ".claude/agent-outfit/config.json",
   kind: { _tag: "managedConfig" },
@@ -112,6 +124,7 @@ const desiredFiles = [
   jsonReferenceFile,
   yamlReferenceFile,
   settingsFile,
+  codexHooksFile,
   managedConfigFile,
 ];
 
@@ -276,13 +289,13 @@ describe("checkPlan", () => {
 
     expect(plan.scope).toBe("project");
     expect(plan.root).toBe("/workspace");
-    expect(plan.operations.map((operation) => operation._tag)).toEqual(Array(8).fill("write"));
+    expect(plan.operations.map((operation) => operation._tag)).toEqual(Array(9).fill("write"));
     expect(plan.receipt._tag).toBe("receiptPublish");
     expect(new Set(plan.receipt.receipt.ownedFiles.map((file) => file.kind._tag))).toEqual(
       new Set(["runtime", "skill", "rule", "instruction", "instructionLink", "settings", "managedConfig"]),
     );
     expect(new Set(plan.receipt.receipt.ownedFiles.map((file) => file.ownership._tag))).toEqual(
-      new Set(["wholeFile", "managedBlock", "jsonValues", "yamlSequenceValue"]),
+      new Set(["wholeFile", "managedBlock", "jsonValues", "hookEntries", "yamlSequenceValue"]),
     );
     expect(new Set(plan.receipt.receipt.ownedFiles.map((file) => file.owner._tag))).toEqual(
       new Set(["application", "agent"]),
@@ -627,6 +640,51 @@ describe("planInstall", () => {
     expect(Either.isLeft(planInstall(installRequest({ previous: [previousFile], desired: [settingsFile] })))).toBe(
       true,
     );
+  });
+
+  it("migrates a whole-array settings receipt to hook entry ownership with its first-install history", () => {
+    const previousFile = withOwnership(settingsFile, {
+      createdContainers: [],
+      values: [
+        {
+          pointer: "/hooks/Stop",
+          installed: { _tag: "value", hash: oldHash },
+          previous: { _tag: "value", value: [], lexical: { _tag: "value", source: "[]" } },
+        },
+      ],
+    });
+    const desiredFile = {
+      ...settingsFile,
+      ownership: {
+        _tag: "hookEntries",
+        filePreviouslyPresent: false,
+        createdContainers: [],
+        events: [{ pointer: "/hooks/Stop", previouslyPresent: false, entries: [newHash] }],
+      },
+    };
+    const expectedFile = withOwnership(desiredFile, {
+      filePreviouslyPresent: true,
+      events: [{ pointer: "/hooks/Stop", previouslyPresent: true, entries: [newHash] }],
+    });
+    const plan = unwrap(planInstall(installRequest({ previous: [previousFile], desired: [desiredFile] })));
+
+    expect(plan.operations).toEqual([write(expectedFile)]);
+    expect(plan.receipt).toEqual(publishedReceipt([expectedFile]));
+  });
+
+  it("rejects turning hook entry ownership back into whole-array settings values", () => {
+    const previousFile = { ...settingsFile, ownership: codexHooksFile.ownership };
+
+    expect(issues(planInstall(installRequest({ previous: [previousFile], desired: [settingsFile] })))).toContain(
+      "Cannot change ownership from hookEntries to jsonValues",
+    );
+  });
+
+  it("keeps an unchanged hook entry file as a precondition instead of rewriting it", () => {
+    const plan = unwrap(planInstall(installRequest({ previous: [codexHooksFile], desired: [codexHooksFile] })));
+
+    expect(plan.operations).toEqual([]);
+    expect(plan.preconditions).toEqual([{ path: codexHooksFile.path, expectedCurrent: expectedMissing }]);
   });
 
   it("preserves retained managed-block and YAML restoration history", () => {

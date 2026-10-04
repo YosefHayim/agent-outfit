@@ -5,6 +5,7 @@ import { Effect, Schema } from "effect";
 import {
   fileKindSchema,
   fileOwnerSchema,
+  hookEntriesOwnershipSchema,
   jsonPointerSchema,
   jsonValuesOwnershipSchema,
   managedBlockOwnershipSchema,
@@ -72,6 +73,16 @@ const settingsJsonValuesOwnership = jsonValues([
   },
 ]);
 
+const hookEntries = (
+  events: ReadonlyArray<{ pointer: string; entries: ReadonlyArray<string> }>,
+  createdContainers: ReadonlyArray<string> = [],
+) => ({
+  _tag: "hookEntries",
+  filePreviouslyPresent: true,
+  createdContainers,
+  events: events.map((event) => ({ ...event, previouslyPresent: false })),
+});
+
 const yamlSequenceOwnership = {
   _tag: "yamlSequenceValue",
   filePreviouslyPresent: true,
@@ -126,6 +137,7 @@ const decodePreviousFile = strictDecoder(previousFileValueSchema);
 const decodePreviousJson = strictDecoder(previousJsonValueSchema);
 const decodeJsonValues = strictDecoder(jsonValuesOwnershipSchema);
 const decodeYamlSequenceValue = strictDecoder(yamlSequenceValueOwnershipSchema);
+const decodeHookEntries = strictDecoder(hookEntriesOwnershipSchema);
 const encodeReceiptJson = Schema.encodeSync(receiptJsonSchema);
 
 const completeReceipt = decodeReceipt(completeReceiptInput);
@@ -364,6 +376,39 @@ describe("receiptSchema", () => {
     expect(() =>
       decodeJsonValues(jsonValues([ownedValue("/hooks/Stop", { _tag: "value", value: [] })], createdContainers)),
     ).toThrow(/container|ancestor|unique/i);
+  });
+
+  it("records the hash of each owned hook entry per event with exact created containers", () => {
+    const ownership = decodeHookEntries(
+      hookEntries([{ pointer: "/hooks/Stop", entries: [installedValueHash, installedValueHash] }], ["/hooks"]),
+    );
+
+    expect(ownership.createdContainers).toEqual(["/hooks"]);
+    expect(ownership.events).toEqual([
+      { pointer: "/hooks/Stop", previouslyPresent: false, entries: [installedValueHash, installedValueHash] },
+    ]);
+  });
+
+  it.each([
+    { name: "nested hook entry pointer", events: [{ pointer: "/hooks/Stop/0", entries: [installedValueHash] }] },
+    { name: "non-hook pointer", events: [{ pointer: "/permissions", entries: [installedValueHash] }] },
+    { name: "event without entries", events: [{ pointer: "/hooks/Stop", entries: [] }] },
+    { name: "missing events", events: [] },
+    {
+      name: "duplicate events",
+      events: [
+        { pointer: "/hooks/Stop", entries: [installedValueHash] },
+        { pointer: "/hooks/Stop", entries: [installedHash] },
+      ],
+    },
+  ])("rejects hook entry ownership with a $name", ({ events }) => {
+    expect(() => decodeHookEntries(hookEntries(events))).toThrow();
+  });
+
+  it("rejects a hook entry created container that holds no owned event", () => {
+    expect(() =>
+      decodeHookEntries(hookEntries([{ pointer: "/hooks/Stop", entries: [installedValueHash] }], ["/permissions"])),
+    ).toThrow(/container|ancestor/i);
   });
 
   it("allows missing owned members when the host file previously existed", () => {

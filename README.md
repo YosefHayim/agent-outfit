@@ -33,7 +33,7 @@ npx agent-outfit
 npx agent-outfit menu
 ```
 
-Install a specific skill or hook set:
+Add a specific skill or hook set. `install` only adds: features that are already installed stay installed:
 
 ```bash
 npx agent-outfit install write-readme update-agent-docs
@@ -41,11 +41,14 @@ npx agent-outfit install duplicate-code-guard
 npx agent-outfit install image-to-code
 ```
 
-Keep an existing install and refresh its copied skills and hooks:
+Keep an existing install and refresh its copied skills and hooks. Named IDs must already be installed; the rest of the install is kept:
 
 ```bash
 agent-outfit update
+agent-outfit update context-guard
 ```
+
+To drop some features, open `agent-outfit menu`, pick Update, then Choose features: the set you pick replaces the installed one.
 
 Remove only the hooks, skill files, and settings entries the receipt owns:
 

@@ -127,6 +127,8 @@ const ownershipAllowsRemoval = (ownership: Ownership): boolean => {
       return !ownership.filePreviouslyPresent;
     case "jsonValues":
       return !ownership.filePreviouslyPresent && ownership.values.every((value) => value.previous._tag === "missing");
+    case "hookEntries":
+      return !ownership.filePreviouslyPresent && ownership.events.every((event) => !event.previouslyPresent);
     case "yamlSequenceValue":
       return !ownership.filePreviouslyPresent && !ownership.previouslyPresent;
   }

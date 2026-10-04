@@ -18,9 +18,12 @@ const updateFeatureChoiceSchema = Schema.Union(
   Schema.TaggedStruct("preserve", {}).annotations({
     description: "Reuse the dependency-resolved features recorded by the current receipt.",
   }),
+  Schema.TaggedStruct("refresh", { ids: selectedFeatureChoiceSchema.fields.ids }).annotations({
+    description: "Refresh installed features by ID while keeping the receipt's whole selection.",
+  }),
   selectedFeatureChoiceSchema,
 ).annotations({
-  description: "Preserved or explicit feature selection for an existing installation.",
+  description: "Preserved, refreshed, or replacement feature selection for an existing installation.",
 });
 
 const updateRequestSchema = Schema.extend(
@@ -77,8 +80,17 @@ export const update = (input: unknown) =>
       return yield* new UpdateError({ issue: "No ownership receipt exists at the requested scope." });
     }
 
-    // A preserved selection reuses the receipt's features only; agents always come from the request.
-    const featureIds = request.features._tag === "preserve" ? receiptSnapshot.receipt.features : request.features.ids;
+    const installedIds = receiptSnapshot.receipt.features;
+    const missingId =
+      request.features._tag === "refresh" ? request.features.ids.find((id) => !installedIds.includes(id)) : undefined;
+    if (missingId !== undefined) {
+      return yield* new UpdateError({
+        issue: `Feature ${missingId} is not installed in this scope; use install to add it.`,
+      });
+    }
+
+    // Preserved and refreshed selections reuse the receipt's features; agents always come from the request.
+    const featureIds = request.features._tag === "selected" ? request.features.ids : installedIds;
     const installRequest: InstallRequest = { ...request, features: { _tag: "selected", ids: featureIds } };
     const installSummary = yield* syncInstall({ request: installRequest, receiptSnapshot });
     const updateSummary: UpdateSummary = {

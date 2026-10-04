@@ -85,6 +85,38 @@ layer(NodeContext.layer)("update", (it) => {
     }),
   );
 
+  it.scoped("refreshes named installed features and keeps the rest of the receipt selection", () =>
+    Effect.gen(function* () {
+      const { root, preparedRoot, readText, exists } = yield* workspace;
+      const baseRequest = request({ root, preparedRoot, features: ["autorun"] });
+      yield* install({ ...baseRequest, configuration: selectedDefaults });
+
+      const updateSummary = yield* update({ ...baseRequest, features: { _tag: "refresh", ids: ["context-guard"] } });
+
+      expect(updateSummary.features).toEqual(["context-guard", "autorun"]);
+      expect(JSON.parse(yield* readText(".claude/agent-outfit/receipt.json")).features).toEqual([
+        "context-guard",
+        "autorun",
+      ]);
+      expect(yield* exists(".claude/skills/autorun/SKILL.md")).toBe(true);
+    }),
+  );
+
+  it.scoped("refuses to refresh a feature that is not installed and changes nothing", () =>
+    Effect.gen(function* () {
+      const { root, preparedRoot, readText, exists } = yield* workspace;
+      const baseRequest = request({ root, preparedRoot, features: ["context-guard"] });
+      yield* install({ ...baseRequest, configuration: selectedDefaults });
+      const originalReceipt = yield* readText(".claude/agent-outfit/receipt.json");
+
+      const error = yield* Effect.flip(update({ ...baseRequest, features: { _tag: "refresh", ids: ["autorun"] } }));
+
+      expect(error.message).toContain("Feature autorun is not installed in this scope; use install to add it.");
+      expect(yield* readText(".claude/agent-outfit/receipt.json")).toBe(originalReceipt);
+      expect(yield* exists(".claude/skills/autorun/SKILL.md")).toBe(false);
+    }),
+  );
+
   it.scoped("refuses an update after bytes inside a receipted instruction block change", () =>
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText } = yield* workspace;
