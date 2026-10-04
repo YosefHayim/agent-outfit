@@ -122,7 +122,7 @@ no Node host · Python → real data/ML (that's the `ib-bot` project).
 - **structured data** — data in a defined shape (objects, lists), not free-form text.
   `{ name: "outfit", features: [ "a", "b" ] }   // vs "outfit,a,b"`
 - **executable / binary** — a single file the computer runs directly, no extra tools.
-  `$ ./outfit install`
+  `$ ./agent-outfit install`
 - **Node (Node.js)** — the program that runs JavaScript outside a browser (laptop or server).
   [official: https://nodejs.org] `$ node app.js`
 - **JS engine** — the part inside Node (or a browser) that reads and executes JavaScript.
@@ -142,7 +142,7 @@ no Node host · Python → real data/ML (that's the `ib-bot` project).
   JS/TS run on Node (usually already there).
   `print("a")   # runs now` / `print(1/0)   # error only surfaces HERE, at runtime`
 - **compiles to one binary (Go)** — Go turns source into a single self-contained executable that
-  runs with no runtime installed. `$ go build -o outfit && ./outfit`
+  runs with no runtime installed. `$ go build -o agent-outfit && ./agent-outfit`
 - **pip** — Python's package installer (npm, but for Python). `$ pip install requests`
 - **brew (Homebrew)** — the common macOS installer for programs. `$ brew install python`
 - **hook** — "user-defined shell commands … that execute automatically at specific points in Claude

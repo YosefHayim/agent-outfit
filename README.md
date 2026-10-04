@@ -108,7 +108,14 @@ agent-outfit keeps none of the old names: the CLI, the install folder, the recei
    ```
 
 3. Rename the environment variables you set to the `AGENT_OUTFIT_` prefix listed under [Environment variables](#environment-variables). Old names are ignored without an error.
-4. Delete the old package's leftover state folder under `~/.claude/` by hand. The new state lives under `~/.claude/agent-outfit/state/`.
+4. Delete what is left of the old package's state by hand; agent-outfit never reads it. Every published release kept it in these paths in your home folder, whatever the install scope:
+
+   ```bash
+   rm -rf ~/.claude/.ctx-loop-state ~/.claude/.ctx-guard-state
+   rm -f ~/.claude/.ctx-guard-off
+   ```
+
+   The new state lives under `~/.claude/agent-outfit/state/`, so the context-guard off switch is now `~/.claude/agent-outfit/state/context-guard-off`.
 
 ## What it installs
 
