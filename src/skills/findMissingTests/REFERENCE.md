@@ -1,14 +1,13 @@
 # find-missing-tests — reference
 
-## Artifact paths
+## Run report
 
-| File | Path |
+| Section | Where |
 |------|------|
-| Features | `docs/agent/find-missing-tests/<run-id>/FEATURES.md` |
-| Report | `docs/agent/find-missing-tests/<run-id>/REPORT.md` |
-| Active pointer | `docs/agent/find-missing-tests/CURRENT` |
+| Features | `## Features` in `$RUN_DIR/report.md` |
+| Report | `## Report` in `$RUN_DIR/report.md` |
 
-Mint `RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)` for new runs; resume via `CURRENT`. Never leave campaign MD at repo root. See [references/agent-artifacts.md](references/agent-artifacts.md).
+`RUN_DIR` is `${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/find-missing-tests/<YYYY-MM-DD-HHMM>/`, outside the repo. Start a new folder for each run (snippet in [SKILL.md](SKILL.md)); resume from the path the user gives or the newest folder. Never leave run records in the repo. See [references/agent-artifacts.md](references/agent-artifacts.md).
 
 ## Headless policy
 

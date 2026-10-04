@@ -38,7 +38,7 @@ Each draft step is **concrete and project-specific**: real file paths, real regi
 
 ## Step C — Grill the path step-by-step
 
-Present the numbered draft and grill it as **keep / adjust / reorder / cut** in **one** `AskUserQuestion` (one question per step) — the same react-to-a-concrete-artifact discipline as the pick-the-code gallery, not a blank prompt. Fold the answers back into the ordered list. When a step encodes a real trade-off with genuine alternatives (e.g. "register in a central manifest" vs "convention-based auto-discovery"), that's ADR-worthy — offer one.
+Present the numbered draft and grill it as **keep / adjust / reorder / cut** in **one** `AskUserQuestion` (one question per step) — the same react-to-a-concrete-artifact discipline as the pick-the-code gallery, not a blank prompt. Fold the answers back into the ordered list. When a step encodes a real trade-off with genuine alternatives (e.g. "register in a central manifest" vs "convention-based auto-discovery"), record it in the PR description.
 
 End the path with a short **definition of done** checklist — the last gate before a unit is "in". Derive it from the picks; keep it to what's actually load-bearing for THIS repo. Typical entries (grill each in/out, don't paste them all):
 
@@ -72,4 +72,4 @@ And to the **Step 7 write-list**:
 
 - `CODE-STYLE.md` gains a first-class **`## Golden path — adding a {unit}`** (numbered steps + done-checklist + a cross-link to the `## Canonical example`). The pre-existing `## Recipes` **stays** for secondary how-tos (add-a-CLI-command, etc.) — the golden path is the one paved road; recipes are the side-tasks.
 - The `AGENTS.md` `## Conventions` digest gains a **tight** mirror — one line per golden-path step + the done-checklist — since "how to add a {unit} here" is exactly what an agent needs before touching code. Full prose + ✓/✗ examples stay in `CODE-STYLE.md`.
-- The **lint config** gains the rules from layer 1; any **ADR** offered in Step C.
+- The **lint config** gains the rules from layer 1; any decision from Step C goes in the **PR description**.

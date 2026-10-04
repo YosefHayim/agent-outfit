@@ -20,10 +20,9 @@ Same as `find-missing-tests`: default **headless**. Only `headed` / `visible` / 
 Typical MYPR-style handoff:
 
 ```text
+state dir has:
+  ${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/find-missing-tests/<newest>/report.md   # ## Features + ## Report
 repo has:
-  docs/agent/find-missing-tests/CURRENT    # run-id pointer
-  docs/agent/find-missing-tests/<run-id>/REPORT.md
-  docs/agent/find-missing-tests/<run-id>/FEATURES.md
   branch test/find-missing-tests-p0-units  (optional mono fill)
 ```
 
@@ -57,7 +56,7 @@ Before claiming e2e for a wave, try once to bring up **documented** local stack 
 3. Start web or boot sim per scripts  
 4. Run headless e2e  
 
-If still blocked → skip with exact reason in `$AGENT_DOCS/SHIP.md` and each PR. Do not hit production.
+If still blocked → skip with exact reason in the `## Ship` section of `$REPORT` and each PR. Do not hit production.
 
 ## Merge order
 

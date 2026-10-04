@@ -77,7 +77,7 @@ Skip any question the inspection already answered. Order:
 3. **Builder path** — How does a builder extend, integrate, or contribute? or N/A
 4. **Agent path** — Are agents editing this repo? If yes, `AGENTS.md` is in scope.
 5. **Scope** — What is intentionally out of scope? No fake roadmap or aspirational features.
-6. **Deeper docs** — Where do they live? `docs/`, website, internal wiki, none
+6. **Deeper docs** — Where do they live? README sections, per-package READMEs, website, internal wiki, none
 7. **Artifacts** — Confirm the final list of files to write.
 
 ## Step 4 — Build the README map
@@ -111,6 +111,6 @@ When a usable file already exists, **edit, don't replace**. Preserve the user's 
 - **Don't invent.** No fake production status, no aspirational features, no "revolutionary / seamless / robust / blazing-fast" filler.
 - **Don't bloat.** A 200-line demo gets a 30-line README. No feature tables for a toy project.
 - **Don't bury agent rules.** Agent guidance goes in `AGENTS.md`, not deep inside `README.md`.
-- **Don't turn README into architecture docs.** Link out to `docs/` or `ARCHITECTURE.md` if depth is needed.
+- **Don't turn README into architecture docs.** If depth is needed, use a short later README section, a per-package README, or an existing `ARCHITECTURE.md`. Never create a `docs/` folder.
 - **Don't guess shape-changing facts.** If you can't tell whether the repo is public, internal, library, or app, ask one question.
 - **Don't cite unofficial docs when official docs exist.** First README mention of an external tool, language, framework, runtime, package manager, agent, or platform gets an official hyperlink.

@@ -13,7 +13,7 @@ The landing page for humans and builders. Answers six questions, in order:
 3. **What can I do in 5 minutes?** — copy-pasteable quick start that produces a visible result.
 4. **How do I run / use / build with it?** — usage, scripts, common workflows.
 5. **What is intentionally out of scope?** — short, honest. Prevents readers from expecting features that don't exist.
-6. **Where do deeper docs live?** — links to `docs/`, `AGENTS.md`, `ARCHITECTURE.md`, website, official tool docs, etc.
+6. **Where do deeper docs live?** — links to per-package READMEs, `AGENTS.md`, `ARCHITECTURE.md`, website, official tool docs, etc. Never create a `docs/` folder.
 
 Before writing, choose the dominant README style from [readme-styles.md](readme-styles.md). The six questions stay stable; the section order and emphasis change by project type.
 
@@ -39,7 +39,7 @@ Before writing, choose the dominant README style from [readme-styles.md](readme-
 ## Docs
 
 - [AGENTS.md](AGENTS.md) — for coding agents
-- [docs/](docs/) — deeper guides
+- [<package>/README.md](<package>/README.md) — per-package detail, when the repo has packages
 - <official external links where useful>
 ```
 

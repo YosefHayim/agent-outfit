@@ -72,7 +72,7 @@ Run the full catalog: **[STYLE-CATALOG.md](_shared/STYLE-CATALOG.md)** — all l
 
 Key behaviors:
 - **Each pick → a rule card.** Chosen variant = the `// ✓` case; rejected variant = the `// ✗` case. Every card follows the fixed five-slot anatomy in [CODE-STYLE-FORMAT.md](_shared/CODE-STYLE-FORMAT.md) (**SSOT root: this package’s format + root `CODE-STYLE.md` + `src/templates/projectDocs/CODE-STYLE.md` — never an external product repo**): `###` short name (no tags), `[rule:<id>] · verify: \`<command>\`` or `· verify: judgment`, **exactly one assertion sentence**, one fenced `// ✓` + `// ✗` block, `Why:` line. **Never** write `[taste]` / `[lint: …]` / `[CI: …]` in the heading.
-- **Formatting** — quotes, semicolons, line width, trailing commas, import order. Grill my preference, but **the answer becomes a formatter config, not prose**: pick and scaffold the appropriate config per [FORMATTERS.md](_shared/FORMATTERS.md), and record the choice as an ADR.
+- **Formatting** — quotes, semicolons, line width, trailing commas, import order. Grill my preference, but **the answer becomes a formatter config, not prose**: pick and scaffold the appropriate config per [FORMATTERS.md](_shared/FORMATTERS.md), and record the choice in the PR description.
 - **Anti-patterns / AI-slop fingerprint** — the explicit "never do this here" list. Grill the recognizable AI tells up front so generated code avoids them from day one. Each becomes a concrete `Never` entry (an illustrative snippet, since there's no code yet) cross-referencing the `[rule:<id>]` that owns it.
 - **Over-engineering (the "too much" fingerprint)** — run [STYLE-CATALOG.md](_shared/STYLE-CATALOG.md) **Round 7**: grill each over-engineering family (needless indirection, fake robustness, control-flow contortion, shape noise, dead space, structural too-much/too-little, **and ceremony/tool-slop C1–C8** — tool wrappers, house typegen, scripts only under `scripts/{dev,production}`, tool-first CLIs, no parallel vendor schemas, structured logging + one env mute) against the one test — *an abstraction earns its place only with a second real caller or a genuine domain concept* — and the **tool-first test** — *if the framework CLI already does it, call it; no house wrapper*. Illustrative before/after: `simplify-code` references including **`ceremony-smells`**. Killed families fold into `Never`; recommend tool-first + two-nest scripts as default. Point ongoing enforcement at `simplify-code` per-diff.
 - **Compose the canonical example.** After the rounds, assemble every pick into one **canonical example** — a representative feature for this project written in the agreed style — so I see the whole pattern together. It becomes the Step 6 litmus and the `## Canonical example` block of `CODE-STYLE.md`; with no code yet, it's the single clearest picture of what "good" looks like here.
@@ -87,15 +87,15 @@ In the agent era every project earns a **CLI that both humans and agents drive**
 - **Command surface** — the verbs/nouns and their shape.
 - **Dual-mode contract** — one code path serves both audiences: a bare invocation in a TTY opens an interactive menu; any flag or non-TTY stdin defers to flags and **never hangs**; both routes call the **same functions** (the `agent-outfit` "interactive front door" pattern). Prompt wrappers return a fallback off-TTY so scripts don't block.
 
-Record the command surface as an **ADR** (the "why this surface"); the CLI conventions become `CODE-STYLE.md` rules + a recipe.
+Record the command surface in the **PR description** (the "why this surface"); the CLI conventions become `CODE-STYLE.md` rules + a recipe.
 
 ---
 
 ## Step 4 — Establish dependency policy & research libraries
 
-Grill the dependency policy (2–3 quick picks — see [STEPS.md](_shared/STEPS.md) § "Greenfield" for the questions). Record it as an ADR.
+Grill the dependency policy (2–3 quick picks — see [STEPS.md](_shared/STEPS.md) § "Greenfield" for the questions). Record it in the PR description.
 
-When a library choice comes up, research + recommend a stable option (WebSearch / the `deep-research` skill), then record the choice + rationale as a separate ADR. `CODE-STYLE.md` documents only how to USE the chosen library — never the choice rationale.
+When a library choice comes up, research + recommend a stable option (WebSearch / the `deep-research` skill), then record the choice + rationale in the PR description. `CODE-STYLE.md` documents only how to USE the chosen library — never the choice rationale.
 
 ---
 
@@ -116,7 +116,7 @@ Lands a first-class `## Golden path — adding a {unit}` in `CODE-STYLE.md` + a 
 See **[STEPS.md](_shared/STEPS.md)** for the shared procedures (the golden-path step above is shared Step 6; greenfield handles dependencies as its Step 4):
 
 - **Step 6** → Reference framework practices (detect stack, point to official skills), then render the interactive planpage plan (the review gate) — including the **golden-path + guard block**.
-- **Step 7** → On approval, write the files (CODE-STYLE.md incl. `## Golden path`, formatter + lint config, structure docs, ADRs, AGENTS.md digest incl. the tight golden-path mirror).
+- **Step 7** → On approval, write the files (CODE-STYLE.md incl. `## Golden path`, formatter + lint config, structure docs, AGENTS.md digest incl. the tight golden-path mirror); decisions go in the PR description.
 - **Re-running** → Idempotent refresh; once real code exists, hand off to `code-style-existing-project`.
 
 > **Step 8 (capstone reorg) does not apply to greenfield** — there's no code to reorganize.

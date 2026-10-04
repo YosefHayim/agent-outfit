@@ -93,7 +93,7 @@ Do **not** emit any of these (historical drift; convert on sight):
 
 ## Rules
 
-- **Names only.** No implementation walkthroughs, no roadmap, no ADR-length rationale.
+- **Names only.** No implementation walkthroughs, no roadmap, no long decision rationale.
 - **Be opinionated.** Pick one canonical term; list rivals under `_Avoid_:`.
 - **Project-specific only.** General programming words (timeout, retry, middleware)
   do not belong unless this project redefines them.
@@ -109,7 +109,7 @@ Do **not** emit any of these (historical drift; convert on sight):
 | --- | --- |
 | `code-style-new-project` / `code-style-existing-project` | Ensure the file exists; create from this format when missing; report structure drift (do not invent terms without evidence) |
 | `question-plan-with-docs` / domain-modeling moments | **Owner of term content** — when a term is resolved, update `LANGUAGE.md` inline using this format |
-| `explain-my-stack` | Leave alone unless a genuine *domain* term surfaces (tech teaching goes to `docs/learning/TEACH.md`) |
+| `explain-my-stack` | Leave alone unless a genuine *domain* term surfaces (tech teaching stays in chat) |
 
 ## Single vs multi-context repos
 

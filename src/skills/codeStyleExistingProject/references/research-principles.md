@@ -24,7 +24,7 @@ grilling taste or filling gaps **before** a project has its own CODE-STYLE.
 
 ## Documentation (agent-era)
 
-- Code is source of truth; docs are thin navigation, ADRs, glossary.
+- Code is source of truth; docs are thin navigation and a glossary; decisions live in PR descriptions.
 - Instruction files must stay consistent with the tree; nested instructions need
   explicit scope.
 - Prefer mechanical rules agents can check (each card's `verify:` command) over

@@ -501,7 +501,7 @@ When a dimension is language-specific, a note like `[TS/JS only]` appears in the
   - Land the agreed branching policy as a **CODE-STYLE recipe** + a tight **AGENTS.md Working contract** digest line (not only tribal knowledge).
 
 - **Documentation lifecycle** — [2 picks]
-  - When does new work need an ADR? (any decision an agent would otherwise guess at)
+  - When does new work need its decision written in the PR description? (any decision an agent would otherwise guess at)
   - When do CONTEXT.md / LANGUAGE.md get updated? (same PR that introduces a new concept)
   - Does a new module need its own README, or is colocated doc-comments sufficient?
   - Who owns the update — the PR author, or a periodic sweep?

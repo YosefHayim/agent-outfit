@@ -68,7 +68,7 @@ Agent path:          Read AGENTS.md, run validation commands before finishing.
 Include:             What the app does, quick start, scripts, links to deeper docs.
 Exclude:             Internal-only ops runbooks; link to wiki.
 Official links:      TypeScript, Node.js, pnpm, AGENTS.md convention.
-Link out:            AGENTS.md, docs/architecture.md, internal wiki for ops.
+Link out:            AGENTS.md, internal wiki for ops.
 Unknown:             —
 Recommended artifacts: README.md + AGENTS.md (+ CLAUDE.md as @import of AGENTS.md).
 ```
@@ -92,7 +92,7 @@ Then visit http://localhost:3000.
 ## Docs
 
 - [AGENTS.md](AGENTS.md) — conventions and validation commands for coding agents
-- [docs/architecture.md](docs/architecture.md) — module layout and data flow
+- [Architecture](#architecture) — module layout and data flow, later in this README
 - Internal: ops runbooks live in the Acme wiki
 
 ## Scope
@@ -195,7 +195,7 @@ for await (const record of parse(stream)) {
 - A demo should not look like a product. A product should not look like a demo.
 - Link external technologies to official docs, then stop. A README with too many links reads like a search page.
 - If you find yourself writing a "Features" table for a 200-line repo, stop.
-- If the README is more than about 150 lines, ask whether content belongs in `docs/` or `AGENTS.md`.
+- If the README is more than about 150 lines, ask whether content belongs in a per-package README or `AGENTS.md`.
 - The 5-minute quick start is the single most important section. Most other sections are optional.
 
 ---
@@ -212,7 +212,7 @@ README style:        CLI/developer tool.
 First success:       Install the command and run one example that prints useful output.
 Builder path:        Build from source, run tests, and read CONTRIBUTING.md.
 Agent path:          AGENTS.md if agents edit the repo; otherwise contributor docs only.
-Include:             Pitch, screenshot or command output, docs/manual, install by OS/package manager, examples, build/test.
+Include:             Pitch, screenshot or command output, manual or docs site link, install by OS/package manager, examples, build/test.
 Exclude:             Full command reference if a manual or docs site exists.
 Official links:      Language/runtime, package managers, shell/manual docs if named.
 Link out:            Manual, CONTRIBUTING.md, SECURITY.md, releases.
@@ -259,7 +259,7 @@ First success:       Create a cloud workspace or run the local Docker stack and 
 Builder path:        Extend product modules after local stack is healthy.
 Agent path:          AGENTS.md for validation commands, module ownership, and deployment boundaries.
 Include:             Why/value, capability map, cloud path, self-host/local path, stack, support, security notes.
-Exclude:             Deep deployment runbooks; link out to docs.
+Exclude:             Deep deployment runbooks; link out to the docs site.
 Official links:      Docker, framework/runtime, database, AGENTS.md convention if mentioned.
 Link out:            Docs site, self-host guide, CONTRIBUTING.md, SECURITY.md.
 Unknown:             Whether self-hosting is production-supported or personal-use only.
@@ -303,7 +303,7 @@ First success:       Create a minimal endpoint, run the server, and verify it wi
 Builder path:        Follow tutorials, examples, and contribution docs.
 Agent path:          Optional AGENTS.md if agents edit the framework repo.
 Include:             Description, requirements, install, minimal endpoint, run/check steps, docs, examples, tests.
-Exclude:             Full API reference; keep it in docs.
+Exclude:             Full API reference; keep it on the docs site.
 Official links:      Runtime/language, package manager, framework docs.
 Link out:            Tutorial, API reference, CONTRIBUTING.md, SECURITY.md.
 Unknown:             Supported runtime versions if manifests do not say.

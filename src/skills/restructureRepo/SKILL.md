@@ -42,12 +42,12 @@ Measure every finding against these, in order:
 
 - Spawn scouts explicitly; some hosts delegate only when asked.
 - One scout per app or package per phase; batch small ones together.
-- Save each scout report to `$RUN/scans/<phase>-<area>.md` and reuse it on resume.
+- Save each scout report under `### <phase>: <area>` in the Report section of `$REPORT`, and reuse it on resume.
 - On a host without subagents, scan in the main agent and tell the user this run costs more.
 
 ## Workflow
 
-Copy this checklist into `$RUN/PLAN.md` and tick it as you go:
+Copy this checklist into the `## Plan` section of `$REPORT` and tick it as you go:
 
 ```text
 - [ ] 1. Start
@@ -71,20 +71,25 @@ Find the models this host offers right now, as [REFERENCE.md → Scout models](R
 Ask one card before any scout runs:
 
 - **Scout model:** the fastest, cheapest model the host offers first, marked `(Recommended)`, then the stronger ones, each with its cost and care trade-off. The main agent stays on the session model.
-- **Resume:** only when `docs/agent/restructure-repo/CURRENT` points to a `PLAN.md` with unticked lines; resume from the first one.
+- **Resume:** only when the run folder the user gives, or the newest one (`ls -1 "$RUNS" | tail -n 1`, with `RUNS` as set below), has a Plan section with unticked lines; resume from the first one.
 
-Otherwise start a run, and write the picked models to `PLAN.md`:
+Otherwise start a run, and write the picked models to the Plan section:
 
 ```bash
-RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)
-RUN="docs/agent/restructure-repo/$RUN_ID"
-mkdir -p "$RUN/scans"
-printf '%s\n' "$RUN_ID" > docs/agent/restructure-repo/CURRENT
+SKILL="restructure-repo"
+COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+REPO=$(basename "$REPO_ROOT")
+RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+[ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+mkdir -p "$RUN_DIR"
+REPORT="$RUN_DIR/report.md"
 ```
 
 ### 2. Read
 
-Scouts read `git ls-files`, every package manifest, the workspace and framework configs, CI, and the repo's docs. Write to `PLAN.md`: each framework with its installed version, and each surface (client, server, shared, deploy) with its path.
+Scouts read `git ls-files`, every package manifest, the workspace and framework configs, CI, and the repo's docs. Write to the Report section: each framework with its installed version, and each surface (client, server, shared, deploy) with its path.
 
 If `PROJECT.md` or `LANGUAGE.md` is missing, offer `question-plan-with-docs` to write them first. If the user declines, use `README.md` and the words the code already uses most.
 
@@ -94,7 +99,7 @@ For each framework and main library from step 2, a scout fetches its structure, 
 
 ### 4. Baseline
 
-Run typecheck, lint, build, and tests. Start each app in the background, wait until it is ready or 2 minutes pass, then stop it. Write each command and result to `PLAN.md`. If tests are thin, say so, offer `find-missing-tests`, and continue.
+Run typecheck, lint, build, and tests. Start each app in the background, wait until it is ready or 2 minutes pass, then stop it. Write each command and result to the Report section. If tests are thin, say so, offer `find-missing-tests`, and continue.
 
 ### 5. Phases
 
@@ -103,10 +108,10 @@ Run each phase in this loop. [EXAMPLES.md](EXAMPLES.md) shows every step for eve
 1. Scouts scan the phase's targets and return findings.
 2. The main agent reads each finding at its `file:line`, drops the wrong ones, and ranks the rest.
 3. Ask one `AskUserQuestion` card with the decisions (at most 4 questions, recommended option first and marked `(Recommended)`). The user can answer "skip" to skip the phase.
-4. Show the before/after table: up to 15 rows in chat, every row in `PLAN.md`.
+4. Show the before/after table: up to 15 rows in chat, every row in the Report section.
 5. Wait for approval.
 6. Apply. Re-run the baseline; when a check fails, fix it or revert the phase before going on.
-7. Commit `refactor(<phase>): <what changed>`, then append the result and SHA to `PLAN.md` and tick the checklist.
+7. Commit `refactor(<phase>): <what changed>`, then append the result and SHA to the Report section and tick the Plan checklist.
 
 | Phase | Targets |
 |---|---|
@@ -131,9 +136,10 @@ For a big rewrite that needs tests first, hand off to `simplify-repo-with-tests`
 
 Report:
 
-- the branch, the `PLAN.md` path, and the commit SHAs;
+- the branch and the commit SHAs;
 - for each phase, the counts and the table of what was deleted, moved, rewritten, or renamed, with sources;
 - the baseline and final check results side by side;
-- skipped phases and remaining risks.
+- skipped phases and remaining risks;
+- the `report.md` path, last.
 
 The run is done when every approved phase is committed and the final checks match or beat the baseline.

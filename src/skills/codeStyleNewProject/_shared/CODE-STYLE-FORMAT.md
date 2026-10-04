@@ -91,9 +91,8 @@ There is no JSON mirror: tools read the rules from the cards in `CODE-STYLE.md`.
 
 This guide is prescriptive for {project}-owned code. {Optional one-line scope note.}
 
-Precedence: product boundaries in PROJECT.md, system orientation in CONTEXT.md
-(or docs/reference/CONTEXT.md), product vocabulary in LANGUAGE.md (or
-docs/reference/LANGUAGE.md), then this guide.
+Precedence: product boundaries in PROJECT.md, system orientation in CONTEXT.md,
+product vocabulary in LANGUAGE.md, then this guide.
 ```
 
 Keep the preamble short. Migration status, allowlists, and long toolchain essays go

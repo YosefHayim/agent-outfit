@@ -105,20 +105,6 @@ walk(root, (absPath, relPath, stat) => {
   }
 });
 
-const adrRoots = ["docs/adr", "docs/adrs", "adr", "docs/decisions"];
-for (const adr of adrRoots) {
-  const abs = path.join(root, adr);
-  if (fs.existsSync(abs)) {
-    docs.push({
-      name: "ADR-tree",
-      path: adr,
-      scope: adr,
-      bytes: 0,
-      note: "decision records directory present",
-    });
-  }
-}
-
 const topDocs = new Set(docs.filter((d) => d.scope === ".").map((d) => d.name));
 const missingTop = [];
 for (const expected of ["AGENTS.md", "CODE-STYLE.md", "README.md"]) {

@@ -183,7 +183,7 @@ If SHA, version, or build number disagree with intent — stop and report the mi
 
 ### 10. Write the release record
 
-Durable record only if the project already uses one or the user asks (`CHANGELOG.md`, `docs/releases/vX.Y.Z.md`, GitHub Release body, store What’s New).
+Durable record only if the project already uses one or the user asks (`CHANGELOG.md`, GitHub Release body, store What’s New).
 
 **Template:**
 

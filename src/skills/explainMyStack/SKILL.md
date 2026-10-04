@@ -1,6 +1,6 @@
 ---
 name: explain-my-stack
-description: Use when you want to understand why your project uses each tool — language, framework, and services. For each one it explains the trade-offs simply, lets you choose, and saves the answers in TEACH.md. Say "why this stack" or "why TypeScript and not Python". For code style, use code-style-new-project.
+description: Use when you want to understand why your project uses each tool — language, framework, and services. For each one it explains the trade-offs simply, lets you choose, and explains how it works, all in chat. Say "why this stack" or "why TypeScript and not Python". For code style, use code-style-new-project.
 ---
 
 <what-to-do>
@@ -10,9 +10,9 @@ framework, meta-framework, and the load-bearing services/vendors — in one TUI 
 could **explain each choice to someone else**. This is a different axis from `code-style-new-project`
 (which is *how we write code here*); this is ***why this stack, and how it works***.
 
-**Read `TEACH.md` first (dedup).** It's my growing learning record. Whatever decision or glossary
-term is already in it, I already learned — **do not re-teach or re-write it.** Only grill me on, and
-only append, what's genuinely new. If there's no `TEACH.md` yet, this is where it starts.
+**Dedup within the chat.** Whatever decision or glossary term you already explained earlier in this
+conversation, I already learned — **do not re-teach it.** Only grill me on, and only explain, what's
+genuinely new. The answers stay in chat; never save them to a file.
 
 For each decision, the point is **active recall + honest tradeoffs**, never a sales pitch:
 - **Teach the tradeoff space in plain terms** — what each option costs, and what you'd *gain* for
@@ -27,10 +27,10 @@ Teach the tradeoff space in each option's detail. Recommended option first, mark
 Do not drip questions one-by-one. A second card is only for questions that could not exist until
 these answers landed.
 
-**Write only after I've decided.** After the card returns, append each resolved decision to `TEACH.md` per
-**[TEACH-FORMAT.md](TEACH-FORMAT.md)**: a **lean decision-record** on top + a **self-closing,
+**Answer only after I've decided.** After the card returns, explain each resolved decision in chat per
+**[TEACH-FORMAT.md](TEACH-FORMAT.md)**: a **lean decision block** on top + a **self-closing,
 cited glossary** below (every term explained, every term *used inside* a term also explained, one
-short code snippet each). Skip anything already in `TEACH.md`.
+short code snippet each). Skip anything already explained in this chat.
 
 </what-to-do>
 
@@ -38,7 +38,7 @@ short code snippet each). Skip anything already in `TEACH.md`.
 
 ## What counts as a "stack decision" worth grilling
 
-Walk these in dependency order inside **one** card (language first, then runtime, then framework, then vendors); skip any already settled in `TEACH.md`:
+Walk these in dependency order inside **one** card (language first, then runtime, then framework, then vendors); skip any already covered in this chat:
 
 1. **Language** — why this one, vs the obvious alternatives for this domain (TS vs Python vs Go vs
    bash…). The deciding lens is usually **substrate fit**: what ground does the code already run on?
@@ -56,7 +56,7 @@ concern, not a stack decision.
 
 ## The loop — per decision
 
-1. **Locate & dedup.** Is this already in `TEACH.md`? If yes, skip it (mention it's covered). Ground
+1. **Locate & dedup.** Was this already covered in this chat? If yes, skip it (mention it's covered). Ground
    the framing in `PROJECT.md`/`CONTEXT.md` — what is this project actually for? — so the tradeoff is
    judged against *our* needs, not a generic benchmark.
 2. **Teach the tradeoff space (KISS).** 2–4 candidates, one honest line each: its strength, its cost
@@ -68,8 +68,8 @@ concern, not a stack decision.
 5. **Explain how the chosen thing works** — the mechanism (what executes it, the order it runs in),
    concrete enough to picture. Offer to hand a real deep-dive to the **`teach`** skill (which builds
    cited, multi-session lessons) — this skill teaches the *decision*, `teach` teaches the *concept*.
-6. **Append to `TEACH.md`** per [TEACH-FORMAT.md](TEACH-FORMAT.md) — lean decision + self-closing
-   cited glossary (code snippet per term), skipping terms already defined there.
+6. **Answer in chat** per [TEACH-FORMAT.md](TEACH-FORMAT.md) — lean decision + self-closing
+   cited glossary (code snippet per term), skipping terms already explained in this chat.
 
 ## The principle to keep surfacing: substrate fit
 
@@ -79,16 +79,15 @@ that explains "why TS not Go/Python/bash" for a Node-hosted tool, and it flips c
 changes (data/ML → Python; a standalone perf-critical binary with no host → Go). Teach the principle,
 not just the verdict, so I can re-derive the next decision myself.
 
-## Boundaries — three docs, three jobs
+## Boundaries — three places, three jobs
 
-- **`TEACH.md`** ← *this skill writes here.* My personal learning record: why-this-stack decisions +
-  a beginner-safe, self-closing glossary of **general** tech terms. Grows over time; deduped.
+- **The chat answer** ← *this skill writes here.* Why-this-stack decisions + a beginner-safe,
+  self-closing glossary of **general** tech terms. Deduped within the chat; never saved to a file.
 - **`LANGUAGE.md`** ← *leave it alone.* It's the human↔agent bridge for **domain** vocabulary (the
   project's ubiquitous language). Only touch it if a genuinely *domain* term surfaces — general tech
-  literacy ("what's an interpreter") is not domain language and belongs in `TEACH.md`.
-- **ADR (`docs/adr/`)** ← *optional, only if I ask.* The formal, maintainer-facing "why" for the repo.
-  When I want it too, write the decision there as well (terse, ADR-format); `TEACH.md` stays the
-  human-friendly teaching version.
+  literacy ("what's an interpreter") is not domain language and belongs in the chat answer.
+- **PR description** ← *only when a pick changes the project.* The terse, maintainer-facing "why"
+  goes in the PR description of that change; the chat answer stays the human-friendly teaching version.
 
 ## Never
 
@@ -96,11 +95,10 @@ not just the verdict, so I can re-derive the next decision myself.
   trust the verdict.
 - Never state a factual claim (version, limit, capability) from memory — verify and cite the official
   doc.
-- Never re-teach or re-write a decision/term already in `TEACH.md` — read it first, append only what's
-  new.
+- Never re-teach a decision/term already explained in this chat — explain only what's new.
 - Never leave a term undefined inside another term's explanation — the glossary must close over itself.
-- Never write to `TEACH.md` before I've made the decision; never write general tech terms into
-  `LANGUAGE.md` (that doc is domain-only).
+- Never write the decision block before I've made the decision; never save the answers to a file;
+  never write general tech terms into `LANGUAGE.md` (that doc is domain-only).
 - Never write the code before I've confirmed the direction on a judgment decision.
 
 </supporting-info>

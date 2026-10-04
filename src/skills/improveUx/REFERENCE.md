@@ -1,9 +1,13 @@
 # Improve UX — templates
 
-## STATE.md
+## report.md
+
+One file per run: `$RUN_DIR/report.md`. It starts with `# Improve UX — <repo>`, then holds the four `##` sections below in this order.
+
+### State section
 
 ```markdown
-# Improve UX STATE — <repo>
+## State
 
 updated: <ISO date>
 phase: audit | taste | implement | land | done
@@ -14,10 +18,7 @@ direction_id: none | direction.conservative | direction.balanced | direction.bol
 requested_through: audit | taste | implement | land
 host: A | B | C
 product_tip: <ref> @ <sha>
-run_id: <YYYY-MM-DDTHHMMSSZ>
-matrix: docs/agent/improve-ux/<run-id>/MATRIX.md
-audit: docs/agent/improve-ux/<run-id>/AUDIT.md
-taste: docs/agent/improve-ux/<run-id>/TASTE.md
+run_dir: <RUN_DIR>
 next_action: <one concrete verb>
 block_reason: none | waiting for taste pick | …
 lanes_total: N
@@ -26,32 +27,32 @@ lanes_merged: N
 notes: <one line>
 ```
 
-## MATRIX.md
+### Matrix section
 
 ```markdown
-# Improve UX MATRIX — <repo>
+## Matrix
 
 | id | Journey / flow | Surfaces | Paths (globs) | Issue | Branch | Worktree | PR | Head | Proof | Notes |
 |----|----------------|----------|---------------|-------|--------|----------|-----|------|-------|-------|
 | onboarding | First-run → home | web+ios | app/onboarding/**, apps/mobile/**/Onboarding* | #12 | ux/12-onboarding | .worktrees/… | #40 | abc | diagrams+preview | |
 ```
 
-## AUDIT.md
+### Audit section
 
 ```markdown
-# Improve UX AUDIT — <repo>
+## Audit
 
 Updated: <ISO date>
 Scope: …
 Product tip: `<ref>` @ `<sha>`
 
-## Journey map
+### Journey map
 
 | id | Job to be done | Entry | Exit | Steps now | Route hops | Pain |
 |----|----------------|-------|------|-----------|------------|------|
 | checkout | Pay and confirm | /cart | /success | 9 | 5 | account wall mid-flow |
 
-## MUST scores (per journey)
+### MUST scores (per journey)
 
 | id | Clicks | Redirects | Layout | Forms | Empty/Error/Load | Mobile | A11y | Motion | Craft | Overall |
 |----|--------|-----------|--------|-------|------------------|--------|------|--------|-------|---------|
@@ -59,21 +60,21 @@ Product tip: `<ref>` @ `<sha>`
 
 Score 1–10 (10 = excellent). Cite paths / routes under each low score.
 
-## Proposed after (target steps)
+### Proposed after (target steps)
 
 | id | Steps target | Key change |
 |----|--------------|------------|
 | checkout | 5 | guest pay; combine address+shipping |
 
-## Sample flow for taste
+### Sample flow for taste
 
 `<id>` — why highest leverage
 ```
 
-## TASTE.md
+### Taste section
 
 ```markdown
-# Improve UX TASTE — <repo>
+## Taste
 
 Sample flow: <id>
 Variant count: N (why this N)
@@ -82,7 +83,7 @@ Grounding: live screenshot | component reconstruction | both
 compare_state: empty-build | in-progress | proven | ship-ready | <custom>
 # All variants MUST use the same compare_state as the current panel
 
-## Chrome inventory (from live UI)
+### Chrome inventory (from live UI)
 
 | Region | Keep | Cut only if | Notes |
 |--------|------|-------------|-------|
@@ -94,14 +95,14 @@ compare_state: empty-build | in-progress | proven | ship-ready | <custom>
 | inspector / sidebar | yes | … | … |
 | status / run control | yes | … | … |
 
-## Current reference
+### Current reference
 
-- screenshot: docs/agent/improve-ux/<run-id>/current-sample.png (or path)
+- screenshot: <RUN_DIR>/current-sample.png (or path)
 - density score production: N/10
 
-## Variants
+### Variants
 
-### direction.conservative
+#### direction.conservative
 - Role: polish same shell; still ≥2 hard axes
 - hard_axes: [craft, motion]
 - axis_proof:
@@ -111,21 +112,21 @@ compare_state: empty-build | in-progress | proven | ship-ready | <custom>
 - Color: … (may keep primary; must improve surfaces)
 - Click delta: 9 → 7
 - Density after: N/10
-- Mock: docs/agent/improve-ux/<run-id>/mocks/conservative.html
+- Mock: <RUN_DIR>/mocks/conservative.html
 - feel_test: pass|fail — …
 
-### direction.balanced
+#### direction.balanced
 - Role: one structural change + craft; hard_axes must include layout
 - hard_axes: [layout, craft, …]
 - …
 
-### direction.bold
+#### direction.bold
 - Role: new design language in 2 seconds; ≥3 axes incl **color + layout**
 - hard_axes: [color, layout, craft|motion]
 - Palette: MUST NOT clone live paper+primary 1:1
 - …
 
-## Chosen
+### Chosen
 
 - id: direction.…
 - locked_at: <ISO>
@@ -178,6 +179,9 @@ You own ONLY this journey’s paths. Direction is LOCKED — implement it, do no
 ## direction_id
 …
 
+## Run folder
+<RUN_DIR> — shared with the orchestrator; do not start your own run
+
 ## Design rules (from TASTE)
 1. …
 2. …
@@ -228,7 +232,7 @@ web | mobile | both — …
     }
   ],
   "steps": [
-    { "label": "Map journeys", "status": "done", "detail": "AUDIT.md" },
+    { "label": "Map journeys", "status": "done", "detail": "report.md Audit section" },
     { "label": "Score MUST axes", "status": "done", "detail": "evidence paths" },
     { "label": "Taste mocks", "status": "todo", "detail": "2–4 high-fi product-grounded variants" }
   ]

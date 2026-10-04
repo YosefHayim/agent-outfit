@@ -58,16 +58,21 @@ Prefer repo-owned scripts under `scripts/dev/` or `scripts/bench/` (gitignored p
 2. For each trial: prepare isolation → run agent/tool under condition → collect metrics → evaluate success predicate.
 3. Append one JSONL row per trial: `suite, task, condition, trial, metrics, error, artifact_path`.
 4. Aggregate: mean/median, success rate, p50/p95 latency, total cost; optional bootstrap CI if n allows.
-5. Mint a run dir, then emit `$AGENT_DOCS/REPORT.md` + `$AGENT_DOCS/results.json`:
+5. Start a run folder outside the repo, then write the `## Report` section of `$REPORT` + the `$RUN_DIR/results.json` asset:
 
    ```bash
-   RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)
-   AGENT_DOCS="docs/agent/benchmark-agents/$RUN_ID"
-   mkdir -p "$AGENT_DOCS"
-   printf '%s\n' "$RUN_ID" > docs/agent/benchmark-agents/CURRENT
+   SKILL="benchmark-agents"
+   COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+   REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+   REPO=$(basename "$REPO_ROOT")
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+   [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+   mkdir -p "$RUN_DIR"
+   REPORT="$RUN_DIR/report.md"
    ```
 
-   Include methodology, versions, and raw data paths. Never write these at the repository root or a fixed flat path that a second bench overwrites.
+   Include methodology, versions, and raw data paths. Never write these in the repository (no `docs/` folder, nothing at the root) or into an older run folder.
 
 Dynamic = the plan file is the product: user adds tasks/conditions without rewriting the runner.
 

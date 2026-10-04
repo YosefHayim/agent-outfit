@@ -42,6 +42,6 @@ Use these terms consistently in issues, refactors, test names, and agent output:
 | **fidelity bar** | Strict 1:1 (diff is hard gate) vs inspired-by (diff is loose guide) |
 | **crux test** | Seek each moving part to rotation extremes; joint must not gap or ghost |
 
-## ADRs
+## Decisions
 
-Architectural decisions for this skill live in `docs/adr/` when recorded. Read relevant ADRs before contradicting past choices.
+Architectural decisions for this skill go in the PR description of the change that makes them. Read the related PRs before contradicting past choices.

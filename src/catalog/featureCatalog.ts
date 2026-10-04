@@ -505,7 +505,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "explainMyStack",
     title: "Explain my stack",
     summary:
-      "Understand why the project uses each technology (language, framework, services) and save the answers in TEACH.md.",
+      "Understand why the project uses each technology (language, framework, services), with honest trade-offs and a plain glossary, all in chat.",
     shippedPaths: ["SKILL.md", "TEACH-FORMAT.md"],
   }),
   skillFeature({
@@ -513,7 +513,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "questionPlanWithDocs",
     title: "Question plan with docs",
     summary: "Check your plan against the project docs and decisions, and update the docs as you decide.",
-    shippedPaths: ["SKILL.md", "CONTEXT-FORMAT.md", "ADR-FORMAT.md", "LANGUAGE-FORMAT.md"],
+    shippedPaths: ["SKILL.md", "CONTEXT-FORMAT.md", "LANGUAGE-FORMAT.md"],
     dependencies: ["code-style-new-project"],
   }),
   skillFeature({
@@ -577,6 +577,14 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "runLocalAndCheck",
     title: "Run local and check",
     summary: "Run the app on your computer and prove it works in a real browser or app. No deploy.",
+    shippedPaths: ["SKILL.md"],
+  }),
+  skillFeature({
+    id: "run-ci-locally",
+    sourceDirectory: "runCiLocally",
+    title: "Run CI locally",
+    summary:
+      "Run the repo's GitHub Actions workflows in Docker with act when Actions cannot run, then remove everything the run made.",
     shippedPaths: ["SKILL.md"],
   }),
   skillFeature({

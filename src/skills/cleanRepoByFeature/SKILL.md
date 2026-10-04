@@ -39,23 +39,28 @@ Reuse existing skills rather than inventing a second ship path:
 - One agent = one feature = one worktree = one branch = one issue = one PR. No cross-lane file ownership without re-planning.
 - Do not merge PRs to main unless the user explicitly asks after review.
 - Do not deploy, publish, or delete production resources as part of cleanup.
-- Respect `AGENTS.md` / `CODE-STYLE.md` / ADRs; if they are missing or useless, run a **single** style grill first rather than N conflicting styles.
+- Respect `AGENTS.md` / `CODE-STYLE.md`; if they are missing or useless, run a **single** style grill first rather than N conflicting styles.
 - **Never close cmux workspaces/panes** created for lanes unless the user explicitly asks. They are human entry points, not throwaway spawn shells.
 
 
 
 ## Artifact paths (run isolation)
 
-Campaign boards and reports go under **`docs/agent/clean-repo-by-feature/<run-id>/`**, never the repo root and never a fixed flat path that parallel runs overwrite.
+Campaign boards and reports go in one new run folder outside the repo, never in the repository and never in a fixed path that parallel runs overwrite.
 
 ```bash
-RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)
-AGENT_DOCS="docs/agent/clean-repo-by-feature/$RUN_ID"
-mkdir -p "$AGENT_DOCS"
-printf '%s\n' "$RUN_ID" > docs/agent/clean-repo-by-feature/CURRENT
+SKILL="clean-repo-by-feature"
+COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+REPO=$(basename "$REPO_ROOT")
+RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+[ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+mkdir -p "$RUN_DIR"
+REPORT="$RUN_DIR/report.md"
 ```
 
-Write MATRIX/STATE/AUDIT under `$AGENT_DOCS`. Resume → use `CURRENT` or an explicit run-id (do not mint a new one). Put `AGENT_DOCS` in every `LANE-BRIEF.md`. Product SSOT stays under `docs/agents/` (plural).
+Write the Matrix, State, Audit, and Health sections in `$REPORT`. Save planpage JSON as its own file in `$RUN_DIR`. Resume → use the run folder the user gives, else the newest one: `ls -1 "$RUNS" | tail -n 1` (do not start a new run). Put `RUN_DIR` in every `LANE-BRIEF.md`. Product agent config (issue tracker, triage labels, domain notes) lives in `AGENTS.md` sections.
 
 ## Workflow
 

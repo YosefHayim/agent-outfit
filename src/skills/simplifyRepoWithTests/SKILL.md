@@ -10,20 +10,32 @@ type: flow
 
 Slash: **`/simplify-repo-with-tests`**, optional scope (repo path, feature list, `scan-only`).
 
-**Not** a second smell encyclopedia. Smell catalogs live in **`simplify-code`** — load them. This skill owns: scan fan-out, proof matrix, parity-first TDD order, apply scope, headless prove policy, test-slop policy, done receipt, artifact paths.
+**Not** a second smell encyclopedia. Smell catalogs live in **`simplify-code`** — load them. This skill owns: scan fan-out, proof matrix, parity-first TDD order, apply scope, headless prove policy, test-slop policy, done receipt, run report.
 
-## Artifact paths (mandatory)
+## Run report (mandatory)
 
-Never write lean/campaign markdown at the **repository root**. Never use a fixed flat path that parallel runs overwrite.
+Never write run records into the repository: no `docs/` folder, no report at the **repository root**. Each run gets its own folder outside the repo with one `report.md`, so parallel runs never overwrite each other.
 
-| File | Path |
+| Section in `$REPORT` | Holds |
 |------|------|
-| Feature inventory | `docs/agent/simplify-repo-with-tests/<run-id>/FEATURES.md` |
-| Kill list / report | `docs/agent/simplify-repo-with-tests/<run-id>/REPORT.md` |
-| Active pointer | `docs/agent/simplify-repo-with-tests/CURRENT` |
+| `## Features` | Feature inventory |
+| `## Report` | Kill list / report |
 
-1. **New run:** `RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)`; `AGENT_DOCS=docs/agent/simplify-repo-with-tests/$RUN_ID`; `mkdir -p "$AGENT_DOCS"`; write `CURRENT`.
-2. **Resume:** resolve `CURRENT` / explicit run-id; update in place (do not mint a new run-id).
+1. **New run:** start a run folder:
+
+   ```bash
+   SKILL="simplify-repo-with-tests"
+   COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+   REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+   REPO=$(basename "$REPO_ROOT")
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+   [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+   mkdir -p "$RUN_DIR"
+   REPORT="$RUN_DIR/report.md"
+   ```
+
+2. **Resume:** use the run path the user gives, else the newest folder (`ls -1 "$RUNS" | tail -n 1`); update `report.md` in place (do not start a new run).
 3. Shared rules: [references/agent-artifacts.md](references/agent-artifacts.md).
 
 ## Skill map (do not invent siblings)
@@ -62,7 +74,7 @@ Never write lean/campaign markdown at the **repository root**. Never use a fixed
 | Flag / phrase | Meaning |
 |---------------|---------|
 | (default) | Scan → report → **wait for approval** on kill list → parity TDD → apply → prove |
-| `scan-only` | Stop after `$AGENT_DOCS/REPORT.md` (no product code writes) |
+| `scan-only` | Stop after the `## Report` section of `$REPORT` (no product code writes) |
 | `apply` / `go` / `approved` | User already approved; do not re-ask if report was shown this turn |
 | `fill <feature>` | Limit apply/prove to one feature id |
 | **headless (DEFAULT)** | E2E headless / CI — **do not require user to say headless** |
@@ -92,7 +104,7 @@ If the user does **not** say headed/visible/ui → **headless**.
 
 ### 1. Feature / module inventory
 
-Evidence-based ids (routes, `src/features/*`, packages, documented domains). Write `$AGENT_DOCS/FEATURES.md` with stable ids + path globs.
+Evidence-based ids (routes, `src/features/*`, packages, documented domains). Write the `## Features` section of `$REPORT` with stable ids + path globs.
 
 ### 2. Scan phase — sub-agents (read-only)
 
@@ -105,20 +117,20 @@ For each feature (or batch), spawn a **read-only** sub-agent. Brief:
 5. List **business behaviors that must stay green** (happy + real error paths already in code).
 6. Return structured markdown only (template in REFERENCE).
 
-Orchestrator merges into **`$AGENT_DOCS/REPORT.md`**:
+Orchestrator merges into the **`## Report`** section of `$REPORT`:
 
 ```markdown
-## Feature: <id>
-### Behavior that must remain
+### Feature: <id>
+#### Behavior that must remain
 - …
-### Kill list (priority)
+#### Kill list (priority)
 | pri | path | axis | proof | Δ files | Δ LOC≈ | before→after | risk |
 |-----|------|------|-------|---------|--------|--------------|------|
-### Test-slop (delete or rewrite)
+#### Test-slop (delete or rewrite)
 | path | why not business | replace with |
-### Parity tests needed first
+#### Parity tests needed first
 | layer | behavior | path |
-### Commands
+#### Commands
 - unit: …
 - e2e: …
 ```
@@ -165,7 +177,7 @@ After product lean is green:
 
 ### 7. Handoff
 
-- Default: branch + `$AGENT_DOCS/REPORT.md` + before/after summary; commits via **`organize-commits`** if asked.
+- Default: branch + `$REPORT` + before/after summary; commits via **`organize-commits`** if asked.
 - `open-pr` / `ship`: **`finish-and-push`** (no merge unless they said merge).
 - Optional readability pass: **`make-code-readable`** on remaining names.
 
@@ -189,8 +201,7 @@ repo: <path>
 mode: full | scan-only
 headless: true | false
 features_scanned: N
-run_id: <YYYY-MM-DDTHHMMSSZ>
-report: docs/agent/simplify-repo-with-tests/<run-id>/REPORT.md
+report: <RUN_DIR>/report.md
 kills_applied: N
 files_removed: N
 loc_delta: ≈ -N

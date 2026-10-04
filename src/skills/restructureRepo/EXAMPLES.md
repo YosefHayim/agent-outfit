@@ -58,7 +58,7 @@ Card:
 > 2. Delete the files; review the deps in phase 5.
 > 3. Keep everything.
 
-Table (first 2 of 7 rows; `PLAN.md` gets all 7):
+Table (first 2 of 7 rows; the Report section of `report.md` gets all 7):
 
 | Remove | Kind | Evidence | Source |
 |---|---|---|---|
