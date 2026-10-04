@@ -392,6 +392,7 @@ describe("receiptSchema", () => {
   it.each([
     { name: "nested hook entry pointer", events: [{ pointer: "/hooks/Stop/0", entries: [installedValueHash] }] },
     { name: "non-hook pointer", events: [{ pointer: "/permissions", entries: [installedValueHash] }] },
+    { name: "escaped event name", events: [{ pointer: "/hooks/foo~1bar", entries: [installedValueHash] }] },
     { name: "event without entries", events: [{ pointer: "/hooks/Stop", entries: [] }] },
     { name: "missing events", events: [] },
     {

@@ -292,8 +292,8 @@ export const jsonValuesOwnershipSchema = Schema.TaggedStruct("jsonValues", {
 
 export type JsonValuesOwnership = Schema.Schema.Type<typeof jsonValuesOwnershipSchema>;
 
-// e.g. "/hooks/Stop" — one hook event array, never a nested member such as "/hooks/Stop/0"
-const HOOK_EVENT_POINTER_PATTERN = /^\/hooks\/(?:[^~/]|~[01])+$/;
+// e.g. "/hooks/Stop" — one hook event array named as is, never a nested member such as "/hooks/Stop/0"
+const HOOK_EVENT_POINTER_PATTERN = /^\/hooks\/[^~/]+$/;
 
 const ownedHookEventSchema = Schema.Struct({
   pointer: jsonPointerSchema.pipe(
