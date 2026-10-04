@@ -41,7 +41,7 @@ const previousFiles = () => [
 
 const request = () => ({
   agent: claudeAgent,
-  controlScript: "dufflebag control",
+  controlScript: "agent-outfit control",
   skills: [{ installedSkill: skillDefinition, sourceFiles: sourceFiles() }],
   previousFiles: previousFiles(),
 });
@@ -97,7 +97,7 @@ describe("planSkillDirectory", () => {
     );
     const catalogRequest = {
       agent: claudeAgent,
-      controlScript: "dufflebag control",
+      controlScript: "agent-outfit control",
       skills,
       previousFiles: expectedPaths.map((path) => ({ path, previous: missingPrevious })),
     };
@@ -114,8 +114,8 @@ describe("planSkillDirectory", () => {
     const binaryWrite = writeAt(plan, binaryPath);
     const plainWrite = writeAt(plan, plainPath);
 
-    expect(textDecoder.decode(skillWrite.bytes)).toBe("Run `dufflebag control status`.\n");
-    expect(textDecoder.decode(guideWrite.bytes)).toBe("Use dufflebag control with care.\n");
+    expect(textDecoder.decode(skillWrite.bytes)).toBe("Run `agent-outfit control status`.\n");
+    expect(textDecoder.decode(guideWrite.bytes)).toBe("Use agent-outfit control with care.\n");
     expect(binaryWrite.bytes).toEqual(Uint8Array.from([0xff, 0x40, 0x40, 0x43, 0x54, 0x4c, 0x40, 0x40]));
     expect(plainWrite.bytes).toEqual(plainBytes);
   });

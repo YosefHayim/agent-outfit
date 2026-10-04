@@ -1,4 +1,4 @@
-/** `dufflebag catalog` — list the public feature IDs accepted by install and update. */
+/** `agent-outfit catalog` — list the public feature IDs accepted by install and update. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -34,6 +34,6 @@ export const catalogCommand = Command.make("catalog", { format: formatOption }, 
 
     yield* TerminalUI.intro("catalog");
     yield* showFeatureList;
-    yield* TerminalUI.outro("Install with `dufflebag install <feature-id>...`.");
+    yield* TerminalUI.outro("Install with `agent-outfit install <feature-id>...`.");
   }),
 ).pipe(Command.withDescription("List installable feature IDs and catalog defaults"));

@@ -35,7 +35,7 @@ const guideWith = (ruleIds: ReadonlyArray<string>): string =>
     .concat("\n");
 
 const repositoryWith = (files: Readonly<Record<string, string>>): string => {
-  const repositoryRoot = mkdtempSync(join(tmpdir(), "dufflebag-style-"));
+  const repositoryRoot = mkdtempSync(join(tmpdir(), "agent-outfit-style-"));
   repositories.push(repositoryRoot);
   Object.entries({ "CODE-STYLE.md": guideWith(["function.arrow-only"]), ...files }).forEach(([path, source]) => {
     mkdirSync(dirname(join(repositoryRoot, path)), { recursive: true });
@@ -180,7 +180,7 @@ const REJECTED: ReadonlyArray<SingleFileCase & { ruleId: string; line?: number }
   },
   {
     name: "an exported object type mixing data and functions",
-    path: "src/providerRouting/healthStore.ts",
+    path: "src/doctor/healthStore.ts",
     source: "export type HealthStore = { filePath: string; readHealth: () => Effect.Effect<void> };\n",
     ruleId: "type.schema-owned-runtime",
   },
@@ -289,7 +289,7 @@ const ACCEPTED: ReadonlyArray<SingleFileCase> = [
   { name: "a type alias", source: "export type FeatureId = string;\n" },
   {
     name: "an exported object type holding only functions",
-    path: "src/providerRouting/healthStore.ts",
+    path: "src/doctor/healthStore.ts",
     source: "export type HealthStore = { readHealth: () => Effect.Effect<void>; writeHealth(record: string): void };\n",
   },
   { name: "assertion-looking string content", source: 'export const copy = "input as string";\n' },
@@ -312,7 +312,7 @@ const ACCEPTED: ReadonlyArray<SingleFileCase> = [
   {
     name: "an interface in a declaration file",
     path: "src/types/environment.d.ts",
-    source: "declare global { interface ProcessEnv { DUFFLEBAG_VOICE_DIR?: string } }\nexport {};\n",
+    source: "declare global { interface ProcessEnv { AGENT_OUTFIT_REHOME_STATE_DIR?: string } }\nexport {};\n",
   },
   { name: "directive-looking string content", source: 'export const copy = "@ts-ignore";\n' },
   {

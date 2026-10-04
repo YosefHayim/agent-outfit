@@ -1,4 +1,4 @@
-/** Agent hook settings (settings.json and native equivalents): plan the dufflebag hook entries, and restore them on removal. */
+/** Agent hook settings (settings.json and native equivalents): plan the agent-outfit hook entries, and restore them on removal. */
 
 import type { Path } from "@effect/platform";
 import { Either, Schema, ParseResult as SchemaParseIssue } from "effect";
@@ -80,7 +80,7 @@ const decodeHookGroups = (value: unknown, event: string): Either.Either<Readonly
     () => new InstallError({ issue: `settings.json hook event ${event} must contain an array.` }),
   );
 
-// The user's own groups for an event: from the receipt when dufflebag already edited it, else from the file.
+// The user's own groups for an event: from the receipt when agent-outfit already edited it, else from the file.
 const baseHookGroups = (input: {
   ownership: JsonValuesOwnership | undefined;
   document: SettingsDocument;
@@ -115,7 +115,7 @@ const baseHookGroups = (input: {
   );
 };
 
-// dufflebag owns only whole hook events, so every owned pointer is /hooks/<event>.
+// agent-outfit owns only whole hook events, so every owned pointer is /hooks/<event>.
 const settingsValueAtPointer = (document: SettingsDocument, pointer: string): unknown => {
   const [container, key, extra] = jsonPointerPath(pointer);
 
@@ -140,7 +140,7 @@ const validateCurrentSettingsOwnership = (
       );
 };
 
-// A file dufflebag created and left empty is removed; anything else keeps its remaining user bytes.
+// A file agent-outfit created and left empty is removed; anything else keeps its remaining user bytes.
 const restoreOrRemove = (input: {
   file: OwnedFile;
   source: string;
@@ -178,7 +178,7 @@ const managedHookGroupSchema = Schema.Struct({
       }),
     }),
   ).annotations({
-    description: "Single dufflebag-authored command leaf for this registration.",
+    description: "Single agent-outfit-authored command leaf for this registration.",
   }),
 });
 
@@ -210,7 +210,7 @@ export const desiredHookGroups = (input: {
         registrationEntrypoint(feature.runtime, registration),
       );
       const runtime = `node "${input.path.join(input.root, entrypoint)}"`;
-      const command = registration.readsAgentId ? `DUFFLEBAG_AGENT_ID=${input.agent.id} ${runtime}` : runtime;
+      const command = registration.readsAgentId ? `AGENT_OUTFIT_AGENT_ID=${input.agent.id} ${runtime}` : runtime;
       const group = managedHookGroupSchema.make({
         ...(registration.matcher._tag === "pattern" ? { matcher: registration.matcher.value } : {}),
         hooks: [{ type: "command", command }],
@@ -254,7 +254,7 @@ export const planSettings = (input: {
     return Either.left(currentOwnership.left);
   }
 
-  // Events dufflebag no longer wants are restored first, newest first, then every desired event is written.
+  // Events agent-outfit no longer wants are restored first, newest first, then every desired event is written.
   const previousEvents = (previousOwnership?.values || []).flatMap((value) => {
     const event = hookEventFromPointer(value.pointer);
 
@@ -399,7 +399,7 @@ export const restoreSettings = (input: {
     return Either.left(currentOwnership.left);
   }
 
-  // Undo edits in reverse order, then drop only the containers dufflebag created that are now empty.
+  // Undo edits in reverse order, then drop only the containers agent-outfit created that are now empty.
   let source = decoded.right.source;
   for (const value of [...ownership.values].reverse()) {
     const restored = restorePointer(source, value);

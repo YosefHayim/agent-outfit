@@ -1,12 +1,12 @@
-/** `dufflebag install [feature-id...]` — thin adapter over the install capability. */
+/** `agent-outfit install [feature-id...]` — thin adapter over the install capability. */
 
-import { Args, Command } from "@effect/cli";
+import { Command } from "@effect/cli";
 import { Effect } from "effect";
 
 import { destinationForScope, scanHost } from "../config/hostScan.js";
 import { install } from "../install/install.js";
 import { preparePackage } from "../install/preparePackage.js";
-import { formatOption, scopeOption } from "./cliOptions.js";
+import { featureIdsArgument, formatOption, scopeOption } from "./cliOptions.js";
 import * as TerminalUI from "./TerminalUI.js";
 
 export const showInstallation = (installation: {
@@ -23,14 +23,13 @@ export const showInstallation = (installation: {
     if (installation.agents.length > 0) yield* TerminalUI.detail(`Agents: ${installation.agents.join(", ")}`);
   });
 
-const featureIdsArgument = Args.text({ name: "feature-id" }).pipe(
-  Args.repeated,
-  Args.withDescription("Feature IDs from `dufflebag catalog`; omitted means catalog defaults"),
-);
-
 export const installCommand = Command.make(
   "install",
-  { featureIds: featureIdsArgument, scope: scopeOption, format: formatOption },
+  {
+    featureIds: featureIdsArgument("Feature IDs from `agent-outfit catalog`; omitted means catalog defaults"),
+    scope: scopeOption,
+    format: formatOption,
+  },
   (args) =>
     Effect.gen(function* () {
       if (args.format === "text") yield* TerminalUI.intro("install");

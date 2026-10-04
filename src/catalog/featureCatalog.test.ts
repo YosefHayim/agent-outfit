@@ -14,7 +14,6 @@ import {
 const expectedFeatureIds = [
   "context-guard",
   "autorun",
-  "voice",
   "duplicate-code-guard",
   "scratch-folder-guard",
   "session-rehome",
@@ -71,7 +70,6 @@ const expectedFeatureIds = [
 const expectedSourceDirectories = [
   "contextGuard",
   "autorun",
-  "voice",
   "duplicateCodeGuard",
   "scratchFolderGuard",
   "sessionRehome",
@@ -157,7 +155,6 @@ const validFixture = [
     runtime: {
       _tag: "hook",
       sourceEntrypoint: "hooks/beta.ts",
-      shippedPaths: [],
       registrations: [
         {
           event: "Stop",
@@ -187,7 +184,7 @@ describe("featureCatalog", () => {
 
   it("derives defaults, installed skills, and exact shipped allowlists", () => {
     expect(defaultFeatureIds).toEqual(["context-guard", "scratch-folder-guard"]);
-    expect(skillsForFeatures(["context-guard", "voice", "duplicate-code-guard"])).toEqual([]);
+    expect(skillsForFeatures(["context-guard", "duplicate-code-guard"])).toEqual([]);
     expect(
       skillsForFeatures(featureCatalog.map((feature) => feature.id)).map((skill) => [skill.id, skill.shippedPaths]),
     ).toEqual([
@@ -267,7 +264,6 @@ describe("featureCatalog", () => {
               id: feature.id,
               platform: feature.platform,
               sourceEntrypoint: feature.runtime.sourceEntrypoint,
-              shippedPaths: feature.runtime.shippedPaths,
               registrations: feature.runtime.registrations,
             },
           ]
@@ -279,7 +275,6 @@ describe("featureCatalog", () => {
         id: "context-guard",
         platform: "any",
         sourceEntrypoint: "hooks/contextGuard.ts",
-        shippedPaths: [],
         registrations: [
           {
             event: "PreToolUse",
@@ -344,32 +339,9 @@ describe("featureCatalog", () => {
         ],
       },
       {
-        id: "voice",
-        platform: "any",
-        sourceEntrypoint: "hooks/speakReply.ts",
-        shippedPaths: [
-          "dufflebag-voice",
-          "refine_prompt.py",
-          "refine_providers.py",
-          "refine_choices.py",
-          "mac_picker.py",
-          "text_to_speech.py",
-          "text_to_speech.py.lock",
-        ],
-        registrations: [
-          {
-            event: "Stop",
-            matcher: { _tag: "none" },
-            entrypoint: { _tag: "featureDefault" },
-            readsAgentId: true,
-          },
-        ],
-      },
-      {
         id: "duplicate-code-guard",
         platform: "any",
         sourceEntrypoint: "hooks/duplicateCodeGuard.ts",
-        shippedPaths: [],
         registrations: [
           {
             event: "PreToolUse",
@@ -383,7 +355,6 @@ describe("featureCatalog", () => {
         id: "scratch-folder-guard",
         platform: "any",
         sourceEntrypoint: "hooks/scratchFolderGuard.ts",
-        shippedPaths: [],
         registrations: [
           {
             event: "PreToolUse",
@@ -403,7 +374,6 @@ describe("featureCatalog", () => {
         id: "session-rehome",
         platform: "any",
         sourceEntrypoint: "hooks/rehomeEndedSession.ts",
-        shippedPaths: [],
         registrations: [
           {
             event: "SessionEnd",
@@ -535,7 +505,6 @@ describe("featureCatalogSchema", () => {
           runtime: {
             _tag: "hook",
             sourceEntrypoint: "hooks/beta.js",
-            shippedPaths: [],
             registrations: [],
           },
         },

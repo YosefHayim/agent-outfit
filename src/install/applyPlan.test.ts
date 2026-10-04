@@ -20,8 +20,8 @@ const inspectedReceiptBytes = new TextEncoder().encode("receipt inspected during
 const changedReceiptBytes = new TextEncoder().encode("receipt changed after planning");
 const applicationOwner = { _tag: "application" };
 const expectedMissing: ExpectedCurrent = { _tag: "missing" };
-const receiptFile = ".dufflebag/receipt.json";
-const recoveryFile = ".dufflebag/recovery.json";
+const receiptFile = ".agent-outfit/receipt.json";
+const recoveryFile = ".agent-outfit/recovery.json";
 const receiptTarget = { path: receiptFile, kind: { _tag: "receipt" }, owner: applicationOwner };
 
 const portablePath = (filePath: string): string => filePath.replaceAll("\\", "/");
@@ -41,11 +41,11 @@ const configFile = (path: string, previous: object = { _tag: "missing" }) => ({
   ownership: { _tag: "wholeFile", installedHash, previous },
 });
 
-const receiptOf = (artifacts: ReadonlyArray<object>) => ({
+const receiptOf = (ownedFiles: ReadonlyArray<object>) => ({
   version: "0.12.0",
   scope: "project",
   features: [],
-  artifacts,
+  ownedFiles,
 });
 
 type WritePlanRequest = {
@@ -91,7 +91,7 @@ const receiptRemovalPlan = (root: string, expectedCurrent: ExpectedCurrent): Pla
 const makeWorkspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-apply-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-apply-" });
   const at = (relative: string) => path.join(root, relative);
 
   return {
@@ -118,7 +118,7 @@ const makeWorkspace = Effect.gen(function* () {
         { discard: true },
       ),
     transactionDirectories: Effect.map(fileSystem.readDirectory(root), (entries) =>
-      entries.filter((entry) => entry.startsWith(".dufflebag-transaction-")),
+      entries.filter((entry) => entry.startsWith(".agent-outfit-transaction-")),
     ),
     publishedReceipt: Effect.flatMap(fileSystem.readFileString(at(receiptFile)), decodeReceiptJson),
     recoveryRecord: Effect.flatMap(fileSystem.readFileString(at(recoveryFile)), decodeRecoveryRecordJson),
@@ -159,7 +159,7 @@ const failWith = (method: string, pathOrDescriptor: string) =>
 
 const named = (filePath: string, name: string) => portablePath(filePath).endsWith(`/${name}`);
 
-// Transaction files live at <root>/.dufflebag-transaction-<id>/<prepared|snapshots>/<name>.
+// Transaction files live at <root>/.agent-outfit-transaction-<id>/<prepared|snapshots>/<name>.
 const rootOfTransactionFile = (path: Path.Path, filePath: string) => path.dirname(path.dirname(path.dirname(filePath)));
 
 type Race = (context: {
@@ -345,7 +345,7 @@ layer(NodeContext.layer)("applyPlan", (it) => {
   it.scoped("rejects a symlinked parent before creating transaction state", () =>
     Effect.gen(function* () {
       const workspace = yield* makeWorkspace;
-      const outside = yield* workspace.fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-apply-outside-" });
+      const outside = yield* workspace.fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-apply-outside-" });
       yield* workspace.fileSystem.symlink(outside, workspace.at("link"));
 
       yield* expectFailure(applyPlan(writePlan(workspace.root, { files: missingFiles(["link/escaped.json"]) })));
@@ -393,7 +393,7 @@ layer(NodeContext.layer)("applyPlan", (it) => {
       yield* workspace.expectBytes("write.txt", installedBytes);
       yield* workspace.expectBytes("restore.txt", originalBytes);
       yield* workspace.expectAbsent(["remove.txt"]);
-      expect((yield* workspace.publishedReceipt).artifacts.map((file) => file.path)).toEqual(["write.txt"]);
+      expect((yield* workspace.publishedReceipt).ownedFiles.map((file) => file.path)).toEqual(["write.txt"]);
     }),
   );
 
@@ -536,7 +536,7 @@ describe("applyPlan under injected filesystem faults", () => {
     Effect.gen(function* () {
       const workspace = yield* makeWorkspace;
       const outside = `${workspace.root}-recovery-outside`;
-      yield* workspace.fileSystem.makeDirectory(workspace.at(".dufflebag"));
+      yield* workspace.fileSystem.makeDirectory(workspace.at(".agent-outfit"));
       yield* workspace.fileSystem.makeDirectory(outside);
       yield* Effect.addFinalizer(() => workspace.fileSystem.remove(outside, { recursive: true, force: true }));
 
@@ -549,8 +549,8 @@ describe("applyPlan under injected filesystem faults", () => {
       Effect.provide(
         afterReceiptPrepared(({ root, fileSystem, path }) =>
           Effect.zipRight(
-            fileSystem.rename(path.join(root, ".dufflebag"), path.join(root, ".dufflebag-before-swap")),
-            fileSystem.symlink(`${root}-recovery-outside`, path.join(root, ".dufflebag")),
+            fileSystem.rename(path.join(root, ".agent-outfit"), path.join(root, ".agent-outfit-before-swap")),
+            fileSystem.symlink(`${root}-recovery-outside`, path.join(root, ".agent-outfit")),
           ),
         ),
       ),
@@ -613,7 +613,7 @@ describe("applyPlan under injected filesystem faults", () => {
       yield* Effect.gen(function* () {
         const workspace = yield* makeWorkspace;
         const plan = writePlan(workspace.root, { files: { "settings.json": expectedFile(originalBytes) } });
-        yield* workspace.fileSystem.makeDirectory(workspace.at(".dufflebag"));
+        yield* workspace.fileSystem.makeDirectory(workspace.at(".agent-outfit"));
         yield* workspace.seed({ "settings.json": originalBytes });
 
         const firstWriter = yield* Effect.fork(Effect.exit(applyPlan(plan)));
@@ -794,7 +794,7 @@ describe("applyPlan under injected filesystem faults", () => {
       Effect.provide(
         patchedPlatform((fileSystem) => ({
           remove: (filePath, options) =>
-            portablePath(filePath).includes("/.dufflebag-transaction-") && options?.recursive === true
+            portablePath(filePath).includes("/.agent-outfit-transaction-") && options?.recursive === true
               ? failWith("remove", filePath)
               : fileSystem.remove(filePath, options),
         })),

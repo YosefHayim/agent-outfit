@@ -1,7 +1,7 @@
 name: CI
 
 # One install and one `pnpm verify` run cover the repository's complete gate.
-# Copied by `dufflebag workflow scaffold`; customize this copy when the project
+# Copied by `agent-outfit workflow scaffold`; customize this copy when the project
 # needs an additional runtime or service.
 #
 # REQUIRED package.json script:

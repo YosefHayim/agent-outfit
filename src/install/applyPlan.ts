@@ -111,7 +111,7 @@ const targetSnapshot = (targetPath: string, original: TargetSnapshot["original"]
 
 const preparePlan = (plan: Plan, root: string) =>
   Effect.map(Path.Path, (path): PreparedPlan => {
-    const transactionRoot = path.join(root, `.dufflebag-transaction-${randomUUID()}`);
+    const transactionRoot = path.join(root, `.agent-outfit-transaction-${randomUUID()}`);
     const preparedDirectory = path.join(transactionRoot, "prepared");
     const snapshotsDirectory = path.join(transactionRoot, "snapshots");
     const receiptTargetPath = path.resolve(root, plan.receipt.target.path);
@@ -249,10 +249,6 @@ const validatePlanPreconditions = (transaction: Transaction) => {
   );
 };
 
-// The voice worker binary is the one shipped file that must stay executable.
-const isExecutableRuntimeFile = (targetPath: string): boolean =>
-  targetPath.endsWith("/dufflebag-voice") || targetPath.endsWith("\\dufflebag-voice");
-
 const prepareFile = (file: PreparedFile) =>
   Effect.gen(function* () {
     if (file.operation._tag === "remove") {
@@ -260,13 +256,7 @@ const prepareFile = (file: PreparedFile) =>
     }
 
     const fileSystem = yield* FileSystem.FileSystem;
-    if (!isExecutableRuntimeFile(file.targetPath)) {
-      return yield* fileSystem.writeFile(file.preparedPath, file.operation.bytes);
-    }
-
-    // The umask filters the creation mode, so chmod sets it exactly.
-    yield* fileSystem.writeFile(file.preparedPath, file.operation.bytes, { mode: 0o755 });
-    yield* fileSystem.chmod(file.preparedPath, 0o755);
+    yield* fileSystem.writeFile(file.preparedPath, file.operation.bytes);
   });
 
 const prepareTargets = (preparedPlan: PreparedPlan) =>

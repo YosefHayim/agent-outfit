@@ -18,7 +18,7 @@ const generatedSection = (marker: string): string => {
 };
 
 describe("README generation", () => {
-  it("lists dufflebag-owned skills in the catalog, minus community and user-global skills", () => {
+  it("lists agent-outfit-owned skills in the catalog, minus community and user-global skills", () => {
     const catalog = generatedSection("FEATURES");
 
     expect(catalog).toContain("**write-readme**");

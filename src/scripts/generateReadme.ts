@@ -75,7 +75,7 @@ const featuresTable = (): string =>
 
 const communitySection = (descriptions: ReadonlyMap<string, string>): string =>
   [
-    "These skills ship with dufflebag for convenience — installable the same way (`npx ys-dufflebag install <id>`) — but they are **authored by others**, not by dufflebag. Full credit and upstream sources:",
+    "These skills ship with agent-outfit for convenience — installable the same way (`npx agent-outfit install <id>`) — but they are **authored by others**, not by agent-outfit. Full credit and upstream sources:",
     "",
     "| Skill | What it does | By |",
     "| --- | --- | --- |",
@@ -88,14 +88,14 @@ const communitySection = (descriptions: ReadonlyMap<string, string>): string =>
         : [];
     }),
     "",
-    "> `code-style-new-project` and `code-style-existing-project` are dufflebag-original skills that build on Matt Pocock's grilling pattern — they stay in the owned catalog above.",
+    "> `code-style-new-project` and `code-style-existing-project` are agent-outfit-original skills that build on Matt Pocock's grilling pattern — they stay in the owned catalog above.",
   ].join("\n");
 
 const defaultText = (value: unknown): string => (value === undefined ? "absent" : `\`${JSON.stringify(value)}\``);
 
 const settingsSection = (): string =>
   [
-    "dufflebag keeps one `config.json` in its install root: `~/.claude/dufflebag/config.json` for a global install, `.claude/dufflebag/config.json` for a project install. Change a setting with `dufflebag config set <setting> <value>`, show it with `dufflebag config show`, and reset it with `dufflebag config reset`. A file with an unknown key does not load; fix it or run `dufflebag config reset`.",
+    "agent-outfit keeps one `config.json` in its install root: `~/.claude/agent-outfit/config.json` for a global install, `.claude/agent-outfit/config.json` for a project install. Change a setting with `agent-outfit config set <setting> <value>`, show it with `agent-outfit config show`, and reset it with `agent-outfit config reset`. A file with an unknown key does not load; fix it or run `agent-outfit config reset`.",
     "",
     "| Setting | config.json key | Default | What it does |",
     "| --- | --- | --- | --- |",
@@ -104,17 +104,14 @@ const settingsSection = (): string =>
         `| \`${setting.name}\` | \`${setting.key}\` | ${defaultText(defaultConfig[setting.key])} | ${tableCell(setting.description)} |`,
     ),
     "",
-    "Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line. An empty value clears a setting whose default is absent.",
+    "Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line.",
     "",
     "### Environment variables",
     "",
-    "Provider API keys (`GROQ_API_KEY`, `GEMINI_API_KEY`, …) keep their vendor names and are listed by `dufflebag free models`.",
-    "",
-    "| Variable | Default | What it does | Read by |",
-    "| --- | --- | --- | --- |",
+    "| Variable | Default | What it does |",
+    "| --- | --- | --- |",
     ...environmentVariables.map(
-      (variable) =>
-        `| \`${variable.name}\` | ${tableCell(variable.defaultValue)} | ${tableCell(variable.purpose)} | ${variable.readBy.join(", ")} |`,
+      (variable) => `| \`${variable.name}\` | ${tableCell(variable.defaultValue)} | ${tableCell(variable.purpose)} |`,
     ),
   ].join("\n");
 

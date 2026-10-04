@@ -3,7 +3,7 @@ import { Effect, Exit } from "effect";
 
 import { decodeRecoveryRecordJson } from "./recovery.js";
 
-const transactionName = ".dufflebag-transaction-00000000-0000-4000-8000-000000000000";
+const transactionName = ".agent-outfit-transaction-00000000-0000-4000-8000-000000000000";
 const transactionRoot = `/safe/${transactionName}`;
 
 const missingAt = (targetPath: string) => ({ targetPath, original: { _tag: "missing" } });
@@ -13,12 +13,12 @@ const snapshotAt = (targetPath: string, snapshotPath: string) => ({
   original: { _tag: "file", snapshotPath },
 });
 
-const receiptSnapshot = missingAt("/safe/.dufflebag/receipt.json");
+const receiptSnapshot = missingAt("/safe/.agent-outfit/receipt.json");
 const validRecord = {
   _tag: "pending",
   version: 1,
   root: "/safe",
-  receiptPath: "/safe/.dufflebag/receipt.json",
+  receiptPath: "/safe/.agent-outfit/receipt.json",
   transactionRoot,
   snapshots: [receiptSnapshot],
 };
@@ -32,9 +32,9 @@ const withSnapshots = (snapshots: ReadonlyArray<object>) => ({
 const driveRecord = (fields: object) => ({
   ...validRecord,
   root: "C:/safe",
-  receiptPath: "C:/safe/.dufflebag/receipt.json",
+  receiptPath: "C:/safe/.agent-outfit/receipt.json",
   transactionRoot: `C:/safe/${transactionName}`,
-  snapshots: [missingAt("C:/safe/.dufflebag/receipt.json")],
+  snapshots: [missingAt("C:/safe/.agent-outfit/receipt.json")],
   ...fields,
 });
 
@@ -44,9 +44,9 @@ describe("recovery", () => {
       const rootRecord = {
         ...validRecord,
         root: "/",
-        receiptPath: "/.dufflebag/receipt.json",
+        receiptPath: "/.agent-outfit/receipt.json",
         transactionRoot: `/${transactionName}`,
-        snapshots: [missingAt("/.dufflebag/receipt.json")],
+        snapshots: [missingAt("/.agent-outfit/receipt.json")],
       };
 
       expect(yield* decodeRecoveryRecordJson(JSON.stringify(validRecord))).toEqual(validRecord);
@@ -57,8 +57,11 @@ describe("recovery", () => {
   // Every malformed record must fail before recovery can touch the filesystem.
   it.effect.each([
     { name: "embedded NUL", record: withSnapshots([missingAt("/safe/file\0.txt")]) },
-    { name: "recovery marker target", record: withSnapshots([missingAt("/safe/.dufflebag/recovery.json")]) },
-    { name: "recovery marker descendant", record: withSnapshots([missingAt("/safe/.dufflebag/recovery.json/child")]) },
+    { name: "recovery marker target", record: withSnapshots([missingAt("/safe/.agent-outfit/recovery.json")]) },
+    {
+      name: "recovery marker descendant",
+      record: withSnapshots([missingAt("/safe/.agent-outfit/recovery.json/child")]),
+    },
     { name: "root target", record: withSnapshots([missingAt("/safe")]) },
     { name: "transaction target", record: withSnapshots([missingAt(`${transactionRoot}/snapshots/evidence`)]) },
     { name: "ancestor targets", record: withSnapshots([missingAt("/safe/a"), missingAt("/safe/a/b")]) },
@@ -87,7 +90,7 @@ describe("recovery", () => {
     },
     {
       name: "malformed transaction suffix",
-      record: { ...validRecord, transactionRoot: "/safe/.dufflebag-transaction-invalid" },
+      record: { ...validRecord, transactionRoot: "/safe/.agent-outfit-transaction-invalid" },
     },
     {
       name: "uppercase transaction path",
@@ -99,25 +102,25 @@ describe("recovery", () => {
     },
     {
       name: "case-only receipt target",
-      record: { ...validRecord, snapshots: [missingAt("/safe/.DUFFLEBAG/RECEIPT.JSON")] },
+      record: { ...validRecord, snapshots: [missingAt("/safe/.AGENT-OUTFIT/RECEIPT.JSON")] },
     },
     {
       name: "drive-qualified case-only receipt target",
-      record: driveRecord({ snapshots: [missingAt("C:/safe/.DUFFLEBAG/RECEIPT.JSON")] }),
+      record: driveRecord({ snapshots: [missingAt("C:/safe/.AGENT-OUTFIT/RECEIPT.JSON")] }),
     },
     {
       name: "drive-qualified case-only snapshot parent",
       record: driveRecord({
         snapshots: [
           snapshotAt("C:/safe/a", `C:/safe/${transactionName.toUpperCase()}/SNAPSHOTS/0`),
-          missingAt("C:/safe/.dufflebag/receipt.json"),
+          missingAt("C:/safe/.agent-outfit/receipt.json"),
         ],
       }),
     },
     {
       name: "drive-qualified case-only root alias",
       record: driveRecord({
-        snapshots: [missingAt("C:/SAFE/file.txt"), missingAt("C:/safe/.dufflebag/receipt.json")],
+        snapshots: [missingAt("C:/SAFE/file.txt"), missingAt("C:/safe/.agent-outfit/receipt.json")],
       }),
     },
     { name: "target outside root", record: withSnapshots([missingAt("/outside.txt")]) },

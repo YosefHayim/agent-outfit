@@ -68,79 +68,7 @@ export const configSchema = Schema.Struct({
   idleCompactAfter: withDefault(durationSchema, "off").annotations({
     title: "idle compact after",
     description:
-      "How long an agent session sits idle before dufflebag submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h.",
-  }),
-  speechVoice: withDefault(trimmed(Schema.Trimmed), "F4").annotations({
-    title: "speech voice",
-    description: "Supertonic voice ID (F1-F5 or M1-M5); unsupported names fall back to F4.",
-  }),
-  speechWordsPerMinute: numberSetting({
-    range: [80, 720],
-    outOfRange: "Speech rate must be between 80 and 720 words per minute.",
-    fallback: 230,
-    title: "speech rate (words per minute)",
-    description: "Speech rate for read-aloud replies, in words per minute.",
-  }),
-  speechMode: withDefault(trimmed(Schema.Literal("auto", "immediate", "off")), "auto").annotations({
-    title: "speech mode",
-    description:
-      "When agent replies are read aloud: auto holds a Cmux reply until its surface is focused and Cmux is in front, and speaks other replies at once; immediate speaks every reply at once; off reads nothing.",
-  }),
-  refineMode: withDefault(trimmed(Schema.Literal("off", "clipboard", "dictation", "both")), "off").annotations({
-    title: "refine mode",
-    description:
-      "Prompt refine: off; clipboard = double-tap Shift refines the copied prompt; dictation = refine the final dictation before it is typed; both.",
-  }),
-  refineProvider: withDefault(trimmed(Schema.NonEmptyString), "codex").annotations({
-    title: "refine provider",
-    description:
-      "Refine provider: codex | local | auto | grok | ollama | opencode | claude | gemini | pi. `dufflebag config pick-refine` lists only providers found on PATH.",
-  }),
-  refineModel: Schema.optionalWith(trimmed(Schema.NonEmptyString), { exact: true }).annotations({
-    title: "refine model",
-    description:
-      "Model id for the refine provider (e.g. gpt-5.3-codex-spark, grok-4.5, llama3.2). When absent the voice worker uses gpt-5.3-codex-spark.",
-  }),
-  refineEffort: Schema.optionalWith(trimmed(Schema.Literal("low", "medium", "high", "xhigh", "minimal")), {
-    exact: true,
-  }).annotations({
-    title: "refine effort",
-    description:
-      "Reasoning effort for providers that support it (grok --reasoning-effort, codex model_reasoning_effort). When absent the voice worker uses low so dictation refine stays fast.",
-  }),
-  refinePressEnter: withDefault(Schema.Boolean, false).annotations({
-    title: "refine press Enter",
-    description: "Press Enter after the refined text is typed at the caret. Independent of refineCmuxPressEnter.",
-  }),
-  refineSendTo: withDefault(trimmed(Schema.Literal("caret", "cmux-new", "cmux-resume")), "caret").annotations({
-    title: "refine send to",
-    description:
-      "Where refined text goes: caret (paste into the focused input), cmux-new (a new focused cmux workspace), or cmux-resume (the focused cmux surface).",
-  }),
-  refineCmuxCommand: withDefault(trimmed(Schema.Trimmed), "").annotations({
-    title: "refine cmux command",
-    description:
-      "Optional shell command run in the new cmux terminal for cmux-new. Placeholders: {{prompt_file}} (safe path), {{prompt}} (shell-escaped), {{cwd}}. Empty pastes the refined text only.",
-  }),
-  refineCmuxPressEnter: withDefault(Schema.Boolean, false).annotations({
-    title: "refine cmux press Enter",
-    description: "Press Enter after injecting refined text into cmux (cmux-resume, or cmux-new without a command).",
-  }),
-  dictationReplacements: withDefault(trimmed(Schema.Trimmed), "").annotations({
-    title: "dictation replacements",
-    description: "Semicolon-separated speech replacements in heard=written form.",
-  }),
-  dictationKeepListeningSeconds: numberSetting({
-    range: [0, 2],
-    outOfRange: "Dictation keep-listening time must be between 0 and 2 seconds.",
-    fallback: 0.2,
-    title: "dictation keep listening (seconds)",
-    description: "Seconds the microphone stays open after Shift is released so trailing words are not cut off.",
-  }),
-  dictationLanguage: withDefault(trimmed(Schema.Literal("en", "he")), "en").annotations({
-    title: "dictation language",
-    description:
-      "Dictation speech language: en (default whisper.cpp) or he (ivrit.ai Hebrew whisper-large-v3-turbo ggml).",
+      "How long an agent session sits idle before agent-outfit submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h.",
   }),
   duplicateCodeMode: withDefault(trimmed(Schema.Literal("block", "warn", "off")), "block").annotations({
     title: "duplicate code mode",
@@ -165,7 +93,7 @@ export const configSchema = Schema.Struct({
   }),
   debugLogs: withDefault(Schema.Boolean, false).annotations({
     title: "debug logs",
-    description: "Print dufflebag hook errors to stderr.",
+    description: "Print agent-outfit hook errors to stderr.",
   }),
 }).pipe(
   Schema.filter((config) => [
@@ -192,7 +120,7 @@ export const configJsonSchema = Schema.parseJson(configSchema);
 
 export const defaultConfig = Schema.decodeUnknownSync(configSchema, { onExcessProperty: "error" })({});
 
-export const decodeConfig = Schema.decodeUnknown(configSchema, { onExcessProperty: "error" });
+const decodeConfig = Schema.decodeUnknown(configSchema, { onExcessProperty: "error" });
 
 type ConfigProperty = Schema.PropertySignature.All;
 

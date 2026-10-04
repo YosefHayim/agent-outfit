@@ -6,7 +6,7 @@ import { installationLocationSchema, receiptPath } from "./installPaths.js";
 import { errorMessage, InstallError, interactionSchema } from "./installRequest.js";
 import { planUninstall } from "./planChanges.js";
 import { readReceipt, scopeSchema } from "./receipt.js";
-import { planRestores } from "./restore.js";
+import { planRestorations } from "./restore.js";
 
 export const uninstallRequestSchema = Schema.extend(
   installationLocationSchema,
@@ -37,7 +37,7 @@ class UninstallError extends Schema.TaggedError<UninstallError>()("UninstallErro
   }),
 }) {
   get message(): string {
-    return `Cannot uninstall dufflebag: ${this.issue}`;
+    return `Cannot uninstall agent-outfit: ${this.issue}`;
   }
 }
 
@@ -80,9 +80,9 @@ export const uninstall = (input: unknown) =>
       return yield* new UninstallError({ issue: "Existing receipt scope does not match the requested destination." });
     }
 
-    const restorations = yield* planRestores({
+    const restorations = yield* planRestorations({
       root: request.destination.root,
-      files: receiptSnapshot.receipt.artifacts,
+      files: receiptSnapshot.receipt.ownedFiles,
     });
     const plannedUninstall = planUninstall({
       root: request.destination.root,

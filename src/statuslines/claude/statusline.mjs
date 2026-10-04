@@ -8,7 +8,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { stripVTControlCharacters } from "node:util";
 
-const STATE_DIR = path.join(homedir(), ".claude", "dufflebag", "state");
+const STATE_DIR = path.join(homedir(), ".claude", "agent-outfit", "state");
 const ANSI = { green: "\x1b[32m", yellow: "\x1b[33m", red: "\x1b[31m", dim: "\x1b[2m", reset: "\x1b[0m" };
 const SEPARATOR = `${ANSI.dim} · ${ANSI.reset}`;
 // Claude indents the status line, so leave room for it.

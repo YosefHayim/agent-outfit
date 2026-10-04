@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** dufflebag CLI entry point: the only file that starts the Effect runtime. */
+/** agent-outfit CLI entry point: the only file that starts the Effect runtime. */
 
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
@@ -15,22 +15,15 @@ import { CliUsageError } from "./cliOptions.js";
 import { configCommand } from "./configCommand.js";
 import { doctorCommand } from "./doctorCommand.js";
 import { duplicatesCommand } from "./duplicatesCommand.js";
-import { freeProviderCommand } from "./freeProviderCommand.js";
 import { installCommand } from "./installCommand.js";
 import { menuCommand } from "./menuCommand.js";
-import { openRouterCommand } from "./openRouterCommand.js";
-import { sttCommand } from "./sttCommand.js";
 import * as TerminalUI from "./TerminalUI.js";
-import { ttsCommand } from "./ttsCommand.js";
 import { uninstallCommand } from "./uninstallCommand.js";
 import { updateCommand } from "./updateCommand.js";
-import { voiceCommand } from "./voiceCommand.js";
 import { workflowCommand } from "./workflowCommand.js";
 
-const dufflebag = Command.make("dufflebag").pipe(
-  Command.withDescription(
-    "Install a personal set of AI coding-agent skills, hooks, natural voice, and copyable workflows.",
-  ),
+const agentOutfit = Command.make("agent-outfit").pipe(
+  Command.withDescription("Install a personal set of AI coding-agent skills, hooks, and copyable workflows."),
   Command.withSubcommands([
     installCommand,
     updateCommand,
@@ -41,11 +34,6 @@ const dufflebag = Command.make("dufflebag").pipe(
     doctorCommand,
     duplicatesCommand,
     workflowCommand,
-    sttCommand,
-    ttsCommand,
-    voiceCommand,
-    openRouterCommand,
-    freeProviderCommand,
   ]),
 );
 
@@ -67,14 +55,14 @@ const showCliFailure = (error: unknown) => {
 export const isBareArgv = (argv: ReadonlyArray<string>): boolean => argv.length <= 2;
 
 const program = Effect.gen(function* () {
-  const cli = Command.run(dufflebag, { name: "dufflebag", version: yield* readPackageVersion });
+  const cli = Command.run(agentOutfit, { name: "agent-outfit", version: yield* readPackageVersion });
 
   if (isBareArgv(process.argv)) {
-    yield* cli(["node", "dufflebag", "--help"]);
+    yield* cli(["node", "agent-outfit", "--help"]);
     return;
   }
 
-  const invocationArguments = process.argv[2] === "-V" ? ["node", "dufflebag", "--version"] : process.argv;
+  const invocationArguments = process.argv[2] === "-V" ? ["node", "agent-outfit", "--version"] : process.argv;
   yield* cli(invocationArguments);
 }).pipe(
   Effect.catchAll(showCliFailure),

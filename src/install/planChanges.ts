@@ -86,7 +86,7 @@ const desiredStateSchema = Schema.Struct({
 }).pipe(
   Schema.filter((desired) => [
     ...desired.writes.flatMap((operation, index) => {
-      const receiptFile = desired.receipt.artifacts.find((file) => file.path === operation.file.path);
+      const receiptFile = desired.receipt.ownedFiles.find((file) => file.path === operation.file.path);
 
       return receiptFile !== undefined && ownedFilesEqual(operation.file, receiptFile)
         ? []
@@ -97,12 +97,12 @@ const desiredStateSchema = Schema.Struct({
             },
           ];
     }),
-    ...desired.receipt.artifacts.flatMap((file, index) =>
+    ...desired.receipt.ownedFiles.flatMap((file, index) =>
       desired.writes.filter((operation) => operation.file.path === file.path).length === 1
         ? []
         : [
             {
-              path: ["receipt", "artifacts", index, "path"],
+              path: ["receipt", "ownedFiles", index, "path"],
               message: "Every desired receipt entry must have exactly one desired write.",
             },
           ],
@@ -174,14 +174,14 @@ const installPlanInputSchema = Schema.Struct({
   }),
 }).pipe(
   Schema.filter((input) => {
-    const previousFiles = input.previous._tag === "receipt" ? input.previous.receipt.artifacts : [];
-    const desiredFiles = input.desired.receipt.artifacts;
+    const previousFiles = input.previous._tag === "receipt" ? input.previous.receipt.ownedFiles : [];
+    const desiredFiles = input.desired.receipt.ownedFiles;
     const staleFiles = reverseValues(
       previousFiles.filter((previousFile) => !desiredFiles.some((file) => file.path === previousFile.path)),
     );
     const retainedFiles = desiredFiles.flatMap((file, index): ReadonlyArray<RetainedFile> => {
       const previous = previousFiles.find((candidate) => candidate.path === file.path);
-      return previous === undefined ? [] : [{ file, previous, path: ["desired", "receipt", "artifacts", index] }];
+      return previous === undefined ? [] : [{ file, previous, path: ["desired", "receipt", "ownedFiles", index] }];
     });
 
     return [
@@ -208,7 +208,7 @@ const installPlanInputSchema = Schema.Struct({
           ? []
           : [
               {
-                path: ["desired", "receipt", "artifacts", index, "path"],
+                path: ["desired", "receipt", "ownedFiles", index, "path"],
                 message: `Desired file path ${file.path} conflicts with reserved path ${reservedPath}.`,
               },
             ];
@@ -228,7 +228,7 @@ const uninstallPlanInputSchema = Schema.Struct({
     description: "Receipt target state captured during capability inspection.",
   }),
 }).pipe(
-  Schema.filter((input) => restorationConsistencyIssues(reverseValues(input.receipt.artifacts), input.restorations)),
+  Schema.filter((input) => restorationConsistencyIssues(reverseValues(input.receipt.ownedFiles), input.restorations)),
 );
 
 const preserveJsonRestoration = (previous: JsonValuesOwnership, desired: JsonValuesOwnership): Ownership => ({
@@ -321,8 +321,8 @@ const installedFilesEqual = (left: OwnedFile, right: OwnedFile): boolean =>
 
 export const planInstall = (input: unknown) =>
   Either.flatMap(Schema.validateEither(installPlanInputSchema, { onExcessProperty: "error" })(input), (request) => {
-    const previousFiles = request.previous._tag === "receipt" ? request.previous.receipt.artifacts : [];
-    const nextFiles = request.desired.receipt.artifacts.map((desiredFile) => {
+    const previousFiles = request.previous._tag === "receipt" ? request.previous.receipt.ownedFiles : [];
+    const nextFiles = request.desired.receipt.ownedFiles.map((desiredFile) => {
       const previousFile = previousFiles.find((file) => file.path === desiredFile.path);
 
       return previousFile === undefined
@@ -343,7 +343,7 @@ export const planInstall = (input: unknown) =>
         }),
     );
     const changedPaths = new Set(changedWrites.map((operation) => operation.file.path));
-    const receipt = { ...request.desired.receipt, artifacts: nextFiles };
+    const receipt = { ...request.desired.receipt, ownedFiles: nextFiles };
 
     return checkPlan({
       scope: receipt.scope,
@@ -368,7 +368,7 @@ export const planUninstall = (input: unknown) =>
     checkPlan({
       scope: request.receipt.scope,
       root: request.root,
-      operations: orderRestorations(reverseValues(request.receipt.artifacts), request.restorations),
+      operations: orderRestorations(reverseValues(request.receipt.ownedFiles), request.restorations),
       preconditions: [],
       receipt: { _tag: "remove", target: request.receiptTarget, expectedCurrent: request.receiptExpectedCurrent },
     }),

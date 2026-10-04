@@ -49,8 +49,8 @@ const runHook = (request: {
     env: {
       ...process.env,
       HOME: "/Users/me",
-      DUFFLEBAG_AGENT_ID: request.agent,
-      DUFFLEBAG_REHOME_STATE_DIR: request.stateFolder,
+      AGENT_OUTFIT_AGENT_ID: request.agent,
+      AGENT_OUTFIT_REHOME_STATE_DIR: request.stateFolder,
     },
   });
 
@@ -118,7 +118,7 @@ describe("announceMovedSession process boundary", () => {
       cwd: packageRoot,
       input: "{",
       encoding: "utf8",
-      env: { ...process.env, DUFFLEBAG_AGENT_ID: "codex", DUFFLEBAG_REHOME_STATE_DIR: stateFolder },
+      env: { ...process.env, AGENT_OUTFIT_AGENT_ID: "codex", AGENT_OUTFIT_REHOME_STATE_DIR: stateFolder },
     });
 
     expect(execution.status).toBe(0);

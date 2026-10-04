@@ -1,4 +1,4 @@
-// Agent transcripts hold one JSON object per line; context-guard and the voice hook both decode them here.
+// Agent transcripts hold one JSON object per line; context-guard and session-rehome decode them here.
 
 import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
 

@@ -1,4 +1,4 @@
-// State paths under <installRoot>/state/ (~/.claude/dufflebag/state for a global install) and the small
+// State paths under <installRoot>/state/ (~/.claude/agent-outfit/state for a global install) and the small
 // file helpers shared by the guard, autorun control, and both watchers.
 
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
@@ -56,7 +56,7 @@ export const readJson = (file: string): unknown => {
   }
 };
 
-export const remove = (file: string): void => {
+export const removeFile = (file: string): void => {
   try {
     rmSync(file, { force: true });
   } catch {

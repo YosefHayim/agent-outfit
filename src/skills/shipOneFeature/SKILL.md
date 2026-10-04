@@ -73,7 +73,7 @@ Optional freeform flags:
 
 1. Git root, remote, default branch from `origin/HEAD`. Unrelated dirty main → stop or isolate (sibling safety).
 2. Read `AGENTS.md`, `CODE-STYLE.md`, ADRs, package verify/test scripts, `.github/workflows/*`.
-3. Detect product install surface (npm/pnpm `bin`, dufflebag, cargo, source-only).
+3. Detect product install surface (npm/pnpm `bin`, agent-outfit, cargo, source-only).
 4. Classify **Mode A** vs **Mode B** from the user text. If both a description and `#N` appear, **Mode B** wins for the issue id; treat extra text as scope notes on that issue.
 
 ### 1. Issue

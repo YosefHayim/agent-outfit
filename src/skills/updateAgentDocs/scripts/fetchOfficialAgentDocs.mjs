@@ -9,7 +9,7 @@ const FETCH_TIMEOUT_MS = 20000;
 const SOURCE_FILE_SUFFIX = ".source";
 const REQUEST_HEADERS = {
   accept: "text/html, text/markdown, text/plain;q=0.9, */*;q=0.8",
-  "user-agent": "dufflebag-update-agent-docs/1.0",
+  "user-agent": "agent-outfit-update-agent-docs/1.0",
 };
 const SOURCE_FILE = "sources.json";
 

@@ -4,7 +4,7 @@ import { Either, Option, Schema } from "effect";
 const FEATURE_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 // e.g. "contextGuard", "imageToCode" — not "context-guard" or "Context_Guard"
 const SOURCE_DIRECTORY_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
-// e.g. "SKILL.md", "hooks/autorunWatcher.ts" — not "/abs/path" or "a/../b"
+// e.g. "SKILL.md", "watchers/autorunWatcher.ts" — not "/abs/path" or "a/../b"
 const FEATURE_RELATIVE_PATH_PATTERN = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+$/;
 // e.g. "hooks/duplicateCodeGuard.ts" — feature-relative hook entrypoint only
 const HOOK_SOURCE_ENTRYPOINT_PATTERN = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+\.ts$/;
@@ -105,7 +105,8 @@ const hookRegistrationSchema = Schema.Struct({
   matcher: hookMatcherSchema,
   entrypoint: registrationEntrypointSchema,
   readsAgentId: Schema.Boolean.annotations({
-    description: "Whether the hook reads DUFFLEBAG_AGENT_ID, so its command starts with DUFFLEBAG_AGENT_ID=<agent>.",
+    description:
+      "Whether the hook reads AGENT_OUTFIT_AGENT_ID, so its command starts with AGENT_OUTFIT_AGENT_ID=<agent>.",
   }),
 });
 
@@ -120,10 +121,6 @@ const featureRuntimeSchema = Schema.Union(
         description: "Feature-relative TypeScript entrypoint compiled into dist/src/hooks.",
       }),
     ),
-    shippedPaths: shippedPathsSchema({
-      duplicateMessage: "Runtime shipped paths must be unique within one feature.",
-      description: "Exact authored runtime assets copied beside the compiled hook.",
-    }),
     registrations: Schema.Array(hookRegistrationSchema).annotations({
       description: "Hook registrations derived into supported agent settings.",
     }),
@@ -274,7 +271,6 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     runtime: {
       _tag: "hook",
       sourceEntrypoint: "hooks/contextGuard.ts",
-      shippedPaths: [],
       registrations: [
         {
           event: "PreToolUse",
@@ -320,52 +316,18 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     platform: "macos+ghostty",
   }),
   {
-    id: "voice",
-    sourceDirectory: "voice",
-    installedSkill: { _tag: "none" },
-    title: "Voice",
-    summary:
-      "Read complete agent responses with local speech, hold-Shift dictation via whisper.cpp large-v3-turbo (Metal), Cmux focus gating, and optional on-device prompt refinement on macOS.",
-    selectedByDefault: false,
-    dependencies: [],
-    platform: "any",
-    runtime: {
-      _tag: "hook",
-      sourceEntrypoint: "hooks/speakReply.ts",
-      // Native voice worker (built by src/scripts/buildVoiceWorker.sh) plus optional Python helpers.
-      shippedPaths: [
-        "dufflebag-voice",
-        "refine_prompt.py",
-        "refine_providers.py",
-        "refine_choices.py",
-        "mac_picker.py",
-        "text_to_speech.py",
-        "text_to_speech.py.lock",
-      ],
-      registrations: [
-        {
-          event: "Stop",
-          matcher: { _tag: "none" },
-          entrypoint: { _tag: "featureDefault" },
-          readsAgentId: true,
-        },
-      ],
-    },
-  },
-  {
     id: "duplicate-code-guard",
     sourceDirectory: "duplicateCodeGuard",
     installedSkill: { _tag: "none" },
     title: "Duplicate code guard",
     summary:
-      "Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `dufflebag config set duplicate-code-mode warn`). Agents without edit hooks can run `dufflebag duplicates` as a pre-commit or CI check.",
+      "Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `agent-outfit config set duplicate-code-mode warn`). Agents without edit hooks can run `agent-outfit duplicates` as a pre-commit or CI check.",
     selectedByDefault: false,
     dependencies: [],
     platform: "any",
     runtime: {
       _tag: "hook",
       sourceEntrypoint: "hooks/duplicateCodeGuard.ts",
-      shippedPaths: [],
       registrations: [
         {
           event: "PreToolUse",
@@ -389,7 +351,6 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     runtime: {
       _tag: "hook",
       sourceEntrypoint: "hooks/scratchFolderGuard.ts",
-      shippedPaths: [],
       registrations: [
         {
           event: "PreToolUse",
@@ -419,7 +380,6 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     runtime: {
       _tag: "hook",
       sourceEntrypoint: "hooks/rehomeEndedSession.ts",
-      shippedPaths: [],
       registrations: [
         {
           event: "SessionEnd",

@@ -166,7 +166,7 @@ const healthReportSchema = Schema.Struct({
     description: "Deterministic diagnostic differences observed without authorizing mutation.",
   }),
 }).annotations({
-  description: "Complete read-only dufflebag health report.",
+  description: "Complete read-only agent-outfit health report.",
 });
 
 export type HealthReport = Schema.Schema.Type<typeof healthReportSchema>;
@@ -177,7 +177,7 @@ export class HealthCheckError extends Schema.TaggedError<HealthCheckError>()("He
   }),
 }) {
   get message(): string {
-    return `Cannot inspect dufflebag: ${this.issue}`;
+    return `Cannot inspect agent-outfit: ${this.issue}`;
   }
 }
 
@@ -214,7 +214,7 @@ const preparedRuntimeStatus = (request: { readonly feature: FeatureDefinition; r
     return { _tag: present ? ("present" as const) : ("missing" as const), path: relativePath };
   });
 
-const createFeatureDiagnostics = (request: HealthRequest, receipt: Receipt) => {
+const checkFeatureHealth = (request: HealthRequest, receipt: Receipt) => {
   const installedFeatureIds = new Set(receipt.features);
 
   return Effect.forEach(
@@ -232,9 +232,9 @@ const createFeatureDiagnostics = (request: HealthRequest, receipt: Receipt) => {
   );
 };
 
-const createAgentDiagnostics = (evidence: AgentEvidence, receipt: Receipt | undefined) => {
+const checkAgentHealth = (evidence: AgentEvidence, receipt: Receipt | undefined) => {
   const managedIds = new Set(
-    receipt?.artifacts.flatMap((file) => (file.owner._tag === "agent" ? file.owner.agentIds : [])) || [],
+    receipt?.ownedFiles.flatMap((file) => (file.owner._tag === "agent" ? file.owner.agentIds : [])) || [],
   );
   const detectedAgents = new Map(detectAgents(evidence).map((agent) => [agent.id, agent.installed]));
 
@@ -292,8 +292,8 @@ export const checkHealth = (input: unknown) =>
     const configSnapshot = yield* readConfigFile(path.join(request.destination.root, managedConfigPath));
     const receiptSnapshot = yield* readReceipt(path.join(request.destination.root, receiptPath));
     const receipt = receiptSnapshot._tag === "present" ? receiptSnapshot.receipt : undefined;
-    const featureDiagnostics = receipt === undefined ? [] : yield* createFeatureDiagnostics(request, receipt);
-    const agentDiagnostics = createAgentDiagnostics(request.agentEvidence, receipt);
+    const featureDiagnostics = receipt === undefined ? [] : yield* checkFeatureHealth(request, receipt);
+    const agentDiagnostics = checkAgentHealth(request.agentEvidence, receipt);
     const autorunWatchers = yield* findAutorunWatchers(request);
 
     // Discrepancies are report data only; they never authorize a repair.

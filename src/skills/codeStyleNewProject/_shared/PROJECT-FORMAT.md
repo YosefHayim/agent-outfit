@@ -13,7 +13,7 @@ before writing code.
 | `docs/adr/` | Individual hard-to-reverse decisions |
 | `AGENTS.md` | Current structure / how to work in the repo |
 
-**Canonical exemplars:** `planpage/PROJECT.md` and `dufflebag/PROJECT.md` (seven
+**Canonical exemplars:** `planpage/PROJECT.md` and `agent-outfit/PROJECT.md` (seven
 sections). `ai-browser-bridge/PROJECT.md` is a valid close variant (same intent,
 slightly different headings).
 

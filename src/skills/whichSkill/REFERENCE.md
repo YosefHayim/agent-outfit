@@ -190,8 +190,4 @@ which-skill: here is my raw ask — <paste> — primary skill + paste-ready refi
 | Separate “routing chat” then restart | Interrupt / context switch | **Avoid** |
 | Manual Cmd+C / Cmd+V as the product | Clunky | Only internal to `type_text` |
 
-Existing pieces:
-
-- STT already pastes into the caret (`src/hooks/voice/worker/src/typing.rs`).
-- Optional Shift double-tap refines **clipboard** (`refineMode=clipboard|both`).
-- **Product wiring (mode A):** after **final STT transcript**, when `refineMode=dictation|both`, voice runs route-aware `refine_prompt.py` (default provider `codex` / model `gpt-5.3-codex-spark`), then `type_text(refined)` into the caret. See `src/hooks/voice/worker/TESTING.md`.
+Existing pieces live in **voxkey**, a separate app: its dictation pastes into the caret, and its prompt refinement can run on the final transcript before typing the refined prompt into the caret (mode A). See the voxkey docs for its settings.

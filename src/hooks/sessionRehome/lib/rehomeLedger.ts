@@ -20,6 +20,9 @@ import { appendJsonLine, decodeJsonLine } from "./jsonLines.js";
 
 export type RehomeAgent = "claude-code" | "codex";
 
+export const rehomeAgentFrom = (agentId: string | undefined): RehomeAgent | undefined =>
+  agentId === "claude-code" || agentId === "codex" ? agentId : undefined;
+
 export type LedgerDecision = "moved" | "stayed" | "uncertain" | "no-signal" | "deleted" | "conflict";
 
 export type LedgerEntry = {
@@ -46,7 +49,7 @@ const LEDGER_DECISIONS: ReadonlyArray<LedgerDecision> = [
 ];
 
 const stateFolder = (): string =>
-  process.env.DUFFLEBAG_REHOME_STATE_DIR || path.join(installRoot, "state", "session-rehome");
+  process.env.AGENT_OUTFIT_REHOME_STATE_DIR || path.join(installRoot, "state", "session-rehome");
 
 const ledgerFile = (): string => path.join(stateFolder(), "ledger.jsonl");
 

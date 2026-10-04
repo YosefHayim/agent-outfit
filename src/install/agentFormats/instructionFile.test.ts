@@ -8,8 +8,8 @@ import { findFeature } from "../../catalog/featureCatalog.js";
 import type { OwnedFile } from "../ownership.js";
 import { type InstructionFilePlan, InstructionFilePlanError, planInstructionFile } from "./instructionFile.js";
 
-const startMarker = "<!-- dufflebag:skills start -->";
-const endMarker = "<!-- dufflebag:skills end -->";
+const startMarker = "<!-- agent-outfit:skills start -->";
+const endMarker = "<!-- agent-outfit:skills end -->";
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 const makeCodeReadable = Option.getOrThrow(findFeature("make-code-readable"));
@@ -49,7 +49,7 @@ const request = (input?: {
           _tag: "present",
           agentIds: input?.agentIds || ["aider"],
           skills: input?.skills || [desiredSkill()],
-          controlScript: input?.controlScript || "dufflebag",
+          controlScript: input?.controlScript || "agent-outfit",
         },
   currentFile: input?.currentBytes === undefined ? { _tag: "missing" } : { _tag: "file", bytes: input.currentBytes },
   previousFile: input?.previousFile === undefined ? { _tag: "missing" } : { _tag: "owned", file: input.previousFile },
@@ -116,7 +116,7 @@ describe("planInstructionFile", () => {
     const operation = write({ currentBytes: existing });
 
     expect(decode(operation.bytes)).toBe(
-      `# User rules\n\nKeep trailing spaces.  \n\n${startMarker}\n## make-code-readable\n\nAlpha uses dufflebag.\n${endMarker}\n`,
+      `# User rules\n\nKeep trailing spaces.  \n\n${startMarker}\n## make-code-readable\n\nAlpha uses agent-outfit.\n${endMarker}\n`,
     );
     expect(operation.bytes.slice(0, existing.byteLength)).toEqual(existing);
   });

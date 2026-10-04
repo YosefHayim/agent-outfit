@@ -8,13 +8,13 @@ import { sendTerminalInput, terminalExists } from "../lib/ghosttyTerminal.js";
 import { decideIdleCompactAction, type IdleCompactAction, type IdleCompactPhase } from "../lib/idleCompactDecision.js";
 import { decodeIdleCompactSessionState, type IdleCompactSessionState } from "../lib/idleCompactSession.js";
 import { withKeystrokeLock } from "../lib/keystrokeLock.js";
-import { KILL_SWITCH, readJson, remove, writeJsonAtomic } from "../lib/stateFiles.js";
+import { KILL_SWITCH, readJson, removeFile, writeJsonAtomic } from "../lib/stateFiles.js";
 
 const POLL_MS = 500;
 const ACKNOWLEDGEMENT_SECONDS = 2;
 
 // True to keep watching; a failed send forgets the session.
-const performAction = async (request: {
+const applyIdleCompactAction = async (request: {
   readonly stateFile: string;
   readonly state: IdleCompactSessionState;
   readonly action: IdleCompactAction;
@@ -27,13 +27,13 @@ const performAction = async (request: {
     if (await withKeystrokeLock(() => sendTerminalInput({ terminalId: state.terminalId, text, submit: true }))) {
       return true;
     }
-    remove(stateFile);
+    removeFile(stateFile);
     return false;
   };
 
   switch (request.action._tag) {
     case "reap":
-      remove(stateFile);
+      removeFile(stateFile);
       return false;
     case "submitDraft":
       enterPhase("awaitingPrompt");
@@ -63,7 +63,7 @@ const continueWatching = async (stateFile: string): Promise<boolean> => {
     sessionEnded: state.sessionEnded,
     terminalAvailable: terminalExists(state.terminalId),
   });
-  return performAction({ stateFile, state, action });
+  return applyIdleCompactAction({ stateFile, state, action });
 };
 
 // One watcher per state file: the exclusive `.watcher` lock file makes a second start a no-op.
@@ -82,7 +82,7 @@ const watchStateFile = async (stateFile: string): Promise<void> => {
       await sleep(POLL_MS);
     }
   } finally {
-    remove(watcherLock);
+    removeFile(watcherLock);
   }
 };
 

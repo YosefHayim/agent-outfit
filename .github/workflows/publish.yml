@@ -1,6 +1,6 @@
 name: Publish Package
 
-# Dufflebag's per-repository publish workflow, based on the `workflow scaffold` template.
+# agent-outfit's per-repository publish workflow, based on the `workflow scaffold` template.
 # Publish is an owned COPY
 # (not a referenced reusable workflow): npm OIDC trusted publishing binds provenance to
 # THIS repo AND this exact filename (publish.yml), so it cannot be centralized
@@ -8,8 +8,8 @@ name: Publish Package
 #
 # ONE-TIME SETUP (then every release is automatic):
 #   1. Publish v0.1.0 once manually (npm publish --access public) to create the package.
-#   2. On npmjs.com → the ys-dufflebag package → Settings → Trusted Publisher, add
-#      this repo (YosefHayim/dufflebag) and workflow file `publish.yml`. Renaming this
+#   2. On npmjs.com → the agent-outfit package → Settings → Trusted Publisher, add
+#      this repo (YosefHayim/agent-outfit) and workflow file `publish.yml`. Renaming this
 #      file invalidates the OIDC match.
 #
 # Triggers:
@@ -73,11 +73,6 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Setup uv and Python
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: "3.12"
 
       - name: Verify npm supports OIDC Trusted Publishing
         run: |

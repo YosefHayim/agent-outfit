@@ -1,6 +1,6 @@
-# Dufflebag code style
+# agent-outfit code style
 
-This file is the **project dialect** (prescriptive SSOT) for maintained code in this repository. The rule-card format is owned by this package: `src/skills/codeStyleNewProject/_shared/CODE-STYLE-FORMAT.md`, with this file as the living exemplar and `src/templates/projectDocs/CODE-STYLE.md` as the greenfield scaffold. When another guide elsewhere conflicts with this one, **this file wins for dufflebag**.
+This file is the **project dialect** (prescriptive SSOT) for maintained code in this repository. The rule-card format is owned by this package: `src/skills/codeStyleNewProject/_shared/CODE-STYLE-FORMAT.md`, with this file as the living exemplar and `src/templates/projectDocs/CODE-STYLE.md` as the greenfield scaffold. When another guide elsewhere conflicts with this one, **this file wins for agent-outfit**.
 
 The maintained tree conforms to this contract. A new rule is not complete until its verifier gates the same change when the rule is mechanically decidable.
 
@@ -78,10 +78,10 @@ Why: the public hyphenated ID is decoded catalog data; letting it dictate direct
 Executable feature hook code lives under `src/hooks/`, never under `src/skills/`.
 
 ```ts
-// ✓ src/hooks/contextGuard/hooks/autorunWatcher.ts — compiled and installed
+// ✓ src/hooks/contextGuard/watchers/autorunWatcher.ts — compiled and installed
 // ✓ src/skills/imageToCode/scripts/src/bin/pixelDiff.ts — copied verbatim into the skill
 
-// ✗ src/skills/contextGuard/hooks/autorunWatcher.ts — hook code hiding in the payload tree
+// ✗ src/skills/contextGuard/watchers/autorunWatcher.ts — hook code hiding in the payload tree
 ```
 
 Why: the two trees ship by different mechanisms and answer to different rules, so mixing them is what let application rules be applied to standalone scripts and let an entry hook importing its own `lib/` look like a broken hook import.
@@ -544,7 +544,7 @@ Interfaces appear only for declaration merging or an external interoperability c
 // ✓ src/types/environment.d.ts
 declare global {
   interface ProcessEnv {
-    DUFFLEBAG_VOICE_DIR?: string;
+    AGENT_OUTFIT_REHOME_STATE_DIR?: string;
   }
 }
 
@@ -831,7 +831,7 @@ Why: one presentation owner is what makes non-TTY behavior, quiet modes, and str
 ### Tests prove public behavior
 [rule:test.behavior] · verify: judgment
 
-Tests are colocated, name explicit scenarios, exercise public behavior in real temporary workspaces, and mock only external systems.
+Tests are co-located, name explicit scenarios, exercise public behavior in real temporary workspaces, and mock only external systems.
 
 ```ts
 // ✓ scenario states the contract and uses the capability surface
@@ -849,7 +849,7 @@ Why: behavior tests survive internal refactors and make ownership invariants exe
 Maintained scripts exist only for repository-specific lifecycle work that an installed tool cannot perform directly.
 
 ```ts
-// ✓ maintained script owns Dufflebag README generation
+// ✓ maintained script owns agent-outfit README generation
 // src/scripts/generateReadme.ts
 
 // ✗ wrapper only forwards to Biome
@@ -936,13 +936,13 @@ The feature catalog owns its shipped files, the hook process owns transport, the
 
 ## Golden path — adding a feature
 
-A **feature** is dufflebag's unit of extension: a catalog entry plus the files it installs.
+A **feature** is agent-outfit's unit of extension: a catalog entry plus the files it installs.
 
 1. Define the user-visible contract and its public feature ID before choosing files.
 2. Choose exactly one authored tree: copied skill content under `src/skills/<sourceDirectory>/` or executable hook code under `src/hooks/<sourceDirectory>/`.
 3. Build the smallest capability by mirroring `src/skills/githubRepoAbout/` for copied content or the canonical `src/hooks/duplicateCodeGuard/` slice for hook code.
 4. Register the feature once in `src/catalog/featureCatalog.ts` with exact shipped paths; workflow skills declare the existing `type: flow` frontmatter instead of joining a second repeated list.
-5. Prove public behavior, fail-open behavior when applicable, catalog closure, and receipt-last ownership with colocated tests and real temporary workspaces.
+5. Prove public behavior, fail-open behavior when applicable, catalog closure, and receipt-last ownership with co-located tests and real temporary workspaces.
 6. Update only the owning docs, regenerate README explicitly, and run the feature's narrow checks plus the image-to-code harness when that skill changes.
 7. Run `pnpm verify`, `npm pack --dry-run`, then inspect README, the package file list, index, and worktree.
 
@@ -1010,17 +1010,17 @@ The slop fingerprint for this repository. Each entry is a concrete shape, not an
 
 ## Formatting and verification
 
-Biome owns 2-space indentation, double quotes, semicolons, trailing commas, 120-column width, organized imports, and the nested-ternary ban across maintained TS, TSX, JS, MJS, JSON, and JSONC; `pnpm style` owns the nullish-operator ban. Pinned Ruff owns Python linting and formatting for the voice feature's scripts.
+Biome owns 2-space indentation, double quotes, semicolons, trailing commas, 120-column width, organized imports, and the nested-ternary ban across maintained TS, TSX, JS, MJS, JSON, and JSONC; `pnpm style` owns the nullish-operator ban.
 
 | Command | Covers |
 | --- | --- |
-| `pnpm verify` | Biome → Ruff → typecheck → code-style contract → style-guide contract → tests → build → generated-document check. |
+| `pnpm verify` | Biome → typecheck → code-style contract → style-guide contract → tests → build → generated-document check. |
 | `pnpm style` | Repository-specific architecture, path, declaration, `??`, and import-graph checks over every maintained runtime tree. |
 
 The complete target verification order is:
 
 ```text
-Biome → Ruff → typecheck → code-style contract → style-guide contract → tests → build → generated-document check
+Biome → typecheck → code-style contract → style-guide contract → tests → build → generated-document check
 ```
 
-The custom checker does not duplicate ordinary syntax checks that Biome, TypeScript, or Ruff already own. Hook code findings gate with application and tooling findings. Broad legacy allowlists are forbidden; the only exception is the one exact path in `NULLISH_EXCEPTION`.
+The custom checker does not duplicate ordinary syntax checks that Biome or TypeScript already own. Hook code findings gate with application and tooling findings. Broad legacy allowlists are forbidden; the only exception is the one exact path in `NULLISH_EXCEPTION`.

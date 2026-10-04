@@ -27,7 +27,7 @@ describe("rehome decision", () => {
 
   it("keeps a cross-repo session uncertain instead of guessing", () => {
     const scores = scoreSession({
-      evidence: evidenceWith({ paths: { dufflebag: 50, replybase: 30, vybekiit: 20 } }),
+      evidence: evidenceWith({ paths: { "agent-outfit": 50, replybase: 30, vybekiit: 20 } }),
       folderRepoName: undefined,
     });
 
@@ -98,7 +98,7 @@ describe("rehome decision", () => {
 
   it("counts repos named for deletion together", () => {
     const scores = scoreSession({
-      evidence: evidenceWith({ paths: { aria: 40, "extension-installer": 35, dufflebag: 25 } }),
+      evidence: evidenceWith({ paths: { aria: 40, "extension-installer": 35, "agent-outfit": 25 } }),
       folderRepoName: undefined,
     });
 

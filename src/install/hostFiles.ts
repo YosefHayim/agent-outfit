@@ -50,7 +50,7 @@ export const checkFileChange = (input: unknown): Either.Either<FileChange, Insta
   );
 
 export const previousReceiptFile = (receipt: Receipt | undefined, filePath: string): OwnedFile | undefined =>
-  receipt?.artifacts.find((file) => file.path === filePath);
+  receipt?.ownedFiles.find((file) => file.path === filePath);
 
 // A receipted file that already holds the bytes about to be written is adopted, not refused: an external
 // skill sync can reproduce our content, and rewriting identical bytes destroys nothing.

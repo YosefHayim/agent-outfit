@@ -73,7 +73,7 @@ const expectedAgents = [
     displayName: "Grok",
     detection: { homePaths: [".grok"], absolutePaths: [], commands: ["grok"] },
     target: { _tag: "skillDirectory", path: ".grok/skills" },
-    nativeHooks: { _tag: "grokJson", configPath: ".grok/hooks/dufflebag.json" },
+    nativeHooks: { _tag: "grokJson", configPath: ".grok/hooks/agent-outfit.json" },
   },
   {
     id: "gemini",

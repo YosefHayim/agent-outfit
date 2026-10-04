@@ -1,4 +1,4 @@
-# PROJECT.md — dufflebag
+# PROJECT.md — agent-outfit
 
 What an agent reads to understand product intent before changing behavior. The
 human-facing introduction lives in `README.md`; runtime boundaries live in
@@ -10,18 +10,18 @@ human-facing introduction lives in `README.md`; runtime boundaries live in
 Coding-agent workflows accumulate the same recurring friction across repositories:
 long sessions exhaust their usable context, agents duplicate existing code, local
 skills and hooks drift between tools, and every repository rebuilds the same CI and
-publishing setup. Dufflebag packages one owned set of guardrails, skills, agent
+publishing setup. agent-outfit packages one owned set of guardrails, skills, agent
 configuration, and workflow templates behind a surgical installer.
 
 ## Who it is for
 
-Dufflebag serves its owner first and other coding-agent users who deliberately want
+agent-outfit serves its owner first and other coding-agent users who deliberately want
 this exact set. It is not a plugin marketplace, a hosted agent platform, or a team
 service with compatibility guarantees.
 
 ## Product promise
 
-A user can install, update, diagnose, configure, and remove what dufflebag installed
+A user can install, update, diagnose, configure, and remove what agent-outfit installed
 without losing unowned bytes. Catalog entries declare what may ship; receipts declare what may be
 removed. Installed hooks run without package dependencies and fail open so a guard
 cannot block the editor because its own execution failed.
@@ -32,7 +32,7 @@ cannot block the editor because its own execution failed.
 - Restore prior bytes during receipt-authorized uninstallation.
 - Warn and wind down long sessions before they exhaust context.
 - Detect structurally duplicated TypeScript while edits are being made and in CI.
-- Narrate complete agent replies locally and support local dictation/refinement.
+- Keep agents out of system temporary folders and move ended sessions into the repo they worked in.
 - Turn image references into code through a measured screenshot-difference loop.
 - Scaffold owned CI and publishing workflows into another repository.
 - Keep every supported agent format catalog-driven and evidence-backed.
@@ -40,6 +40,7 @@ cannot block the editor because its own execution failed.
 ## Non-goals
 
 - Hosting or discovering third-party extensions.
+- Voice and free provider routing: they live in voxkey and free-model-router.
 - Preserving old command forms by default before version 1.0.
 - Adding runtime package dependencies to installed TypeScript hooks.
 - Guessing unsupported agent lifecycle integrations.
@@ -49,7 +50,7 @@ cannot block the editor because its own execution failed.
 ## Direction
 
 The current product owns installation lifecycle, managed configuration, diagnostics,
-feature and agent catalogs, dependency-free hooks, copied skills, local voice,
+feature and agent catalogs, dependency-free hooks, copied skills, status-line presets,
 and CI/publishing workflow scaffolding. Near-term work strengthens verified agent
 adapters, makes the command surface predictable for both people and automation, and
 keeps the authored skills and hooks consistent through one enforceable code-style contract.

@@ -75,7 +75,7 @@ const controlScriptPath = (root: string, path: Path.Path): Either.Either<string,
     );
   }
 
-  return Either.right(path.join(root, installedHookFile(feature.sourceDirectory, "hooks/autorunControl.js")));
+  return Either.right(path.join(root, installedHookFile(feature.sourceDirectory, "command/autorunControl.js")));
 };
 
 const createSkillDirectoryWrites = (input: FormatWritesRequest) =>

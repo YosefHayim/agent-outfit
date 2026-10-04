@@ -231,8 +231,8 @@ const operationPathIssues = (operations: ReadonlyArray<FileChange>, receiptTarge
   });
 
 const receiptFileIssues = (receipt: Receipt, receiptTarget: ReceiptTarget) =>
-  receipt.artifacts.flatMap((file, index) => {
-    const path = ["receipt", "receipt", "artifacts", index];
+  receipt.ownedFiles.flatMap((file, index) => {
+    const path = ["receipt", "receipt", "ownedFiles", index];
     const reservedPath = reservedReceiptPaths(receiptTarget).find((reserved) => pathsConflict(file.path, reserved));
 
     return [
@@ -295,7 +295,7 @@ const publishIssues = (plan: PlanFields, publish: ReceiptPublishOperation) => [
     : [{ path: ["receipt", "receipt", "scope"], message: "Published receipt scope must match the plan scope." }]),
   ...receiptFileIssues(publish.receipt, publish.target),
   ...plan.operations.flatMap((operation, index) => {
-    const receiptFile = publish.receipt.artifacts.find((file) => file.path === operation.file.path);
+    const receiptFile = publish.receipt.ownedFiles.find((file) => file.path === operation.file.path);
     if (operation._tag !== "write") {
       return receiptFile === undefined
         ? []
@@ -316,7 +316,7 @@ const publishIssues = (plan: PlanFields, publish: ReceiptPublishOperation) => [
           },
         ];
   }),
-  ...publish.receipt.artifacts.flatMap((file, index) => {
+  ...publish.receipt.ownedFiles.flatMap((file, index) => {
     const mutated = plan.operations.some((operation) => operation.file.path === file.path);
     const guarded = plan.preconditions.filter((precondition) => precondition.path === file.path).length === 1;
 
@@ -324,13 +324,13 @@ const publishIssues = (plan: PlanFields, publish: ReceiptPublishOperation) => [
       ? []
       : [
           {
-            path: ["receipt", "receipt", "artifacts", index, "path"],
+            path: ["receipt", "receipt", "ownedFiles", index, "path"],
             message: "Every published file requires a mutation or validation-only precondition.",
           },
         ];
   }),
   ...plan.preconditions.flatMap((precondition, index) =>
-    publish.receipt.artifacts.some((file) => file.path === precondition.path)
+    publish.receipt.ownedFiles.some((file) => file.path === precondition.path)
       ? []
       : [
           {

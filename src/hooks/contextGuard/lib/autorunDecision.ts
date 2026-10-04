@@ -5,7 +5,7 @@ export type AutorunSnapshot = {
   armed: boolean;
   // Latest main-thread occupancy in tokens, or null when the transcript has none.
   occupancy: number | null;
-  // Always positive (windowFor returns a constant), so the warn percent never divides by zero.
+  // Always positive (contextWindowTokens returns a constant), so the warn percent never divides by zero.
   windowTokens: number;
   warnPercent: number;
   // Completed compact cycles since /autorun armed the session.

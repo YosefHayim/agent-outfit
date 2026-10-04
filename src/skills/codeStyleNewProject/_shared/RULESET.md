@@ -18,7 +18,7 @@ mechanism's command* as `verify`. Prefer left over right — deterministic Biome
 | Biome rule, path-scoped | a Biome rule for a path subset | a `biome.json` **`overrides[]`** entry (`includes` + the rule) | `biome ci .` |
 | `noRestrictedImports` | a path/dependency **boundary** (layer X can't import Y) | `noRestrictedImports` inside an `overrides[]` entry | `biome ci .` |
 | GritQL plugin | a **custom**, call/expression-shaped rule Biome lacks | `biome-rules/<id>.grit`, listed in `biome.json` `plugins` | `biome ci .` |
-| Repo AST checker | a shape GritQL cannot match (declarations, import graphs, paths) | a script like dufflebag's `src/scripts/checkCodeStyle.ts` | that script's script name, e.g. `pnpm style` |
+| Repo AST checker | a shape GritQL cannot match (declarations, import graphs, paths) | a script like agent-outfit's `src/scripts/checkCodeStyle.ts` | that script's script name, e.g. `pnpm style` |
 | — | taste/architecture with no honest detector | nothing mechanical — review sub-agents + `make-code-readable`/`simplify-code` | `judgment` |
 
 ## How to decide (run this, don't guess)

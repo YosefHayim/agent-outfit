@@ -69,14 +69,14 @@ const readTemplates = (templateDirectory: string) =>
     const path = yield* Path.Path;
     if (!(yield* fileSystem.exists(templateDirectory))) {
       return yield* new CopyWorkflowsError({
-        issue: `src/templates/workflows missing at ${templateDirectory} — reinstall dufflebag.`,
+        issue: `src/templates/workflows missing at ${templateDirectory} — reinstall agent-outfit.`,
       });
     }
 
     const names = (yield* fileSystem.readDirectory(templateDirectory)).filter((name) => name.endsWith(".yml")).sort();
     if (names.length === 0) {
       return yield* new CopyWorkflowsError({
-        issue: `No workflow templates found in ${templateDirectory} — reinstall dufflebag.`,
+        issue: `No workflow templates found in ${templateDirectory} — reinstall agent-outfit.`,
       });
     }
 

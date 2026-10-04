@@ -10,16 +10,18 @@ import { uninstall, uninstallRequestSchema } from "./uninstall.js";
 const packageFiles = {
   "hooks/contextGuard/hooks/contextGuard.js": "export {};\n",
   "hooks/contextGuard/hooks/startAutorunWatcher.js": "export {};\n",
-  "hooks/contextGuard/hooks/autorunControl.js": "export {};\n",
+  "hooks/contextGuard/command/autorunControl.js": "export {};\n",
   "hooks/contextGuard/hooks/recordIdleCompactEvent.js": "export {};\n",
+  "hooks/contextGuard/watchers/autorunWatcher.js": "export {};\n",
+  "hooks/contextGuard/watchers/idleCompactWatcher.js": "export {};\n",
   "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
 };
 
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-uninstall-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-uninstall-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-uninstall-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-uninstall-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {
@@ -45,7 +47,7 @@ const installRequest = (input: { root: string; preparedRoot: string }) => ({
   features: { _tag: "selected", ids: ["autorun"] },
   agents: { _tag: "selected", ids: ["claude-code", "cursor", "codex", "aider", "continue"] },
   interaction: { _tag: "scripted" },
-  configuration: { _tag: "selected", config: { ...defaultConfig, speechVoice: "Daniel" } },
+  configuration: { _tag: "selected", config: { ...defaultConfig, duplicateCodeSkipFolders: ["vendor"] } },
 });
 
 const uninstallRequest = (root: string) => ({
@@ -61,26 +63,32 @@ layer(NodeContext.layer)("uninstall", (it) => {
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText, exists } = yield* workspace;
       const originals = {
-        ".claude/dufflebag/config.json": `${JSON.stringify(defaultConfig, null, 2)}\n`,
+        ".claude/agent-outfit/config.json": `${JSON.stringify(defaultConfig, null, 2)}\n`,
         ".claude/settings.json": '{\r\n\t"theme":"dark",\r\n\t"hooks": { }\r\n}\r\n',
         "AGENTS.md": "User instructions.\n",
         ".aider.conf.yml": "model: sonnet\n",
         ".continue/config.json": '{\r\n\t"models": []\r\n}\r\n',
       };
+      const installerCreatedFiles = [
+        ".claude/agent-outfit/receipt.json",
+        ...Object.keys(packageFiles)
+          .filter((packagePath) => packagePath.startsWith("hooks/"))
+          .map((packagePath) => `.claude/agent-outfit/${packagePath}`),
+        ".claude/skills/autorun/SKILL.md",
+        ".cursor/rules/autorun.mdc",
+      ];
       yield* writeFiles(root, originals);
       yield* install(installRequest({ root, preparedRoot }));
+      for (const created of installerCreatedFiles) {
+        expect(yield* exists(created)).toBe(true);
+      }
 
       expect(yield* uninstall(uninstallRequest(root))).toEqual(uninstalled);
       for (const [relativePath, contents] of Object.entries(originals)) {
         expect(yield* readText(relativePath)).toBe(contents);
       }
-      for (const removed of [
-        ".claude/dufflebag/receipt.json",
-        ".claude/dufflebag/hooks/contextGuard/hooks/startAutorunWatcher.js",
-        ".claude/skills/autorun/SKILL.md",
-        ".cursor/rules/autorun.mdc",
-      ]) {
-        expect(yield* exists(removed)).toBe(false);
+      for (const created of installerCreatedFiles) {
+        expect(yield* exists(created)).toBe(false);
       }
     }),
   );
@@ -118,13 +126,13 @@ layer(NodeContext.layer)("uninstall", (it) => {
   it.scoped("still removes installer-created files when their bytes drifted after install", () =>
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, exists } = yield* workspace;
-      const hookFile = ".claude/dufflebag/hooks/contextGuard/hooks/startAutorunWatcher.js";
+      const hookFile = ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js";
       yield* install(installRequest({ root, preparedRoot }));
       yield* writeFiles(root, { [hookFile]: "user changed this\n" });
 
       expect(yield* uninstall(uninstallRequest(root))).toEqual(uninstalled);
       expect(yield* exists(hookFile)).toBe(false);
-      expect(yield* exists(".claude/dufflebag/receipt.json")).toBe(false);
+      expect(yield* exists(".claude/agent-outfit/receipt.json")).toBe(false);
     }),
   );
 

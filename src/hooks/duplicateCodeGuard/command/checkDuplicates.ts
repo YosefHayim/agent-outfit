@@ -1,4 +1,4 @@
-// `dufflebag duplicates [workspace]`: the same check as the hook, for agents without edit hooks, pre-commit
+// `agent-outfit duplicates [workspace]`: the same check as the hook, for agents without edit hooks, pre-commit
 // (`--staged`), and CI (`--since <ref>`). It exits non-zero on findings; a repo without its own `typescript` is
 // skipped with exit 0 so non-TS repos never fail CI. Dependency-free like the hooks, so it writes plain stdout.
 
@@ -65,7 +65,7 @@ const renderCluster = (cluster: DuplicateCluster): string => {
 export const checkDuplicates = (options: CheckDuplicatesOptions): void => {
   const repoRoot = path.resolve(options.workspace === undefined ? process.cwd() : options.workspace);
   const format = options.format === undefined ? "text" : options.format;
-  if (format === "text") process.stdout.write(`dufflebag · duplicates\n  → workspace: ${repoRoot}\n`);
+  if (format === "text") process.stdout.write(`agent-outfit · duplicates\n  → workspace: ${repoRoot}\n`);
 
   const ts = loadTypeScript(repoRoot);
   if (!ts) {

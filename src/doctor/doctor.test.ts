@@ -28,10 +28,10 @@ const makeWorkspace = (files: { readonly config?: boolean; readonly receipt?: st
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-doctor-root-" });
-    const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-doctor-prepared-" });
-    const configPath = path.join(root, ".claude/dufflebag/config.json");
-    const receiptPath = path.join(root, ".claude/dufflebag/receipt.json");
+    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-doctor-root-" });
+    const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-doctor-prepared-" });
+    const configPath = path.join(root, ".claude/agent-outfit/config.json");
+    const receiptPath = path.join(root, ".claude/agent-outfit/receipt.json");
     if (files.config || files.receipt !== undefined) {
       yield* fileSystem.makeDirectory(path.dirname(configPath), { recursive: true });
     }
@@ -83,7 +83,7 @@ layer(NodeContext.layer)("doctor", (it) => {
             version: "0.9.0",
             scope: "global",
             features: ["context-guard", "autorun", "make-code-readable"],
-            artifacts: [
+            ownedFiles: [
               {
                 owner: { _tag: "agent", agentIds: ["codex"] },
                 path: "AGENTS.md",
@@ -91,8 +91,8 @@ layer(NodeContext.layer)("doctor", (it) => {
                 ownership: {
                   _tag: "managedBlock",
                   filePreviouslyPresent: false,
-                  startMarker: "<!-- dufflebag start -->",
-                  endMarker: "<!-- dufflebag end -->",
+                  startMarker: "<!-- agent-outfit start -->",
+                  endMarker: "<!-- agent-outfit end -->",
                   installedBodyHash: "a".repeat(64),
                 },
               },
@@ -158,7 +158,7 @@ layer(NodeContext.layer)("doctor", (it) => {
         ]);
         expect([...(yield* fileSystem.readFile(workspace.configPath))]).toEqual([...configBefore]);
         expect([...(yield* fileSystem.readFile(workspace.receiptPath))]).toEqual([...receiptBefore]);
-        expect(yield* fileSystem.exists(path.join(workspace.root, ".claude/dufflebag/recovery.json"))).toBe(false);
+        expect(yield* fileSystem.exists(path.join(workspace.root, ".claude/agent-outfit/recovery.json"))).toBe(false);
       }),
   );
 
@@ -189,7 +189,7 @@ layer(NodeContext.layer)("doctor", (it) => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const workspace = yield* makeWorkspace({
-        receipt: { version: "1.0.0", scope: "project", features: [], artifacts: [] },
+        receipt: { version: "1.0.0", scope: "project", features: [], ownedFiles: [] },
       });
 
       const report = yield* checkHealth(workspace.requestFor());
@@ -207,9 +207,9 @@ layer(NodeContext.layer)("doctor", (it) => {
       const path = yield* Path.Path;
       const workspace = yield* makeWorkspace({
         config: true,
-        receipt: { version: "1.0.0", scope: "project", features: ["context-guard", "autorun"], artifacts: [] },
+        receipt: { version: "1.0.0", scope: "project", features: ["context-guard", "autorun"], ownedFiles: [] },
       });
-      const autorunStateDir = path.join(workspace.root, ".claude/dufflebag/state/autorun");
+      const autorunStateDir = path.join(workspace.root, ".claude/agent-outfit/state/autorun");
       yield* fileSystem.makeDirectory(autorunStateDir, { recursive: true });
       // This process's pid passes the live check without spawning a fake watcher.
       yield* fileSystem.writeFileString(path.join(autorunStateDir, "sess-doctor-watcher.pid"), `${process.pid}\n`);
@@ -224,7 +224,7 @@ layer(NodeContext.layer)("doctor", (it) => {
   it.scoped("rejects an ambiguous receipt without normalizing or rewriting it", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const receipt = '{"version":"1.0.0","scope":"project","features":[],"artifacts":[],"scope":"global"}\n';
+      const receipt = '{"version":"1.0.0","scope":"project","features":[],"ownedFiles":[],"scope":"global"}\n';
       const workspace = yield* makeWorkspace({ config: true, receipt });
 
       const error = yield* Effect.flip(checkHealth(workspace.requestFor()));

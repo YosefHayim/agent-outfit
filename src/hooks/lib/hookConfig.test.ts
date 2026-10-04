@@ -24,7 +24,7 @@ describe("hook config resolution", () => {
 
   it("reads the install-root config.json from the installed hook layout", () => {
     // realpath: the module resolves its own real path, and macOS temp folders sit behind a /var symlink.
-    const installRoot = realpathSync(mkdtempSync(path.join(tmpdir(), "dufflebag-hook-config-")));
+    const installRoot = realpathSync(mkdtempSync(path.join(tmpdir(), "agent-outfit-hook-config-")));
     try {
       // Install copies src/hooks/lib into each feature's lib/ under hooksPath.
       const installedModule = path.join(installRoot, hooksPath, "contextGuard", "lib", "hookConfig.ts");
@@ -51,7 +51,7 @@ describe("hook config resolution", () => {
       expect(execution.stderr).toBe("");
       expect(execution.status).toBe(0);
       const printed = JSON.parse(execution.stdout);
-      expect(printed.installRoot).toBe(path.join(installRoot, ".claude", "dufflebag"));
+      expect(printed.installRoot).toBe(path.join(installRoot, ".claude", "agent-outfit"));
       expect(printed.config.contextWarnPercent).toBe(31);
       expect(printed.config.duplicateCodeMode).toBe("warn");
       expect(printed.config.duplicateCodeSkipFolders).toEqual(["vendor"]);
@@ -75,11 +75,11 @@ describe("hook config resolution", () => {
   });
 
   it.each([
-    [{ DUFFLEBAG_IDLE_COMPACT_AFTER: "45s" }, 45],
-    [{ DUFFLEBAG_IDLE_COMPACT_AFTER: "1h" }, 3_600],
-    [{ DUFFLEBAG_IDLE_COMPACT_AFTER: "off" }, null],
-    [{ DUFFLEBAG_IDLE_COMPACT_AFTER: "soon" }, null],
-    [{ DUFFLEBAG_IDLE_COMPACT_AFTER: "2d" }, null],
+    [{ AGENT_OUTFIT_IDLE_COMPACT_AFTER: "45s" }, 45],
+    [{ AGENT_OUTFIT_IDLE_COMPACT_AFTER: "1h" }, 3_600],
+    [{ AGENT_OUTFIT_IDLE_COMPACT_AFTER: "off" }, null],
+    [{ AGENT_OUTFIT_IDLE_COMPACT_AFTER: "soon" }, null],
+    [{ AGENT_OUTFIT_IDLE_COMPACT_AFTER: "2d" }, null],
     [{}, 120],
   ])("resolves idle compact seconds from %o over a 2m config value", (env, seconds) => {
     expect(resolveIdleCompactSeconds({ env, configValue: "2m" })).toBe(seconds);

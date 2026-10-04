@@ -5,7 +5,7 @@ import { Effect } from "effect";
 
 import { managedConfigPath } from "./configFile.js";
 import { defaultConfig } from "./configSchema.js";
-import { readConfigAt } from "./configSettings.js";
+import { readConfigAt } from "./scopeConfig.js";
 
 const writeConfig = (request: { readonly root: string; readonly config: object }) =>
   Effect.gen(function* () {
@@ -18,8 +18,8 @@ const writeConfig = (request: { readonly root: string; readonly config: object }
 
 const makeRoots = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
-  const homeRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-config-settings-home-" });
-  const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-config-settings-project-" });
+  const homeRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-config-settings-home-" });
+  const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-config-settings-project-" });
   return { homeRoot, projectRoot };
 });
 

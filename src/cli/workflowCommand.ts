@@ -1,12 +1,12 @@
-/** `dufflebag workflow scaffold` — copy CI and publish workflow templates. */
+/** `agent-outfit workflow scaffold` — copy CI and publish workflow templates. */
 
-import { Args, Command, Options } from "@effect/cli";
+import { Command, Options } from "@effect/cli";
 import { Path } from "@effect/platform";
 import { Effect, Option } from "effect";
 
 import { findPackageRoot } from "../install/packageRoot.js";
 import { copyWorkflows } from "../workflows/copyWorkflows.js";
-import { formatOption } from "./cliOptions.js";
+import { formatOption, workspaceArgument } from "./cliOptions.js";
 import * as TerminalUI from "./TerminalUI.js";
 
 export const workflowTemplateDirectory = Effect.gen(function* () {
@@ -28,19 +28,18 @@ export const showCopiedWorkflows = (copiedWorkflows: {
     copiedWorkflows.written.length > 0 ? "Scaffolded" : "Nothing written (all present)",
   );
 
-const workspaceArgument = Args.directory({ name: "workspace", exists: "either" }).pipe(
-  Args.optional,
-  Args.withDescription("Target repository root (default: current working directory)"),
-);
-
 const overwriteOption = Options.boolean("overwrite").pipe(
   Options.withDefault(false),
-  Options.withDescription("Overwrite existing workflow files (resync from dufflebag)"),
+  Options.withDescription("Overwrite existing workflow files (resync from agent-outfit)"),
 );
 
 const scaffoldCommand = Command.make(
   "scaffold",
-  { workspace: workspaceArgument, overwrite: overwriteOption, format: formatOption },
+  {
+    workspace: workspaceArgument("Target repository root (default: current working directory)"),
+    overwrite: overwriteOption,
+    format: formatOption,
+  },
   (args) =>
     Effect.gen(function* () {
       const path = yield* Path.Path;

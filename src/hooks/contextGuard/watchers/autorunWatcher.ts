@@ -13,7 +13,7 @@ import { decodeTranscriptLine, readTranscriptTail, type TranscriptEntry } from "
 import { appleScriptString, runAppleScript } from "../lib/appleScript.js";
 import { decideAutorunStep } from "../lib/autorunDecision.js";
 import { withKeystrokeLock } from "../lib/keystrokeLock.js";
-import { findTranscriptForSession, readContextUsage, windowFor } from "../lib/sessionTranscript.js";
+import { contextWindowTokens, findTranscriptForSession, readContextUsage } from "../lib/sessionTranscript.js";
 import {
   AUTORUN_STATE_DIR,
   autorunFile,
@@ -21,7 +21,7 @@ import {
   KILL_SWITCH,
   readInt,
   readText,
-  remove,
+  removeFile,
   writeText,
 } from "../lib/stateFiles.js";
 
@@ -41,14 +41,14 @@ type TerminalText = { readonly text: string; readonly submit: boolean };
 
 type WatchTick = { readonly exit: boolean; readonly warnEnteredAt: number | null };
 
-// Settings are read on every use, so `dufflebag config set` reaches a running watcher.
+// Settings are read on every use, so `agent-outfit config set` reaches a running watcher.
 const checkEveryMs = (): number => readConfig().autorunCheckEverySeconds * 1000;
 
 const idleAfterMs = (): number => readConfig().autorunIdleAfterSeconds * 1000;
 
-// DUFFLEBAG_AUTORUN_DRY_RUN logs keystrokes instead of sending them, for safe manual verification.
+// AGENT_OUTFIT_AUTORUN_DRY_RUN logs keystrokes instead of sending them, for safe manual verification.
 const isDryRun = (): boolean => {
-  const dryRunSetting = (process.env.DUFFLEBAG_AUTORUN_DRY_RUN || "").trim().toLowerCase();
+  const dryRunSetting = (process.env.AGENT_OUTFIT_AUTORUN_DRY_RUN || "").trim().toLowerCase();
   return dryRunSetting === "1" || dryRunSetting === "true" || dryRunSetting === "yes";
 };
 
@@ -179,7 +179,7 @@ end tell`;
 const typeText = (request: TerminalText): boolean => {
   if (isDryRun()) {
     console.error(
-      `[dufflebag dry-run] would keystroke ${JSON.stringify(request.text)}${request.submit ? " + Return" : ""}`,
+      `[agent-outfit dry-run] would keystroke ${JSON.stringify(request.text)}${request.submit ? " + Return" : ""}`,
     );
     return true;
   }
@@ -189,7 +189,7 @@ const typeText = (request: TerminalText): boolean => {
   return runAppleScript(lines.join("\n")) !== null;
 };
 
-const inject = (request: TerminalText & { readonly sessionId: string }): Promise<boolean> =>
+const typeIntoSessionWindow = (request: TerminalText & { readonly sessionId: string }): Promise<boolean> =>
   withKeystrokeLock(
     () => locateAndRaise(readText(autorunFile(request.sessionId, "wtitle"))) === "OK" && typeText(request),
   );
@@ -234,12 +234,13 @@ const shouldExit = (sessionId: string, transcript: string): boolean =>
 
 // Types /compact, then the continuation once the compacted turn goes idle. True once /compact was sent.
 const runCycle = async (sessionId: string, transcript: string): Promise<boolean> => {
-  if (!(await inject({ sessionId, text: "/compact", submit: true }))) return false;
+  if (!(await typeIntoSessionWindow({ sessionId, text: "/compact", submit: true }))) return false;
   const deadline = Date.now() + RESUME_DEADLINE_MS;
   await sleep(checkEveryMs());
   while (Date.now() < deadline) {
     if (existsSync(autorunFile(sessionId, "done"))) return true;
-    if (turnIsIdle(transcript) && (await inject({ sessionId, text: CONTINUATION_PROMPT, submit: true }))) return true;
+    if (turnIsIdle(transcript) && (await typeIntoSessionWindow({ sessionId, text: CONTINUATION_PROMPT, submit: true })))
+      return true;
     await sleep(checkEveryMs());
   }
   return true;
@@ -268,7 +269,7 @@ const advanceWatch = async (sessionId: string, previousWarnEnteredAt: number | n
 
   const config = readConfig();
   const { occupancy, model } = readContextUsage(transcript);
-  const windowTokens = windowFor(model);
+  const windowTokens = contextWindowTokens(model);
   const cycles = readInt(autorunFile(sessionId, "cycles"));
   const budget = readInt(autorunFile(sessionId, "budget"), config.autorunDefaultCycles);
   const atOrAboveWarn = occupancy !== null && (occupancy * 100) / windowTokens >= config.contextWarnPercent;
@@ -285,7 +286,7 @@ const advanceWatch = async (sessionId: string, previousWarnEnteredAt: number | n
     hardCap: config.autorunMaxCycles,
     freshHandoff: probeLiveChecks && warnEnteredAt !== null && freshHandoffExists(warnEnteredAt),
     turnIdle: probeLiveChecks && turnIsIdle(transcript),
-    // The window itself is located again under the keystroke lock inside inject.
+    // The window itself is located again under the keystroke lock inside typeIntoSessionWindow.
     ghosttyFrontmost: probeLiveChecks && ghosttyIsFrontmost(),
     done: probeLiveChecks && existsSync(autorunFile(sessionId, "done")),
   });
@@ -293,7 +294,7 @@ const advanceWatch = async (sessionId: string, previousWarnEnteredAt: number | n
   if (step.kind === "observe" || step.kind === "wait") return { exit: false, warnEnteredAt };
   if (step.kind === "halt") {
     writeText(autorunFile(sessionId, "halted"), step.reason);
-    remove(autorunFile(sessionId, "armed"));
+    removeFile(autorunFile(sessionId, "armed"));
     return { exit: false, warnEnteredAt: null };
   }
   if (!(await runCycle(sessionId, transcript))) return { exit: false, warnEnteredAt };
@@ -312,14 +313,14 @@ const watchSession = async (sessionId: string): Promise<void> => {
       watchTick = await advanceWatch(sessionId, watchTick.warnEnteredAt);
     }
   } finally {
-    remove(autorunFile(sessionId, "pid"));
+    removeFile(autorunFile(sessionId, "pid"));
   }
 };
 
 const watchedSessionId = process.argv[2] || process.env.CLAUDE_SESSION_ID || "";
 if (watchedSessionId) {
   watchSession(watchedSessionId).catch(() => {
-    remove(autorunFile(watchedSessionId, "pid"));
+    removeFile(autorunFile(watchedSessionId, "pid"));
     process.exit(0);
   });
 }

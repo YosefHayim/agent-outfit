@@ -112,9 +112,9 @@ npm install -g .
 # published package
 npm install -g <name>@latest
 
-# dufflebag skills/features
-dufflebag install   # preserve existing features; add if needed
-dufflebag doctor
+# agent-outfit skills/features
+agent-outfit install   # preserve existing features; add if needed
+agent-outfit doctor
 
 # prove
 <binary> --version

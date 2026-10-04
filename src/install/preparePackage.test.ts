@@ -13,10 +13,9 @@ import { preparePackage } from "./preparePackage.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const compiledHooksRoot = path.join(packageRoot, "dist", "src", "hooks");
-const voiceWorker = path.join(packageRoot, "src", "hooks", "voice", "dufflebag-voice");
-// preparePackage needs the compiled hooks (`pnpm build`) and the native voice worker (buildVoiceWorker.sh);
-// CI runs tests before either exists, and catalog casing is still covered without them.
-const packageIsBuilt = existsSync(compiledHooksRoot) && existsSync(voiceWorker);
+// preparePackage needs the compiled hooks (`pnpm build`); CI runs tests before they exist, and catalog casing is
+// still covered without them.
+const packageIsBuilt = existsSync(compiledHooksRoot);
 
 // e.g. `from "../lib/hookConfig.js"` or `import("./duplicateIndex.js")` in a compiled runtime file
 const RELATIVE_IMPORT_PATTERN = /(?:from\s+|import\s*\(\s*)"(\.{1,2}\/[^"]+)"/g;
@@ -59,6 +58,8 @@ describe("preparePackage", () => {
         expect(readFileSync(contextGuard, "utf8")).toContain("../lib/hookConfig.js");
         expect(existsSync(path.join(contextGuardRoot, "lib/hookConfig.js"))).toBe(true);
         expect(existsSync(path.join(contextGuardRoot, "lib/hookOutput.js"))).toBe(true);
+        expect(existsSync(path.join(contextGuardRoot, "watchers/autorunWatcher.js"))).toBe(true);
+        expect(existsSync(path.join(contextGuardRoot, "command/autorunControl.js"))).toBe(true);
 
         // lib files that use the shared runtime import the copy beside them.
         expect(readFileSync(path.join(contextGuardRoot, "lib/stateFiles.js"), "utf8")).toContain("./hookConfig.js");
@@ -73,29 +74,11 @@ describe("preparePackage", () => {
         expect(commandLoad.stderr).toBe("");
         expect(commandLoad.status).toBe(0);
 
-        const voiceRoot = path.join(preparedRuntimeRoot, "voice");
-        // Every authored voice asset must reach the prepared tree byte-for-byte.
-        const voiceAssets = [
-          "refine_prompt.py",
-          "refine_providers.py",
-          "refine_choices.py",
-          "mac_picker.py",
-          "text_to_speech.py",
-          "text_to_speech.py.lock",
-        ];
-        for (const asset of voiceAssets) {
-          expect(readFileSync(path.join(voiceRoot, asset))).toEqual(
-            readFileSync(path.join(packageRoot, "src/hooks/voice", asset)),
-          );
-        }
-        // The voice hook reads transcripts through the shared hook lib, so preparing copies it beside the hook.
-        expect(readFileSync(path.join(voiceRoot, "hooks/speakReply.js"), "utf8")).toContain(
-          "../lib/transcriptReader.js",
-        );
-        expect(existsSync(path.join(voiceRoot, "lib/transcriptReader.js"))).toBe(true);
+        // context-guard reads transcripts through the shared hook lib, so preparing copies it beside the hook.
+        expect(existsSync(path.join(contextGuardRoot, "lib/transcriptReader.js"))).toBe(true);
 
         // The hook reads its transcript under HOME, so give it a throwaway one.
-        const hookHome = mkdtempSync(path.join(tmpdir(), "dufflebag-prepared-home-"));
+        const hookHome = mkdtempSync(path.join(tmpdir(), "agent-outfit-prepared-home-"));
         try {
           const execution = spawnSync(process.execPath, [contextGuard], {
             input: '{"hook_event_name":"UserPromptSubmit","session_id":"prepared-package-test"}',

@@ -7,6 +7,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { rehomeAgentFrom } from "../lib/rehomeLedger.js";
+
 // Claude Code session IDs are UUIDv4 and Codex thread IDs UUIDv7 — never "../x" or "*".
 const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 
@@ -19,20 +21,17 @@ const sessionIdFrom = (candidate: unknown): string => {
   return typeof sessionId === "string" && SESSION_ID_PATTERN.test(sessionId) ? sessionId : "";
 };
 
-const agentFrom = (agentId: string | undefined): string =>
-  agentId === "claude-code" || agentId === "codex" ? agentId : "";
-
 const handOverEndedSession = (): void => {
-  const agent = agentFrom(process.env.DUFFLEBAG_AGENT_ID);
+  const agent = rehomeAgentFrom(process.env.AGENT_OUTFIT_AGENT_ID);
   const sessionId = sessionIdFrom(JSON.parse(readFileSync(0, "utf8")));
   if (!agent || !sessionId) {
     return;
   }
 
-  // The watcher sits beside this file with the same extension: .js when installed, .ts under tsx in tests, where
-  // execArgv carries the tsx loader.
+  // The watcher has this file's extension: .js when installed, .ts under tsx in tests, where execArgv carries the
+  // tsx loader.
   const hookFile = fileURLToPath(import.meta.url);
-  const watcherFile = path.join(path.dirname(hookFile), `rehomeWatcher${path.extname(hookFile)}`);
+  const watcherFile = path.join(path.dirname(hookFile), "..", "watchers", `rehomeWatcher${path.extname(hookFile)}`);
   spawn(process.execPath, [...process.execArgv, watcherFile, "--agent", agent, "--session", sessionId, "--wait"], {
     detached: true,
     stdio: "ignore",

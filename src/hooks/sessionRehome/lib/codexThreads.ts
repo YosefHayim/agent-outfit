@@ -165,7 +165,7 @@ const lastOrdinal = (rolloutFile: string): number | undefined =>
 
 // A resumed writer continues from the rollout's last ordinal, so the copied line takes the next one; legacy rollouts
 // carry no ordinals at all.
-const relocatedSettingsLine = (request: {
+const rehomedSettingsLine = (request: {
   readonly settingsLine: Record<string, unknown>;
   readonly targetFolder: string;
   readonly ordinal: number | undefined;
@@ -185,13 +185,13 @@ const relocatedSettingsLine = (request: {
   };
 };
 
-const appendRelocatedSettings = (request: { readonly rolloutFile: string; readonly targetFolder: string }) => {
+const appendRehomedSettings = (request: { readonly rolloutFile: string; readonly targetFolder: string }) => {
   const settingsLine = existsSync(request.rolloutFile) ? lastSettingsLine(request.rolloutFile) : undefined;
   if (!settingsLine) {
     return;
   }
 
-  const relocated = relocatedSettingsLine({
+  const relocated = rehomedSettingsLine({
     settingsLine,
     targetFolder: request.targetFolder,
     ordinal: lastOrdinal(request.rolloutFile),
@@ -207,7 +207,7 @@ export const moveCodexThread = async (request: {
   const ownRow = { threadId: request.thread.threadId, rolloutFile: request.thread.rolloutFile, cwd: "", title: "" };
   const rows = [ownRow, ...(await familyOf(request))];
   for (const row of rows) {
-    appendRelocatedSettings({ rolloutFile: row.rolloutFile, targetFolder: request.targetFolder });
+    appendRehomedSettings({ rolloutFile: row.rolloutFile, targetFolder: request.targetFolder });
   }
 
   const database = await openStateDatabase({ homeRoot: request.homeRoot, readOnly: false });

@@ -15,7 +15,7 @@ afterEach(() => {
 
 describe("checkDuplicates", () => {
   it("skips a repo whose own TypeScript is unresolvable (exit 0, never fails CI)", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "dufflebag-duplicates-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "agent-outfit-duplicates-"));
     try {
       writeFileSync(path.join(dir, "a.ts"), "export const x = 1;\n");
       process.exitCode = 0;

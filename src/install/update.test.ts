@@ -12,7 +12,7 @@ import { update } from "./update.js";
 const packageFiles = {
   "hooks/contextGuard/hooks/contextGuard.js": "export {};\n",
   "hooks/contextGuard/hooks/startAutorunWatcher.js": "export {};\n",
-  "hooks/contextGuard/hooks/autorunControl.js": "export {};\n",
+  "hooks/contextGuard/command/autorunControl.js": "export {};\n",
   "hooks/contextGuard/hooks/recordIdleCompactEvent.js": "export {};\n",
   "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
 };
@@ -20,8 +20,8 @@ const packageFiles = {
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-update-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-update-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-update-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-update-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {
@@ -77,11 +77,11 @@ layer(NodeContext.layer)("update", (it) => {
       expect(yield* readText(".claude/settings.json")).toContain('"theme": "dark"');
       expect(yield* readText(".claude/settings.json")).toContain("SessionStart");
 
-      const receipt = JSON.parse(yield* readText(".claude/dufflebag/receipt.json"));
+      const receipt = JSON.parse(yield* readText(".claude/agent-outfit/receipt.json"));
       expect(receipt.features).toEqual(["context-guard"]);
       // context-guard's own autorunControl.js stays; only the autorun skill's files must go.
       const autorunSkillFile = /(?:^|\/)autorun(?:\/|\.)/;
-      expect(receipt.artifacts.some((file: { path: string }) => autorunSkillFile.test(file.path))).toBe(false);
+      expect(receipt.ownedFiles.some((file: { path: string }) => autorunSkillFile.test(file.path))).toBe(false);
     }),
   );
 
@@ -89,13 +89,13 @@ layer(NodeContext.layer)("update", (it) => {
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText } = yield* workspace;
       yield* install({ ...request({ root, preparedRoot, features: ["autorun"] }), configuration: selectedDefaults });
-      const originalReceipt = yield* readText(".claude/dufflebag/receipt.json");
+      const originalReceipt = yield* readText(".claude/agent-outfit/receipt.json");
       yield* writeFiles(root, { "AGENTS.md": (yield* readText("AGENTS.md")).replace("Run", "Changed") });
 
       const exit = yield* Effect.exit(update(request({ root, preparedRoot, features: ["context-guard"] })));
 
       expect(exit._tag).toBe("Failure");
-      expect(yield* readText(".claude/dufflebag/receipt.json")).toBe(originalReceipt);
+      expect(yield* readText(".claude/agent-outfit/receipt.json")).toBe(originalReceipt);
       expect(yield* readText("AGENTS.md")).toContain("Changed");
     }),
   );
@@ -138,14 +138,16 @@ layer(NodeContext.layer)("update", (it) => {
   it.scoped("resets a receipted config.json that no longer decodes and records the new bytes", () =>
     Effect.gen(function* () {
       const { fileSystem, path, root, preparedRoot, writeFiles, readText } = yield* workspace;
-      const configPath = ".claude/dufflebag/config.json";
+      const configPath = ".claude/agent-outfit/config.json";
       const baseRequest = request({ root, preparedRoot, features: ["context-guard"] });
       yield* install({
         ...baseRequest,
-        configuration: { _tag: "selected", config: { ...defaultConfig, speechVoice: "M2" } },
+        configuration: { _tag: "selected", config: { ...defaultConfig, duplicateCodeSkipFolders: ["fixtures"] } },
       });
       // Neither decodable nor the receipted bytes: both guards that used to block a reset.
-      yield* writeFiles(root, { [configPath]: '{ "speechVoice": "M2", "unknownSetting": true,\n' });
+      yield* writeFiles(root, {
+        [configPath]: '{ "duplicateCodeSkipFolders": ["fixtures"], "unknownSetting": true,\n',
+      });
 
       const refused = yield* Effect.exit(update({ ...baseRequest, features: { _tag: "preserve" } }));
       expect(refused._tag).toBe("Failure");
@@ -154,8 +156,8 @@ layer(NodeContext.layer)("update", (it) => {
 
       const configBytes = yield* fileSystem.readFile(path.join(root, configPath));
       expect(JSON.parse(new TextDecoder().decode(configBytes))).toEqual(defaultConfig);
-      const receipt = JSON.parse(yield* readText(".claude/dufflebag/receipt.json"));
-      const managedConfigFile = receipt.artifacts.find((file: { path: string }) => file.path === configPath);
+      const receipt = JSON.parse(yield* readText(".claude/agent-outfit/receipt.json"));
+      const managedConfigFile = receipt.ownedFiles.find((file: { path: string }) => file.path === configPath);
       expect(managedConfigFile.ownership.installedHash).toBe(createHash("sha256").update(configBytes).digest("hex"));
       expect(managedConfigFile.ownership.previous).toEqual({ _tag: "missing" });
     }),

@@ -15,7 +15,7 @@ Improve an **existing** skill using concrete feedback. The skill file is the pro
 - Keep frontmatter valid: `description` ≤ 1024 chars; flow skills start with `Use when `; body has Safety / Workflow / Verification when `type: flow`.
 - Do not invent user requirements. If feedback is vague, ask one focused clarifying question or propose 2–3 concrete patches and wait for pick.
 - Do not delete safety gates, remote-delete bans, or main-branch protections to “make it easier.”
-- After edits, run the repo’s skill validation (`src/catalog/skillPayload.test.ts` / catalog checks) when this is the dufflebag monorepo.
+- After edits, run the repo’s skill validation (`src/catalog/featureCatalog.skillPayload.test.ts` / catalog checks) when this is the agent-outfit monorepo.
 
 ## Workflow
 
@@ -32,7 +32,7 @@ Improve an **existing** skill using concrete feedback. The skill file is the pro
 5. **Patch minimally**: prefer description + one workflow bullet + verification line over a rewrite. For freeform-trigger gaps, add the user’s real phrases. For failure modes, add an explicit anti-path or stop condition.
 6. **Cross-links**: if the skill should hand off (e.g. to `finish-and-push`, `run-tasks-in-parallel`), name the sibling skill; if feedback was “I had to paste the whole SKILL.md”, add short aliases / `$name` variants.
 7. **Validate**: frontmatter/tests/catalog; optionally dry-run the new description against 3–5 real user phrases (“would this load?”).
-8. **Ship path**: if dufflebag, ensure `featureCatalog` / `shippedPaths` still correct; remind `install-skills` or install so hosts pick up the change. Prefer a feature branch + PR when the repo uses that policy.
+8. **Ship path**: if agent-outfit, ensure `featureCatalog` / `shippedPaths` still correct; remind `install-skills` or install so hosts pick up the change. Prefer a feature branch + PR when the repo uses that policy.
 
 ## Feedback → edit map
 

@@ -106,7 +106,7 @@ const restoreRequestSchema = Schema.Struct({
 });
 
 // Computes each receipted file's final unowned bytes without touching the filesystem.
-export const planRestores = (input: unknown) =>
+export const planRestorations = (input: unknown) =>
   Effect.gen(function* () {
     const request = yield* Schema.decodeUnknown(restoreRequestSchema, { onExcessProperty: "error" })(input).pipe(
       Effect.mapError((error) => new InstallError({ issue: SchemaParseIssue.TreeFormatter.formatErrorSync(error) })),
@@ -130,7 +130,7 @@ export const planRestores = (input: unknown) =>
     );
   }).pipe(Effect.mapError(toInstallError));
 
-export const createStaleRestorations = (input: {
+export const planStaleRestorations = (input: {
   root: string;
   previousReceipt: Receipt | undefined;
   desiredWrites: ReadonlyArray<FileChange>;
@@ -144,9 +144,9 @@ export const createStaleRestorations = (input: {
     const desiredPaths = new Set(input.desiredWrites.map((write) => write.file.path));
     const settingsRestorations = input.settingsPlans.filter((operation) => operation._tag !== "write");
     const settingsPaths = new Set(settingsRestorations.map((operation) => operation.file.path));
-    const staleFiles = input.previousReceipt.artifacts.filter(
+    const staleFiles = input.previousReceipt.ownedFiles.filter(
       (file) => !desiredPaths.has(file.path) && !settingsPaths.has(file.path),
     );
 
-    return [...settingsRestorations, ...(yield* planRestores({ root: input.root, files: staleFiles }))];
+    return [...settingsRestorations, ...(yield* planRestorations({ root: input.root, files: staleFiles }))];
   });

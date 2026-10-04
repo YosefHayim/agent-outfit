@@ -1,6 +1,6 @@
-/** `dufflebag config show|set|reset|pick-refine` — managed configuration as explicit verbs. */
+/** `agent-outfit config show|set|reset` — managed configuration as explicit verbs. */
 
-import { Args, Command, Options } from "@effect/cli";
+import { Args, Command } from "@effect/cli";
 import { Effect, Option } from "effect";
 
 import {
@@ -11,16 +11,9 @@ import {
   settingValueFromText,
   withSettingValue,
 } from "../config/configSchema.js";
-import { readConfig, resolveConfigTarget, saveConfig } from "../config/configSettings.js";
-import { pickRefineModel } from "../voiceControl/pickRefineModel.js";
-import {
-  type CliScope,
-  confirmDestructive,
-  formatOption,
-  type OutputFormat,
-  scopeOption,
-  yesOption,
-} from "./cliOptions.js";
+import { readConfig, resolveConfigTarget, saveConfig } from "../config/scopeConfig.js";
+import type { Scope } from "../install/receipt.js";
+import { confirmDestructive, formatOption, type OutputFormat, scopeOption, yesOption } from "./cliOptions.js";
 import * as TerminalUI from "./TerminalUI.js";
 
 type ConfigSetting = (typeof configSettings)[number];
@@ -40,7 +33,7 @@ export const formatSettingValue = (request: { readonly config: Config; readonly 
 };
 
 export const showConfig = (request: {
-  readonly scope: CliScope;
+  readonly scope: Scope;
   readonly setting: Option.Option<ConfigSetting>;
   readonly format: OutputFormat;
 }) =>
@@ -143,50 +136,7 @@ const resetCommand = Command.make(
     }),
 ).pipe(Command.withDescription("Reset one setting or every setting to Schema defaults"));
 
-const guiOption = Options.boolean("gui").pipe(
-  Options.withDescription("Force macOS GUI dialogs for pick-refine (default: TTY menu in terminal)"),
-);
-
-/** Pick the refine provider, model, and effort from the CLIs on this machine and save the choice. */
-export const pickRefine = (request: {
-  readonly scope: CliScope;
-  readonly format: OutputFormat;
-  readonly gui: boolean;
-}) =>
-  Effect.gen(function* () {
-    // Without a terminal (e.g. launched from a shortcut) only the GUI dialogs can ask.
-    const gui = request.gui || !(yield* TerminalUI.isInteractiveTerminal);
-    const { nextConfig, owner } = yield* pickRefineModel({ scope: request.scope, gui });
-    if (request.format === "json") {
-      yield* TerminalUI.json({
-        _tag: "configured",
-        scope: request.scope,
-        provider: nextConfig.refineProvider,
-        model: nextConfig.refineModel,
-        effort: nextConfig.refineEffort,
-        owner,
-      });
-      return;
-    }
-    const model = nextConfig.refineModel === undefined ? "(default model)" : nextConfig.refineModel;
-    const effort = nextConfig.refineEffort === undefined ? "(default)" : nextConfig.refineEffort;
-    yield* TerminalUI.success(`refine → ${nextConfig.refineProvider}/${model} effort=${effort}`);
-    yield* TerminalUI.detail(
-      "Restart voice if the worker is already running: dufflebag voice off && dufflebag voice on",
-    );
-  });
-
-const pickRefineCommand = Command.make(
-  "pick-refine",
-  { scope: scopeOption, format: formatOption, gui: guiOption },
-  (args) => Effect.zipRight(TerminalUI.intro("config pick-refine"), pickRefine(args)),
-).pipe(
-  Command.withDescription(
-    "Interactively pick refine provider + model + effort from providers on this machine (codex, claude, grok, ollama, …)",
-  ),
-);
-
 export const configCommand = Command.make("config").pipe(
   Command.withDescription("Inspect or change managed configuration"),
-  Command.withSubcommands([showCommand, setCommand, resetCommand, pickRefineCommand]),
+  Command.withSubcommands([showCommand, setCommand, resetCommand]),
 );

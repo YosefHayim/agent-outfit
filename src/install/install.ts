@@ -39,7 +39,7 @@ import { createHookWrites, readPreparedSkills } from "./packageFiles.js";
 import type { FileChange, ReceiptTarget } from "./plan.js";
 import { planInstall } from "./planChanges.js";
 import { type Receipt, type ReceiptSnapshot, readReceipt, receiptJsonSchema } from "./receipt.js";
-import { createStaleRestorations } from "./restore.js";
+import { planStaleRestorations } from "./restore.js";
 
 const receiptEqual = (left: Receipt, right: Receipt): boolean =>
   Schema.encodeSync(receiptJsonSchema)(left) === Schema.encodeSync(receiptJsonSchema)(right);
@@ -300,7 +300,7 @@ export const syncInstall = (input: { request: InstallRequest; receiptSnapshot: R
       managedConfigWrite,
       ...settingsPlans.filter((plan) => plan._tag === "write"),
     ];
-    const restorations = yield* createStaleRestorations({
+    const restorations = yield* planStaleRestorations({
       root: request.destination.root,
       previousReceipt,
       desiredWrites: writes,
@@ -310,7 +310,7 @@ export const syncInstall = (input: { request: InstallRequest; receiptSnapshot: R
       version: request.preparedPackage.version,
       scope: request.destination._tag,
       features: featureIds,
-      artifacts: writes.map((write) => write.file),
+      ownedFiles: writes.map((write) => write.file),
     };
     const plan = yield* planInstall({
       root: request.destination.root,

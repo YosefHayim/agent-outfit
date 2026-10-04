@@ -8,7 +8,7 @@ import { Effect, Schema } from "effect";
 import { defaultConfig } from "../config/configSchema.js";
 import { install } from "./install.js";
 import { installRequestSchema } from "./installRequest.js";
-import { planRestores } from "./restore.js";
+import { planRestorations } from "./restore.js";
 
 const textEncoder = new TextEncoder();
 
@@ -17,9 +17,9 @@ const sha256 = (bytes: Uint8Array | string): string => createHash("sha256").upda
 const contextGuardRuntime = {
   "hooks/contextGuard/hooks/contextGuard.js": "export {};\n",
   "hooks/contextGuard/hooks/startAutorunWatcher.js": "export {};\n",
-  "hooks/contextGuard/hooks/autorunControl.js": "export {};\n",
+  "hooks/contextGuard/command/autorunControl.js": "export {};\n",
   "hooks/contextGuard/hooks/recordIdleCompactEvent.js": "export {};\n",
-  "hooks/contextGuard/hooks/idleCompactWatcher.js": "export {};\n",
+  "hooks/contextGuard/watchers/idleCompactWatcher.js": "export {};\n",
 };
 
 const autorunSkill = { "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n" };
@@ -27,8 +27,8 @@ const autorunSkill = { "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun 
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-install-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-install-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-install-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-install-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {
@@ -42,7 +42,7 @@ const workspace = Effect.gen(function* () {
 
   const exists = (relativePath: string) => fileSystem.exists(path.join(root, relativePath));
 
-  const readReceipt = Effect.map(readText(".claude/dufflebag/receipt.json"), (text) => JSON.parse(text));
+  const readReceipt = Effect.map(readText(".claude/agent-outfit/receipt.json"), (text) => JSON.parse(text));
 
   return { fileSystem, path, root, preparedRoot, writeFiles, readText, exists, readReceipt };
 });
@@ -84,8 +84,8 @@ layer(NodeContext.layer)("install", (it) => {
         agents: ["claude-code"],
       });
       expect(installation.platformRequirements).toEqual([{ featureId: "context-guard", platform: "any" }]);
-      expect(yield* readText(".claude/dufflebag/hooks/contextGuard/hooks/contextGuard.js")).toBe("export {};\n");
-      expect(JSON.parse(yield* readText(".claude/dufflebag/config.json"))).toEqual(defaultConfig);
+      expect(yield* readText(".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js")).toBe("export {};\n");
+      expect(JSON.parse(yield* readText(".claude/agent-outfit/config.json"))).toEqual(defaultConfig);
 
       const settings = yield* readText(".claude/settings.json");
       expect(settings).toContain('"theme": "dark"');
@@ -94,13 +94,13 @@ layer(NodeContext.layer)("install", (it) => {
 
       const receipt = yield* readReceipt;
       expect(receipt.features).toEqual(["context-guard"]);
-      expect(receipt.artifacts.map((file: { path: string }) => file.path)).toEqual([
-        ".claude/dufflebag/hooks/contextGuard/hooks/autorunControl.js",
-        ".claude/dufflebag/hooks/contextGuard/hooks/contextGuard.js",
-        ".claude/dufflebag/hooks/contextGuard/hooks/idleCompactWatcher.js",
-        ".claude/dufflebag/hooks/contextGuard/hooks/recordIdleCompactEvent.js",
-        ".claude/dufflebag/hooks/contextGuard/hooks/startAutorunWatcher.js",
-        ".claude/dufflebag/config.json",
+      expect(receipt.ownedFiles.map((file: { path: string }) => file.path)).toEqual([
+        ".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js",
+        ".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js",
+        ".claude/agent-outfit/hooks/contextGuard/hooks/recordIdleCompactEvent.js",
+        ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js",
+        ".claude/agent-outfit/hooks/contextGuard/watchers/idleCompactWatcher.js",
+        ".claude/agent-outfit/config.json",
         ".claude/settings.json",
       ]);
     }),
@@ -129,32 +129,35 @@ layer(NodeContext.layer)("install", (it) => {
       expect(commands.filter((command) => command.includes("recordIdleCompactEvent.js"))).not.toEqual([]);
       for (const command of commands) {
         const expectedPrefix = command.includes("recordIdleCompactEvent.js")
-          ? 'DUFFLEBAG_AGENT_ID=codex node "'
+          ? 'AGENT_OUTFIT_AGENT_ID=codex node "'
           : 'node "';
         expect(command.startsWith(expectedPrefix)).toBe(true);
       }
 
-      const grok = yield* readText(".grok/hooks/dufflebag.json");
-      expect(grok).toContain("DUFFLEBAG_AGENT_ID=grok");
+      const grok = yield* readText(".grok/hooks/agent-outfit.json");
+      expect(grok).toContain("AGENT_OUTFIT_AGENT_ID=grok");
       expect(grok).toContain("recordIdleCompactEvent.js");
       expect(yield* exists(".claude/settings.json")).toBe(false);
     }),
   );
 
-  it.scoped("passes the agent id to the voice hook for Claude, Codex, and Grok", () =>
+  it.scoped("passes the agent id to the session-rehome hooks for Claude, Codex, and Grok", () =>
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText } = yield* workspace;
-      yield* writeFiles(preparedRoot, { "hooks/voice/hooks/speakReply.js": "export {};\n" });
+      yield* writeFiles(preparedRoot, {
+        "hooks/sessionRehome/hooks/rehomeEndedSession.js": "export {};\n",
+        "hooks/sessionRehome/hooks/announceMovedSession.js": "export {};\n",
+      });
 
       yield* install({
         ...installRequest({ root, preparedRoot }),
-        features: { _tag: "selected", ids: ["voice"] },
+        features: { _tag: "selected", ids: ["session-rehome"] },
         agents: { _tag: "selected", ids: ["claude-code", "codex", "grok"] },
       });
 
-      expect(yield* readText(".claude/settings.json")).toContain("DUFFLEBAG_AGENT_ID=claude-code node ");
-      expect(yield* readText(".codex/hooks.json")).toContain("DUFFLEBAG_AGENT_ID=codex node ");
-      expect(yield* readText(".grok/hooks/dufflebag.json")).toContain("DUFFLEBAG_AGENT_ID=grok node ");
+      expect(yield* readText(".claude/settings.json")).toContain("AGENT_OUTFIT_AGENT_ID=claude-code node ");
+      expect(yield* readText(".codex/hooks.json")).toContain("AGENT_OUTFIT_AGENT_ID=codex node ");
+      expect(yield* readText(".grok/hooks/agent-outfit.json")).toContain("AGENT_OUTFIT_AGENT_ID=grok node ");
     }),
   );
 
@@ -165,11 +168,11 @@ layer(NodeContext.layer)("install", (it) => {
       yield* writeFiles(preparedRoot, contextGuardRuntime);
 
       yield* install(request);
-      const before = yield* readText(".claude/dufflebag/receipt.json");
+      const before = yield* readText(".claude/agent-outfit/receipt.json");
       const installation = yield* install(request);
 
       expect(installation._tag).toBe("unchanged");
-      expect(yield* readText(".claude/dufflebag/receipt.json")).toBe(before);
+      expect(yield* readText(".claude/agent-outfit/receipt.json")).toBe(before);
     }),
   );
 
@@ -198,7 +201,7 @@ layer(NodeContext.layer)("install", (it) => {
       expect(yield* readText(installedSkill)).toBe(synced);
 
       // The refreshed receipt must describe the adopted bytes, so the next install stays clean.
-      const entry = (yield* readReceipt).artifacts.find((file: { path: string }) => file.path === installedSkill);
+      const entry = (yield* readReceipt).ownedFiles.find((file: { path: string }) => file.path === installedSkill);
       expect(entry.ownership.installedHash).toBe(sha256(yield* fileSystem.readFile(path.join(root, installedSkill))));
       expect((yield* Effect.exit(install(request)))._tag).toBe("Success");
     }),
@@ -240,16 +243,16 @@ layer(NodeContext.layer)("install", (it) => {
       expect(yield* readText(".agents/skills/autorun/SKILL.md")).toContain("Run");
       expect(yield* exists(".codex/skills/autorun/SKILL.md")).toBe(false);
       expect(yield* readText(".cursor/rules/autorun.mdc")).toContain(
-        ".claude/dufflebag/hooks/contextGuard/hooks/autorunControl.js",
+        ".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js",
       );
 
       const instructions = yield* readText("AGENTS.md");
-      expect(instructions.match(/<!-- dufflebag:skills start -->/g)).toHaveLength(1);
+      expect(instructions.match(/<!-- agent-outfit:skills start -->/g)).toHaveLength(1);
       expect(instructions).toContain("## autorun");
       expect(yield* readText(".aider.conf.yml")).toContain("AGENTS.md");
       expect(JSON.parse(yield* readText(".continue/config.json")).rules).toEqual(["AGENTS.md"]);
 
-      const instructionFiles = (yield* readReceipt).artifacts.filter(
+      const instructionFiles = (yield* readReceipt).ownedFiles.filter(
         (file: { kind: { _tag: string }; path: string }) =>
           file.kind._tag === "instruction" && file.path === "AGENTS.md",
       );
@@ -269,9 +272,9 @@ layer(NodeContext.layer)("install", (it) => {
         agents: { _tag: "selected", ids: ["cursor"] },
       });
 
-      expect(yield* readText(".claude/dufflebag/hooks/contextGuard/hooks/autorunControl.js")).toBe("export {};\n");
+      expect(yield* readText(".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js")).toBe("export {};\n");
       expect(yield* readText(".cursor/rules/autorun.mdc")).toContain(
-        ".claude/dufflebag/hooks/contextGuard/hooks/autorunControl.js",
+        ".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js",
       );
     }),
   );
@@ -290,18 +293,18 @@ layer(NodeContext.layer)("install", (it) => {
       );
 
       expect(exit._tag).toBe("Failure");
-      expect(yield* exists(".claude/dufflebag/receipt.json")).toBe(false);
-      expect(yield* exists(".claude/dufflebag/config.json")).toBe(false);
+      expect(yield* exists(".claude/agent-outfit/receipt.json")).toBe(false);
+      expect(yield* exists(".claude/agent-outfit/config.json")).toBe(false);
     }),
   );
 
   it.scoped("copies a validated global config once into a first project installation", () =>
     Effect.gen(function* () {
       const { fileSystem, root: homeRoot, preparedRoot, writeFiles } = yield* workspace;
-      const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "dufflebag-install-project-" });
-      const globalConfig = { ...defaultConfig, speechVoice: "Daniel" };
+      const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-install-project-" });
+      const globalConfig = { ...defaultConfig, duplicateCodeSkipFolders: ["vendor"] };
       const writeGlobalConfig = (config: object) =>
-        writeFiles(homeRoot, { ".claude/dufflebag/config.json": `${JSON.stringify(config, null, 2)}\n` });
+        writeFiles(homeRoot, { ".claude/agent-outfit/config.json": `${JSON.stringify(config, null, 2)}\n` });
       const request = {
         ...installRequest({ root: projectRoot, preparedRoot }),
         host: { homeRoot },
@@ -311,10 +314,10 @@ layer(NodeContext.layer)("install", (it) => {
       yield* writeGlobalConfig(globalConfig);
 
       yield* install(request);
-      yield* writeGlobalConfig({ ...globalConfig, speechVoice: "Moira" });
+      yield* writeGlobalConfig({ ...globalConfig, duplicateCodeSkipFolders: ["generated"] });
       yield* install(request);
 
-      expect(JSON.parse(yield* fileSystem.readFileString(`${projectRoot}/.claude/dufflebag/config.json`))).toEqual(
+      expect(JSON.parse(yield* fileSystem.readFileString(`${projectRoot}/.claude/agent-outfit/config.json`))).toEqual(
         globalConfig,
       );
     }),
@@ -340,8 +343,8 @@ layer(NodeContext.layer)("install", (it) => {
   it.scoped("removes installer-created whole files even when they drifted or vanished", () =>
     Effect.gen(function* () {
       const { root, writeFiles } = yield* workspace;
-      const driftedPath = ".claude/dufflebag/hooks/voice/hooks/speakReply.js";
-      const exactPath = ".claude/dufflebag/hooks/voice/text_to_speech.py";
+      const driftedPath = ".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js";
+      const exactPath = ".claude/agent-outfit/hooks/contextGuard/lib/hookConfig.js";
       yield* writeFiles(root, { [driftedPath]: "drifted after install\n", [exactPath]: "exact\n" });
       const wholeFile = (filePath: string, hash: string) => ({
         owner: { _tag: "application" as const },
@@ -350,11 +353,11 @@ layer(NodeContext.layer)("install", (it) => {
         ownership: { _tag: "wholeFile" as const, installedHash: hash, previous: { _tag: "missing" as const } },
       });
 
-      const restorations = yield* planRestores({
+      const restorations = yield* planRestorations({
         root,
         files: [
           wholeFile(driftedPath, sha256("old\n")),
-          wholeFile(".claude/dufflebag/hooks/voice/refine_prompt.py", sha256("old\n")),
+          wholeFile(".claude/agent-outfit/hooks/contextGuard/lib/stateFiles.js", sha256("old\n")),
           wholeFile(exactPath, sha256("exact\n")),
         ],
       });
@@ -369,7 +372,7 @@ layer(NodeContext.layer)("install", (it) => {
       const { root, writeFiles } = yield* workspace;
       yield* writeFiles(root, { "owned.txt": "user edited\n" });
 
-      const restorationPlan = yield* planRestores({
+      const restorationPlan = yield* planRestorations({
         root,
         files: [
           {

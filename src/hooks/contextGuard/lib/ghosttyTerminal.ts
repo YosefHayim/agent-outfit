@@ -86,7 +86,7 @@ const versionRefusal = (): TerminalClaim | null => {
 export const claimGhosttyTerminal = (sessionId: string, terminalDevice: string): TerminalClaim => {
   const refusal = versionRefusal();
   if (refusal) return refusal;
-  const marker = `dufflebag-${sessionId}`;
+  const marker = `agent-outfit-${sessionId}`;
   if (!writeTerminalTitle(marker, terminalDevice)) return { _tag: "refused", reason: "terminal-not-proven" };
   const claim = decodeTerminalClaim(runAppleScript(claimTerminalScript(marker)));
   writeTerminalTitle("", terminalDevice);

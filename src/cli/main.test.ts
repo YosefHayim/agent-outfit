@@ -33,7 +33,7 @@ const runCli = (args: ReadonlyArray<string>, env: NodeJS.ProcessEnv = {}) =>
 
 // A throwaway directory, used as HOME so the global scope never touches the machine's real install.
 const withFreshDirectory = async (run: (directory: string) => Promise<void>) => {
-  const directory = mkdtempSync(path.join(tmpdir(), "dufflebag-cli-"));
+  const directory = mkdtempSync(path.join(tmpdir(), "agent-outfit-cli-"));
   try {
     await run(directory);
   } finally {
@@ -43,9 +43,9 @@ const withFreshDirectory = async (run: (directory: string) => Promise<void>) => 
 
 describe("isBareArgv", () => {
   it("detects bare invocations that should route to the menu or help", () => {
-    expect(isBareArgv(["node", "dufflebag"])).toBe(true);
-    expect(isBareArgv(["node", "dufflebag", "install"])).toBe(false);
-    expect(isBareArgv(["node", "dufflebag", "--help"])).toBe(false);
+    expect(isBareArgv(["node", "agent-outfit"])).toBe(true);
+    expect(isBareArgv(["node", "agent-outfit", "install"])).toBe(false);
+    expect(isBareArgv(["node", "agent-outfit", "--help"])).toBe(false);
   });
 });
 
@@ -53,23 +53,10 @@ describe("CLI help", () => {
   it.each([
     {
       args: ["--help"],
-      shows: ["dufflebag", "install", "catalog", "workflow scaffold", "voice speak", "stt", "tts"],
-      hides: ["voice example", "--wizard", "--log-level", "--completions"],
+      shows: ["agent-outfit", "install", "catalog", "workflow scaffold"],
+      hides: ["voice", "openrouter", "--wizard", "--log-level", "--completions"],
     },
-    {
-      args: ["voice", "--help"],
-      shows: ["speak", "refine", "devin"],
-      hides: ["--example"],
-    },
-    { args: ["stt", "--help"], shows: ["on", "off", "keep-listening", "lang", "hold Shift"], hides: [] },
-    { args: ["tts", "--help"], shows: ["on", "off", "narration", "speech-mode"], hides: [] },
-    { args: ["config", "--help"], shows: ["pick-refine", "Set one managed setting"], hides: [] },
-    { args: ["openrouter", "--help"], shows: ["connect", "smoke", "chat", "OAuth"], hides: [] },
-    {
-      args: ["free", "--help"],
-      shows: ["models", "credentials", "acknowledge", "chat"],
-      hides: ["base-url", "OmniRoute"],
-    },
+    { args: ["config", "--help"], shows: ["Set one managed setting"], hides: ["pick-refine"] },
     {
       args: ["install", "--help"],
       shows: ["<feature-id>...", "--scope global | project", "global home installation root (default)"],
@@ -93,7 +80,7 @@ describe("CLI help", () => {
       const execution = await runCli([]);
 
       expect(execution.exitCode).toBe(0);
-      expect(execution.stdout).toContain("dufflebag");
+      expect(execution.stdout).toContain("agent-outfit");
     },
     CLI_TEST_TIMEOUT,
   );
@@ -106,46 +93,6 @@ describe("CLI help", () => {
       expect(execution.exitCode).toBe(0);
       expect(execution.stdout).toContain(packageVersion);
     },
-    CLI_TEST_TIMEOUT,
-  );
-});
-
-describe("free providers", () => {
-  it(
-    "lists direct model identities, keyless readiness, credential variables, and unavailable pools",
-    async () => {
-      const execution = await runCli(["free", "models"], { GROQ_API_KEY: "" });
-
-      expect(execution.exitCode).toBe(0);
-      expect(execution.stdout).toContain("groq/meta-llama/llama-4-scout-17b-16e-instruct");
-      expect(execution.stdout).toContain("needs: export GROQ_API_KEY");
-      expect(execution.stdout).toContain("needs: export CLOUDFLARE_ACCOUNT_ID");
-      expect(execution.stdout).toContain("pollinations/openai");
-      expect(execution.stdout).toContain("needs: export POLLINATIONS_API_KEY");
-      expect(execution.stdout).toContain("ovhcloud/gpt-oss-120b");
-      expect(execution.stdout).toContain("ready: keyless");
-      expect(execution.stdout).toContain("huggingchat/baidu/ERNIE-4.5-VL-424B-A47B-Base-PT");
-      expect(execution.stdout).toContain("unavailable: browser-cookie");
-    },
-    CLI_TEST_TIMEOUT,
-  );
-
-  it(
-    "persists only the current terms acknowledgement and rejects malformed explicit model identities",
-    () =>
-      withFreshDirectory(async (stateDirectory) => {
-        const statePath = path.join(stateDirectory, "provider-health.json");
-        const acknowledgement = await runCli(["free", "acknowledge"], { DUFFLEBAG_PROVIDER_HEALTH_FILE: statePath });
-        const malformedModel = await runCli(["free", "chat", "say hi", "--model", "missing-separator"], {
-          DUFFLEBAG_PROVIDER_HEALTH_FILE: statePath,
-        });
-
-        expect(acknowledgement.exitCode).toBe(0);
-        expect(readFileSync(statePath, "utf8")).toContain("omniroute-3.8.50-2026-06-17");
-        expect(readFileSync(statePath, "utf8")).not.toContain("say hi");
-        expect(malformedModel.exitCode).toBe(2);
-        expect(malformedModel.stdout).toContain("--model must be auto-free or provider/model");
-      }),
     CLI_TEST_TIMEOUT,
   );
 });
@@ -177,7 +124,7 @@ describe("config reset", () => {
     "replaces a config.json that no longer decodes without reading it first",
     () =>
       withFreshDirectory(async (homeRoot) => {
-        const configPath = path.join(homeRoot, ".claude/dufflebag/config.json");
+        const configPath = path.join(homeRoot, ".claude/agent-outfit/config.json");
         mkdirSync(path.dirname(configPath), { recursive: true });
         writeFileSync(configPath, '{ "unknownSetting": true,\n');
         const refusedSet = await runCli(["config", "set", "debug-logs", "true"], { HOME: homeRoot });
@@ -186,30 +133,6 @@ describe("config reset", () => {
         expect(refusedSet.exitCode).not.toBe(0);
         expect(execution.exitCode).toBe(0);
         expect(JSON.parse(readFileSync(configPath, "utf8"))).toEqual(defaultConfig);
-      }),
-    CLI_TEST_TIMEOUT,
-  );
-});
-
-describe("tts off", () => {
-  it(
-    "saves speech-mode off and stops only the narration worker",
-    () =>
-      withFreshDirectory(async (homeRoot) => {
-        const workerLog = path.join(homeRoot, "worker.log");
-        const worker = path.join(homeRoot, ".claude/dufflebag/hooks/voice/dufflebag-voice");
-        mkdirSync(path.dirname(worker), { recursive: true });
-        writeFileSync(worker, `#!/bin/sh\necho "$*" >> "${workerLog}"\n`, { mode: 0o755 });
-
-        const execution = await runCli(["tts", "off"], { HOME: homeRoot });
-        const config = JSON.parse(readFileSync(path.join(homeRoot, ".claude/dufflebag/config.json"), "utf8"));
-
-        expect(execution.exitCode).toBe(0);
-        expect(readFileSync(workerLog, "utf8")).toBe("stop-narration\n");
-        expect(execution.stdout).toContain(
-          "Stopped the narration worker and TTS server; dictation worker left running.",
-        );
-        expect(config.speechMode).toBe("off");
       }),
     CLI_TEST_TIMEOUT,
   );

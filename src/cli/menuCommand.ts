@@ -1,4 +1,4 @@
-/** `dufflebag menu` — pick an action, gather the options its CLI command takes, approve a plan, then run the same work. */
+/** `agent-outfit menu` — pick an action, gather the options its CLI command takes, approve a plan, then run the same work. */
 
 import { Command } from "@effect/cli";
 import { Path } from "@effect/platform";
@@ -14,9 +14,9 @@ import { update } from "../install/update.js";
 import { copyWorkflows } from "../workflows/copyWorkflows.js";
 import { showFeatureList } from "./catalogCommand.js";
 import { checkBothScopes, showScopeHealth } from "./doctorCommand.js";
-import { findDuplicates } from "./duplicatesCommand.js";
+import { checkWorkspaceDuplicates } from "./duplicatesCommand.js";
 import { showInstallation } from "./installCommand.js";
-import { applyIfApproved, pickScope, runConfig, runStt, runTts, runVoice } from "./menuSettings.js";
+import { applyIfApproved, pickScope, runConfig } from "./menuSettings.js";
 import * as TerminalUI from "./TerminalUI.js";
 import { showUninstallation } from "./uninstallCommand.js";
 import { showUpdate } from "./updateCommand.js";
@@ -132,7 +132,7 @@ const runUninstall = Effect.gen(function* () {
       { label: "Destination", detail: destination.root },
       { label: "Safety", detail: "only receipt-authorized files are removed" },
     ],
-    confirmMessage: `Uninstall dufflebag from ${scope}?`,
+    confirmMessage: `Uninstall agent-outfit from ${scope}?`,
     apply: uninstall({ destination, host: { homeRoot: host.homeRoot }, interaction: { _tag: "interactive" } }).pipe(
       Effect.flatMap(showUninstallation),
     ),
@@ -190,7 +190,7 @@ const runDuplicates = Effect.gen(function* () {
     ],
   });
   // A read-only scan, so the plan preview needs no approval.
-  yield* findDuplicates({
+  yield* checkWorkspaceDuplicates({
     workspace: targetRoot,
     staged: mode === "staged",
     since: Option.getOrUndefined(since),
@@ -207,9 +207,6 @@ const screens = {
   catalog: TerminalUI.intro("catalog").pipe(Effect.zipRight(showFeatureList)),
   workflow: runWorkflow,
   duplicates: runDuplicates,
-  voice: runVoice,
-  stt: runStt,
-  tts: runTts,
 };
 
 export const menuCommand = Command.make("menu", {}, () =>
@@ -226,9 +223,6 @@ export const menuCommand = Command.make("menu", {}, () =>
         { title: "Catalog", value: "catalog", description: "list feature IDs" },
         { title: "Workflow scaffold", value: "workflow", description: "CI + publish templates" },
         { title: "Duplicates", value: "duplicates", description: "duplicate-code scan" },
-        { title: "Voice", value: "voice", description: "on / off / status" },
-        { title: "STT", value: "stt", description: "dictation on / off / lang" },
-        { title: "TTS", value: "tts", description: "narration on / off" },
         { title: "Exit", value: "exit", description: "close the menu" },
       ],
       initial: "install",

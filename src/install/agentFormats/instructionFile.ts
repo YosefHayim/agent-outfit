@@ -7,8 +7,8 @@ import { bytesEqual, hashBytes } from "../fileBytes.js";
 import { fileKindSchema, fileOwnerSchema, managedBlockOwnershipSchema, relativePathSchema } from "../ownership.js";
 import { controlScriptSchema, fillControlScript, stripFrontmatter, withCompleteFrontmatter } from "./skillText.js";
 
-const startMarker = "<!-- dufflebag:skills start -->";
-const endMarker = "<!-- dufflebag:skills end -->";
+const startMarker = "<!-- agent-outfit:skills start -->";
+const endMarker = "<!-- agent-outfit:skills end -->";
 const textEncoder = new TextEncoder();
 const startMarkerBytes = textEncoder.encode(startMarker);
 const endMarkerBytes = textEncoder.encode(endMarker);
@@ -303,7 +303,7 @@ const instructionFileRequestSchema = instructionFileRequestFieldsSchema.pipe(Sch
 
 type InstructionFileRequest = Schema.Schema.Type<typeof instructionFileRequestSchema>;
 
-// A block dufflebag wrote earlier may be replaced or removed only while its body still hashes to the receipt.
+// A block agent-outfit wrote earlier may be replaced or removed only while its body still hashes to the receipt.
 const receiptedOwnership = (request: InstructionFileRequest, block: ManagedBlock) => {
   if (request.previousFile._tag === "missing" || request.currentFile._tag === "missing") {
     return Either.left(planError("current managed block has no complete prior receipt evidence."));
