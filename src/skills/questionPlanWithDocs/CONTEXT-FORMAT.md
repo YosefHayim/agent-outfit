@@ -9,7 +9,7 @@ and not coding rules.
 | `PROJECT.md` | Purpose & direction — [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md) |
 | `CONTEXT.md` | Orientation (this file) |
 | `LANGUAGE.md` | Names-only glossary — [LANGUAGE-FORMAT.md](./LANGUAGE-FORMAT.md) |
-| `docs/adr/` | Individual hard-to-reverse decisions |
+| PR description | Individual hard-to-reverse decisions |
 | `CODE-STYLE.md` / `AGENTS.md` | How to write code / how to work in the repo |
 
 **Canonical exemplar:** `ai-browser-bridge/CONTEXT.md` (orientation sections; no
@@ -67,9 +67,9 @@ Diagrams and short tables of actors/parts are fine when they orient.}
 | Glossary blocks (`**Term**` + `_Avoid_:`) | `LANGUAGE.md` |
 | `## Language` section | `LANGUAGE.md` |
 | Purpose, goals, non-goals, roadmap Built/Next/Maybe | `PROJECT.md` |
-| ADRs / decision rationale | `docs/adr/current/` |
+| Decision rationale | The PR description |
 | Full code-style rules | `CODE-STYLE.md` |
-| Long implementation walkthroughs | code + ADRs; link only |
+| Long implementation walkthroughs | code; link only |
 
 ## Rules
 

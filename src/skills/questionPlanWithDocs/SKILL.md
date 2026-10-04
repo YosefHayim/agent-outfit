@@ -26,12 +26,6 @@ Most repos have a single context:
 ├── PROJECT.md
 ├── CONTEXT.md
 ├── LANGUAGE.md
-├── docs/
-│   └── adr/
-│       ├── current/
-│       │   ├── 0001-2026-01-04-0900-event-sourced-orders.md
-│       │   └── 0002-2026-02-11-1030-postgres-for-write-model.md
-│       └── archived/
 └── src/
 ```
 
@@ -42,18 +36,16 @@ If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The ma
 ├── PROJECT.md
 ├── CONTEXT-MAP.md
 ├── LANGUAGE.md                        ← one shared glossary (sections per context)
-├── docs/
-│   └── adr/current|archived/          ← system-wide decisions
 ├── src/
 │   ├── ordering/
-│   │   ├── CONTEXT.md
-│   │   └── docs/adr/current|archived/ ← context-specific decisions
+│   │   └── CONTEXT.md
 │   └── billing/
-│       ├── CONTEXT.md
-│       └── docs/adr/current|archived/
+│       └── CONTEXT.md
 ```
 
-Create files lazily — only when you have something to write. If no `LANGUAGE.md` exists, create one when the first **term** is resolved (format in [LANGUAGE-FORMAT.md](./LANGUAGE-FORMAT.md)). If no `CONTEXT.md` exists, create orientation when actors/shape need documenting — not as a glossary. If no `PROJECT.md` exists, create one when the project's purpose/direction is being pinned down (format in [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md)). If no `docs/adr/` exists, create `docs/adr/current/` when the first ADR is needed.
+Past decisions live in merged PR descriptions: search them (`gh pr list --state merged --search "<term>"`) when the plan touches an earlier choice.
+
+Create files lazily — only when you have something to write. If no `LANGUAGE.md` exists, create one when the first **term** is resolved (format in [LANGUAGE-FORMAT.md](./LANGUAGE-FORMAT.md)). If no `CONTEXT.md` exists, create orientation when actors/shape need documenting — not as a glossary. If no `PROJECT.md` exists, create one when the project's purpose/direction is being pinned down (format in [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md)).
 
 ## During the session
 
@@ -93,18 +85,18 @@ Matt Pocock's upstream domain-modeling skill keeps this anatomy inside `CONTEXT.
 
 ### Capture purpose in PROJECT.md
 
-Purpose, goals, and product direction do NOT belong in `LANGUAGE.md` (glossary), `CONTEXT.md` (orientation), or ADRs (individual decisions) — they live in `PROJECT.md`. When the project's "why" or "where it's going" comes up — or when you notice a `CONTEXT.md` that has bloated into problem statements and roadmaps — capture/extract it into `PROJECT.md` using the format in [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md).
+Purpose, goals, and product direction do NOT belong in `LANGUAGE.md` (glossary), `CONTEXT.md` (orientation), or PR descriptions (individual decisions) — they live in `PROJECT.md`. When the project's "why" or "where it's going" comes up — or when you notice a `CONTEXT.md` that has bloated into problem statements and roadmaps — capture/extract it into `PROJECT.md` using the format in [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md).
 
 This skill is the **single owner of PROJECT.md** — for any repo, new or existing. When purpose is thin or absent, fire the seven-part **"What to ask"** checklist in [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md) as **one** `AskUserQuestion`, each with a recommended default, to produce a professional PROJECT.md. Other skills (the `code-style-new-project` pair) don't write their own purpose questions — they offer to run this flow and hand off here.
 
-### Offer ADRs sparingly
+### Put decisions in the PR description
 
-Only offer to create an ADR when all three are true:
+Record a decision the user makes only when all three are true:
 
 1. **Hard to reverse** — the cost of changing your mind later is meaningful
 2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
 3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
 
-If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md) — new ADRs go into `docs/adr/current/`; when one supersedes another, move the old file into `docs/adr/archived/` and cross-link them.
+If any of the three is missing, skip it. Otherwise write it in the PR description of the change: the decision, why, and the options rejected. Never create decision files.
 
 </supporting-info>

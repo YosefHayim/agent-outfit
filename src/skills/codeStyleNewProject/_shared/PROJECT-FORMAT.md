@@ -10,7 +10,7 @@ before writing code.
 | `PROJECT.md` | Purpose & direction (this file) |
 | `CONTEXT.md` | Orientation — [CONTEXT-FORMAT.md](../../questionPlanWithDocs/CONTEXT-FORMAT.md) |
 | `LANGUAGE.md` | Names-only glossary — [LANGUAGE-FORMAT.md](LANGUAGE-FORMAT.md) |
-| `docs/adr/` | Individual hard-to-reverse decisions |
+| PR description | Individual hard-to-reverse decisions |
 | `AGENTS.md` | Current structure / how to work in the repo |
 
 **Canonical exemplars:** `planpage/PROJECT.md` and `agent-outfit/PROJECT.md` (seven
@@ -48,11 +48,11 @@ and `CODE-STYLE.md` for how code is written.
 
 ## Direction
 - **Built:** {what exists today}
-- **Next:** {decided but not built — link the ADRs}
+- **Next:** {decided but not built — link the issue or PR}
 - **Maybe:** {options still on the table}
 
 ## Guiding principles
-- {Non-negotiables that shape decisions — values, platform/budget limits. Deep rationale → an ADR.}
+- {Non-negotiables that shape decisions — values, platform/budget limits. Deep rationale → the PR description.}
 ```
 
 ### Accepted heading aliases (do not invent more)
@@ -85,12 +85,12 @@ question only when the docs already answer it unambiguously.
 3. **Core insight — why this, why now** — The key bet: why this approach beats the obvious alternatives, and why now is the moment. → *The core insight.*
 4. **Goals as outcomes** — What is true when this is "working"? Push for outcomes ("a lead gets a scored PDF in one run"), not feature lists. → *Goals.*
 5. **Non-goals** — What it deliberately will NOT do; what you'll say no to. Highest-leverage section for keeping agents in scope. → *Non-goals.*
-6. **Direction** — What's Built, what's Next (decided — link the ADR), what's Maybe (still open). No aspirational fiction. → *Direction.*
-7. **Guiding principles & hard constraints** — The values and non-negotiables shaping every decision (SSOT/KISS, platform limits, budget). → *Guiding principles*; deep rationale for any one choice still becomes an ADR.
+6. **Direction** — What's Built, what's Next (decided — link the issue or PR), what's Maybe (still open). No aspirational fiction. → *Direction.*
+7. **Guiding principles & hard constraints** — The values and non-negotiables shaping every decision (SSOT/KISS, platform limits, budget). → *Guiding principles*; deep rationale for any one choice goes in the PR description.
 
 ## Rules
 
-- **Purpose and direction only.** Link to ADRs for the "why" of specific decisions; don't restate them.
+- **Purpose and direction only.** The "why" of specific decisions lives in PR descriptions; don't restate it.
 - **No glossary.** Domain terms belong in `LANGUAGE.md` ([LANGUAGE-FORMAT.md](LANGUAGE-FORMAT.md)).
 - **No orientation dump.** Actors/shape belong in `CONTEXT.md`.
 - **No current structure.** Repo layout / module ownership belongs in `AGENTS.md`.

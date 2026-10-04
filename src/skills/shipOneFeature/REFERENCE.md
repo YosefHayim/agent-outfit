@@ -29,10 +29,10 @@ Score **belief the feature is correct and matches repo patterns**, not optimism.
 | Score | When to use |
 |------:|-------------|
 | 1–3 | Spec unclear, tests missing/failing, or large pattern violations. **Do not merge.** |
-| 4–5 | Works in a narrow demo; weak e2e; style/ADR drift. **Do not merge** without human. |
+| 4–5 | Works in a narrow demo; weak e2e; style drift. **Do not merge** without human. |
 | 6 | Happy-path unit + e2e green; follows main patterns; minor residual risk. Default minimum to auto-merge. |
 | 7 | Solid coverage; small unknowns (e.g. thin new e2e harness, one flaky host). |
-| 8 | Full gate + act green; matches CODE-STYLE/ADRs; edge cases considered. |
+| 8 | Full gate + act green; matches CODE-STYLE; edge cases considered. |
 | 9 | High coverage, act + hosted CI green, reinstall smoke clean, little residual risk. |
 | 10 | Reserved: production-hardened, multi-surface proof, no known residual risk. Rare. |
 

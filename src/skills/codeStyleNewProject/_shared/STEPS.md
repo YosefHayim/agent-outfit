@@ -8,7 +8,7 @@ These steps are identical for both grill variants (greenfield and existing-codeb
 
 ### Existing codebase
 
-Read the package manifest. Flag unmaintained / unstable / duplicative deps and suggest alternatives. Record any library decision (keep / add / replace) + rationale as an **ADR** (`docs/adr/current/`). `CODE-STYLE.md` documents only how to USE libraries.
+Read the package manifest. Flag unmaintained / unstable / duplicative deps and suggest alternatives. Record any library decision (keep / add / replace) + rationale in the **PR description**. `CODE-STYLE.md` documents only how to USE libraries.
 
 ### Greenfield
 
@@ -20,7 +20,7 @@ Grill a dependency policy (2–3 quick picks) in the **same** `AskUserQuestion` 
 - Acceptable license set — MIT/Apache/ISC only, or wider? (Recommend: MIT/Apache/ISC)
 - "One job per dep" rule — no kitchen-sink frameworks unless the project IS that framework.
 
-Record the policy as an **ADR**. When a library choice comes up, research + recommend a stable option (WebSearch / the `deep-research` skill), then record the choice + rationale as a separate ADR.
+Record the policy in the **PR description**. When a library choice comes up, research + recommend a stable option (WebSearch / the `deep-research` skill), then record the choice + rationale there too.
 
 `CODE-STYLE.md` documents only how to USE the chosen libraries — never the choice rationale.
 
@@ -79,7 +79,7 @@ Self-contained, CDN-only — no repo assets, no app code:
 - **④ Golden path + guard** — the numbered `## Golden path — adding a {unit}` as **flippable steps** (`data-id` each), the **definition-of-done** checklist, and the **guard split** (which `## Never` tells became lint rules that CI now blocks vs which stay taste/`make-code-readable`). Derived from ②/③ and the dependency step — approved together with them.
 - **⑤ Structure (before → after)** — [existing only] a directory tree and a module graph **scoped to the moved modules**, produced by `ascii-architecture-flow-mapper` (ASCII in `<pre>`; the CLI chart stays Mermaid). Render each half **only when it changed** — else a compact "✓ unchanged" chip. This reflects only incidental moves implied by the style decisions; the deep reorg is the Step 9 capstone.
 - Then the **write-list**: every file to be created/edited.
-- **Review the exact writes** — below the write-list, inline what will actually land for **CODE-STYLE.md** and **AGENTS.md** (both the `## Conventions` digest and `## Repo layout`), rendered as a **diff when the file exists** (green/red `<pre>` lines) or **full proposed content when new**. Other writes (ADRs, created structure docs) stay summarized in ①/②/④. Nothing lands sight-unseen.
+- **Review the exact writes** — below the write-list, inline what will actually land for **CODE-STYLE.md** and **AGENTS.md** (both the `## Conventions` digest and `## Repo layout`), rendered as a **diff when the file exists** (green/red `<pre>` lines) or **full proposed content when new**. Other writes (created structure docs) and the decisions for the PR description stay summarized in ①/②/④. Nothing lands sight-unseen.
 
 (The planpage kit owns the shell, components, theme, and post-back — reference it and plug in content; don't reinvent the HTML. For richer diagram patterns, the `improve-codebase-architecture` report remains a good styling reference.)
 
@@ -92,7 +92,7 @@ The interactive plan **is** the ask — I approve or adjust in the browser and i
 1. Write/update **`CODE-STYLE.md`** per [CODE-STYLE-FORMAT.md](CODE-STYLE-FORMAT.md) — **SSOT root is this package** (format + root `CODE-STYLE.md` exemplar + `src/templates/projectDocs/CODE-STYLE.md` scaffold). Emit the full required shape in order: short title+preamble → **`## How to read a rule`** table → **`## Rules`** (five-slot cards only: `###` name, `[rule:<id>] · verify: …`, one-sentence assertion, one fenced `// ✓` + `// ✗` block, `Why:` line) → **`## Canonical example`** → **`## Golden path — adding a {unit}`** (numbered steps + definition-of-done + cross-link) → **`## Exemplars`** → **`## Never`** (each entry cites `[rule:<id>]`) → optional **`## Stack and framework practices`**, **`## Recipes`**, **`## Verification`**. **Never** write `[taste]` / `[lint: …]` / `[CI: …]` in headings, `_Why:`, or `// [GOOD]` markers. Do **not** pin the shape to any external product repo. This file is the **SSOT for style**.
 2. The **formatter + linter config** chosen in the grill (see [FORMATTERS.md](FORMATTERS.md)) — including the lint rules for the machine-catchable tells (Step 6 guard layer 1: every tell that moved from `verify: judgment` to a real command must have a real rule here).
 2a. The **Biome artifacts** each rule's `verify` points to (scoped `overrides`, `noRestrictedImports`, `biome-rules/*.grit` plugins). See **[RULESET.md](RULESET.md)** for the GritQL facts and the prove-it gate. The cards in `CODE-STYLE.md` are the only rule index.
-3. The **structure docs** flagged `create` in Step 1 (PROJECT.md via `question-plan-with-docs`' flow per [PROJECT-FORMAT.md](PROJECT-FORMAT.md); CONTEXT.md orientation; LANGUAGE.md names-only glossary per [LANGUAGE-FORMAT.md](LANGUAGE-FORMAT.md)); any **ADRs** from the CLI, dependency, and golden-path steps into `docs/adr/current/`.
+3. The **structure docs** flagged `create` in Step 1 (PROJECT.md via `question-plan-with-docs`' flow per [PROJECT-FORMAT.md](PROJECT-FORMAT.md); CONTEXT.md orientation; LANGUAGE.md names-only glossary per [LANGUAGE-FORMAT.md](LANGUAGE-FORMAT.md)). The decisions from the CLI, dependency, and golden-path steps go in the **PR description** of the change that lands these files, never in decision files.
 4. Refresh the `## Conventions` digest in **`AGENTS.md`** — a short digest of only the load-bearing rules, marked `<!-- rules digest — full guide in CODE-STYLE.md; edit there -->`, **including the tight golden-path mirror** (one line per step + the done-checklist) — **and, when §⑤ recorded structure moves (existing only), the `## Repo layout`** to the approved "after".
 5. **Edit, don't replace** — preserve the user's voice and existing content.
 
@@ -110,9 +110,9 @@ Present the proposal as its **own interactive planpage page** — the §⑤ rend
 
 1. Require a **clean working tree** (else stop, or cut the branch first).
 2. Branch `reorg/organize-by-purpose`.
-3. `git mv` the files and **rewrite every import** that referenced a moved module; update the ADR + the AGENTS.md `## Repo layout`.
+3. `git mv` the files and **rewrite every import** that referenced a moved module; update the AGENTS.md `## Repo layout`.
 4. Run the repo's **own validation gate** (typecheck + tests + formatter — e.g. `npm test` / `biome ci`). **Never push red** — red → stop and offer to roll back (`git reset --hard`).
-5. `git push`, then `gh pr create` (body = the §⑤ before/after + rationale + ADR link).
+5. `git push`, then `gh pr create` (body = the §⑤ before/after + rationale + the decisions).
 6. `gh pr merge --auto --squash` — GitHub merges to `main` once required checks pass; branch protection requiring a review naturally holds it for you.
 7. **No remote / CI / `gh`?** Stop at the local branch and print the exact PR command — never fake the ship.
 

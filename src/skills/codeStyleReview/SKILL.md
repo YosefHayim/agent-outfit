@@ -53,7 +53,7 @@ Open with **orientation, then findings**:
   the lesson: I see the shape of what changed, not 300 diffs.
 - **Intent check** — one line: did the diff do what I asked? Any scope creep?
 - **Findings** — each: `file:line`, the rule/intent broken, **why it matters** (the rationale /
-  ADR / the pattern it protects — this is how I learn), the fix, and the exemplar to imitate.
+  the pattern it protects — this is how I learn), the fix, and the exemplar to imitate.
   Clean slices get a one-line "✓ conforms" — never a diff dump.
 - **Verdict** — `verify` state + counts per tier. Auto-fixed (Tier 1+2) items are summarized, not
   itemized.

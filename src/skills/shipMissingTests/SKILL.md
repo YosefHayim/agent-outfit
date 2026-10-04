@@ -25,23 +25,42 @@ This skill is the **glue**. Load sibling `SKILL.md` files and follow them. Do no
 | Single product feature (not a test campaign) | **Stop** → `ship-one-feature` |
 | Over-engineering lean | **Stop** → `simplify-repo-with-tests` |
 
-Owns only: campaign modes, lane selection from gap report, merge sequencing, e2e-unblock policy, campaign done receipt, artifact paths.
+Owns only: campaign modes, lane selection from gap report, merge sequencing, e2e-unblock policy, campaign done receipt, run report.
 
-## Artifact paths (mandatory)
+## Run report (mandatory)
 
-Never write campaign markdown at the **repository root**. Never overwrite another run’s fixed flat files.
+Never write run records into the repository: no `docs/` folder, no report at the **repository root**. Each campaign gets its own run folder outside the repo with one `report.md`.
 
-| File | Path |
+| What | Where |
 |------|------|
-| Features (from find-missing-tests) | `docs/agent/find-missing-tests/<report-run-id>/FEATURES.md` |
-| Gap report (from find-missing-tests) | `docs/agent/find-missing-tests/<report-run-id>/REPORT.md` |
-| Campaign board | `docs/agent/ship-missing-tests/<run-id>/SHIP.md` |
-| Active pointer | `docs/agent/ship-missing-tests/CURRENT` |
+| Features + gap report (from find-missing-tests) | `## Features` and `## Report` in `${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/$REPO/find-missing-tests/<newest>/report.md` |
+| Campaign board | `## Ship` in this run's `$REPORT` |
 
-1. **New campaign:** `RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)`; `AGENT_DOCS=docs/agent/ship-missing-tests/$RUN_ID`; `mkdir -p "$AGENT_DOCS"`; write `CURRENT`. Write the report path you use at the top of `SHIP.md`.
-2. **Resume:** resolve `docs/agent/ship-missing-tests/CURRENT` or an explicit run path; do not mint a new run-id. `SHIP.md` names its report.
-3. `LANE-BRIEF.md` stays **inside each worktree**, not under `docs/agent/`. Include `AGENT_DOCS` in every brief.
-4. Shared rules: [references/agent-artifacts.md](references/agent-artifacts.md).
+1. **New campaign:** start a run folder:
+
+   ```bash
+   SKILL="ship-missing-tests"
+   COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+   REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+   REPO=$(basename "$REPO_ROOT")
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+   [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+   mkdir -p "$RUN_DIR"
+   REPORT="$RUN_DIR/report.md"
+   ```
+
+2. **Gap report:** the path the user gives, else the newest find-missing-tests run (after the scan, when this campaign runs one):
+
+   ```bash
+   GAP_RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/find-missing-tests"
+   GAP_REPORT="$GAP_RUNS/$(ls -1 "$GAP_RUNS" | tail -n 1)/report.md"
+   ```
+
+   Write the `GAP_REPORT` path you use at the top of `## Ship`.
+3. **Resume:** use the run path the user gives, else the newest folder (`ls -1 "$RUNS" | tail -n 1`); do not start a new run. `## Ship` names its gap report.
+4. `LANE-BRIEF.md` stays **inside each worktree**. Lanes share this `RUN_DIR`: put it in every brief. A lane never starts its own run.
+5. Shared rules: [references/agent-artifacts.md](references/agent-artifacts.md).
 
 ## Invocation
 
@@ -62,7 +81,7 @@ Never write campaign markdown at the **repository root**. Never overwrite anothe
 | Flag / phrase | Meaning |
 |---------------|---------|
 | **(default)** | Scan if no fresh report → backup main → parallel lanes for P0 gaps → fill → prove → PR → **merge** each green lane |
-| `resume` / `from-report` | Skip scan; use the find-missing-tests `REPORT.md` + `FEATURES.md` (its `CURRENT` or a run-id). `resume` also continues the last `SHIP.md` |
+| `resume` / `from-report` | Skip scan; use `## Features` + `## Report` from `GAP_REPORT` (the newest find-missing-tests run or a path the user gives). `resume` also continues the newest `## Ship` |
 | `residual-only` | Only features listed under residual / still-missing in the report |
 | `scan-only` | Only run `find-missing-tests` scan; stop (no lanes) |
 | `no-merge` | Open PRs only; human merges |
@@ -94,7 +113,7 @@ If the user does **not** say headed/visible/ui → **headless**.
 1. Repo root (cwd or path). Default branch from `origin/HEAD`. Dirty unrelated main → stop or isolate.
 2. Read `AGENTS.md`, `PROJECT.md`/`CONTEXT.md`, `CODE-STYLE.md`, package scripts, e2e setup docs.
 3. Detect unit / e2e commands via **`find-missing-tests`** discovery rules.
-4. Detect earlier runs: `docs/agent/ship-missing-tests/CURRENT` → `SHIP.md`; `docs/agent/find-missing-tests/CURRENT` → `REPORT.md` / `FEATURES.md`; or an open branch from a prior `find-missing-tests` run.
+4. Detect earlier runs: newest folder in `$RUNS` → `## Ship`; newest folder in `$GAP_RUNS` → `## Features` / `## Report`; or an open branch from a prior `find-missing-tests` run.
 
 ### 1. Gap matrix (scan or resume)
 
@@ -104,7 +123,7 @@ If the user does **not** say headed/visible/ui → **headless**.
 | `resume` / report exists and user implies continue / residual | Use report; refresh only if stale vs HEAD (optional quick re-scan of residual ids) |
 | No report or default full campaign without resume | Load **`find-missing-tests`** through **scan + summary** (fill happens **in lanes**, not as one mono-branch dump) |
 
-Orchestrator produces a **campaign board** (write `$AGENT_DOCS/SHIP.md`):
+Orchestrator produces a **campaign board** (write the `## Ship` section of `$REPORT`):
 
 | Feature id | P0 gaps | Layers | Priority | Wave | Notes |
 |------------|---------|--------|----------|------|-------|
@@ -142,8 +161,8 @@ You own ONLY these path globs: <globs>
 Issue: #<n>
 Base backup: <backup branch> @ <sha>
 Default branch: <main>
-Report source: docs/agent/find-missing-tests/<report-run-id>/REPORT.md section for this feature
-AGENT_DOCS: docs/agent/ship-missing-tests/<run-id>/
+Report source: <GAP_REPORT> `## Report`, section for this feature
+RUN_DIR: <RUN_DIR>
 
 ## Job
 1. Load skill **find-missing-tests** fill rules for YOUR feature only (TDD red→green).
@@ -202,9 +221,8 @@ repo: <path>
 mode: full | resume | residual-only | scan-only | no-merge
 headless: true | false
 backup: <branch> @ <sha>
-run_id: <YYYY-MM-DDTHHMMSSZ>
-report: docs/agent/find-missing-tests/<report-run-id>/REPORT.md
-campaign: docs/agent/ship-missing-tests/<run-id>/SHIP.md
+report: <GAP_REPORT>
+campaign: <RUN_DIR>/report.md
 waves: N
 lanes:
   - feature | issue | worktree | branch | pr | unit | e2e | confidence | merge

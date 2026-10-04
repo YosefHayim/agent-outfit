@@ -116,7 +116,7 @@ Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each i
 | **code-style-teach-me** | While you build, stop at each real choice, show two options, and explain the rule so you learn your own architecture. | 🟢 any OS |
 | **code-style-review** | Check a big change (branch or PR) against the style rules and get a short report, so you do not need to read every file. | 🟢 any OS |
 | **code-style-existing-project** | For a project that already has code — read the real code, ask you questions, then write or update CODE-STYLE.md and the formatter config. Can also only check code against the rules. | 🟢 any OS |
-| **explain-my-stack** | Understand why the project uses each technology (language, framework, services) and save the answers in TEACH.md. | 🟢 any OS |
+| **explain-my-stack** | Understand why the project uses each technology (language, framework, services), with honest trade-offs and a plain glossary, all in chat. | 🟢 any OS |
 | **plan-page** | Show a plan, approval step, or report as an interactive HTML page (open-source planpage package) where you can approve or change choices. | 🟢 any OS |
 | **website-speed-ci** | Add website speed checks (Lighthouse CI, Core Web Vitals, CrUX) to CI so a slow change fails the PR. | 🟢 any OS |
 | **chrome-store-seo** | Improve your Chrome Web Store text (name, summary, description) and landing page so more people find the extension. | 🟢 any OS |
@@ -125,6 +125,7 @@ Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each i
 | **organize-commits** | Split your changes into small, clear commits with good messages, and clean up history and branches. | 🟢 any OS |
 | **finish-and-push** | Finish the work — run checks, commit, push to a feature branch, and clean up leftovers. | 🟢 any OS |
 | **run-local-and-check** | Run the app on your computer and prove it works in a real browser or app. No deploy. | 🟢 any OS |
+| **run-ci-locally** | Run the repo's GitHub Actions workflows in Docker with act when Actions cannot run, then remove everything the run made. | 🟢 any OS |
 | **reuse-before-build** | Before building a feature, find code, packages, or platform features you already have that can do the job. | 🟢 any OS |
 | **find-repeated-prompts** | Read your past agent sessions and find prompts and work patterns you repeat, as ideas for new skills. | 🟢 any OS |
 | **install-skills** | Install or update skills in all your coding agents and check that each agent can really find them. | 🟢 any OS |

@@ -36,6 +36,7 @@ Use this as a quick lookup. Prefer **one primary** skill.
 | You say… | Primary |
 |----------|---------|
 | launch local, playwright, e2e, don’t deploy | `run-local-and-check` |
+| run CI locally, act, Actions blocked by billing | `run-ci-locally` |
 | scan/fill missing unit mocks e2e per feature (TDD) | `find-missing-tests` |
 | over-engineering kill list + TDD parity + headless e2e | `simplify-repo-with-tests` |
 | missing tests campaign worktrees PRs merge | `ship-missing-tests` |
@@ -67,24 +68,25 @@ Use this as a quick lookup. Prefer **one primary** skill.
 
 ## Agent artifact paths (anti-slop)
 
-Campaign / audit MD is **not** product SSOT. Skills must write under **`docs/agent/<campaign>/<run-id>/`** (UTC `date -u +%Y-%m-%dT%H%M%SZ`; create if missing; set `CURRENT` pointer), never:
+Run records are **not** product SSOT. Each run gets one new folder outside every repo, **`${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/<skill>/<YYYY-MM-DD-HHMM>/`**, with one `report.md` that holds the run as `##` sections. Separate files only for assets that are not Markdown. Resume uses the run folder the user gives, else the newest one; there is no pointer file. Parallel lanes share the orchestrator's `RUN_DIR`. Never write run records to:
 
 - the repository root (reports, audits, campaign boards)
-- fixed flat paths like `docs/agent/<campaign>/BOARD.md` that parallel agents overwrite
-- product **`docs/agents/`** (plural — issue-tracker / triage / domain)
+- a `docs/` folder or a gitignored folder in the repository
 
-| Campaign | Dir |
-|----------|-----|
-| run-tasks-in-parallel | `docs/agent/run-tasks-in-parallel/<run-id>/` |
-| find-missing-tests | `docs/agent/find-missing-tests/<run-id>/` |
-| ship-missing-tests | `docs/agent/ship-missing-tests/<run-id>/` |
-| simplify-repo-with-tests | `docs/agent/simplify-repo-with-tests/<run-id>/` |
-| restructure-repo | `docs/agent/restructure-repo/<run-id>/` |
-| code-style-existing-project | `docs/agent/code-style-existing-project/<run-id>/` |
-| clean-repo-by-feature | `docs/agent/clean-repo-by-feature/<run-id>/` |
-| improve-ux | `docs/agent/improve-ux/<run-id>/` |
-| benchmark-agents | `docs/agent/benchmark-agents/<run-id>/` |
-| TEACH (stack grill) | `docs/learning/TEACH.md` |
+Agent config (issue tracker, triage labels, domain notes) goes in `AGENTS.md` sections. Decisions go in the PR description.
+
+| Skill | Sections in `report.md` | Assets |
+|-------|-------------------------|--------|
+| run-tasks-in-parallel | Board, State | none |
+| find-missing-tests | Features, Report | none |
+| ship-missing-tests | Ship (reads the newest find-missing-tests `report.md`) | none |
+| simplify-repo-with-tests | Features, Report | none |
+| restructure-repo | Plan (checkbox lines), Report | none |
+| code-style-existing-project | Findings | none |
+| clean-repo-by-feature | Matrix, State, Audit, Health | planpage JSON |
+| improve-ux | State, Matrix, Audit, Taste | `mocks/` |
+| benchmark-agents | Report | `results.json` |
+| find-repeated-prompts (repo `global`) | Report | the script's output files |
 
 Root stays for: README, AGENTS, CODE-STYLE, PROJECT, CONTEXT, LANGUAGE.
 

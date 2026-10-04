@@ -98,17 +98,20 @@ describe("shipped skills", () => {
   });
 });
 
-describe("agent run folder isolation", () => {
+const shippedSkillFiles = readdirSync(skillRoot, { recursive: true, encoding: "utf8" })
+  .filter((relativePath) => !relativePath.includes("node_modules"))
+  .filter((relativePath) => /\.(md|mjs|js|ts|py|sh|json|txt)$/.test(relativePath))
+  .sort();
+
+describe("run report folders", () => {
   const sharedGuidePath = path.join(skillRoot, "_shared", "agent-artifacts.md");
 
-  it("requires time-stamped run dirs under docs/agent (not fixed flat BOARD/REPORT paths)", () => {
+  it("keeps each run in the user state directory with one report.md", () => {
     const text = readFileSync(sharedGuidePath, "utf8");
-    expect(text).toMatch(/date -u \+%Y-%m-%dT%H%M%SZ/);
-    expect(text).toMatch(/CURRENT/);
-    expect(text).toMatch(/run-id/);
-    expect(text).toMatch(/docs\/agent\/<campaign>\/<run-id>\//);
-    // Product SSOT (plural) must stay distinct from campaign noise (singular)
-    expect(text).toMatch(/docs\/agents\//);
+    expect(text).toMatch(/XDG_STATE_HOME:-\$HOME\/\.local\/state/);
+    expect(text).toMatch(/agent-outfit\/runs\/\$REPO\/\$SKILL/);
+    expect(text).toMatch(/date \+%Y-%m-%d-%H%M/);
+    expect(text).toMatch(/report\.md/);
   });
 
   it.each([
@@ -121,12 +124,18 @@ describe("agent run folder isolation", () => {
     ["improveUx", "improve-ux"],
     ["codeStyleExistingProject", "code-style-existing-project"],
     ["benchmarkAgents", "benchmark-agents"],
-  ] as const)("%s mints or resumes run-scoped docs/agent/%s paths", (sourceDirectory, campaign) => {
+  ] as const)("%s starts its run folder as %s", (sourceDirectory, skillId) => {
     const skillMd = path.join(skillRoot, sourceDirectory, "SKILL.md");
     const text = readFileSync(skillMd, "utf8");
-    expect(text).toMatch(new RegExp(`docs/agent/${campaign}/`));
-    expect(text).toMatch(/run-id|RUN_ID|AGENT_DOCS/);
-    expect(text).toMatch(/CURRENT|date -u \+%Y-%m-%dT%H%M%SZ/);
+    expect(text).toContain(`SKILL="${skillId}"`);
+    expect(text).toMatch(/RUN_DIR/);
+  });
+
+  it.each(shippedSkillFiles)("%s never writes into a repository docs/ folder", (relativePath) => {
+    const text = readFileSync(path.join(skillRoot, relativePath), "utf8");
+    // e.g. "`docs/agent/improve-ux/`" or "./docs/adr" match; "https://example.com/docs/agent-setup" does not
+    expect(text).not.toMatch(/(?<![\w-]\/)docs\/(agent|agents|adr|learning)\b/);
+    expect(text).not.toMatch(/TEACH\.md/);
   });
 });
 

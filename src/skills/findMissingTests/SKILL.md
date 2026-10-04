@@ -27,28 +27,32 @@ Load sibling `SKILL.md` files; do not reimplement them.
 | Over-engineering scan + lean with parity prove | `simplify-repo-with-tests` (different job; may call this skill for business test gaps only) |
 | Multi-feature cleanup (not tests) | `clean-repo-by-feature` |
 
-This skill owns: layer taxonomy, scan briefs, gap matrix, TDD fill order, default **headless** e2e policy, done receipt, and **artifact paths** under `docs/agent/find-missing-tests/`.
+This skill owns: layer taxonomy, scan briefs, gap matrix, TDD fill order, default **headless** e2e policy, done receipt, and the **run report** (`report.md` in its run folder).
 
-## Artifact paths (mandatory)
+## Run report (mandatory)
 
-Never write campaign/report markdown at the **repository root**. Never use a fixed flat file that parallel runs overwrite.
+Never write run records into the repository: no `docs/` folder, no report at the **repository root**. Each run gets its own folder outside the repo with one `report.md`, so parallel runs never overwrite each other.
 
-| File | Path |
+| Section in `$REPORT` | Holds |
 |------|------|
-| Feature inventory | `docs/agent/find-missing-tests/<run-id>/FEATURES.md` |
-| Gap report | `docs/agent/find-missing-tests/<run-id>/REPORT.md` |
-| Active pointer | `docs/agent/find-missing-tests/CURRENT` (one line: run-id) |
+| `## Features` | Feature inventory |
+| `## Report` | Gap report |
 
-1. **New run:** mint UTC run-id, then write only under that dir:
+1. **New run:** start a run folder, then write only `$REPORT`:
 
    ```bash
-   RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)
-   AGENT_DOCS="docs/agent/find-missing-tests/$RUN_ID"
-   mkdir -p "$AGENT_DOCS"
-   printf '%s\n' "$RUN_ID" > docs/agent/find-missing-tests/CURRENT
+   SKILL="find-missing-tests"
+   COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+   REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+   REPO=$(basename "$REPO_ROOT")
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+   [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+   mkdir -p "$RUN_DIR"
+   REPORT="$RUN_DIR/report.md"
    ```
 
-2. **Resume:** resolve `CURRENT` / explicit run-id / newest run dir; do **not** mint a new run-id. Update files in place under that `AGENT_DOCS`.
+2. **Resume:** use the run path the user gives, else the newest folder (`ls -1 "$RUNS" | tail -n 1`); do **not** start a new run. Update `report.md` in place in that folder.
 3. Full convention: [references/agent-artifacts.md](references/agent-artifacts.md).
 
 ## Layers (scan all that exist)
@@ -123,7 +127,7 @@ Build a feature list from evidence, not vibes:
 - `client/src/features/*`, `server/src/<domain>`, packages, routes, documented domains in CONTEXT.md
 - Exclude pure primitives/platform unless they own product rules
 
-Write `$AGENT_DOCS/FEATURES.md` with stable feature ids + path globs.
+Write the `## Features` section of `$REPORT` with stable feature ids + path globs.
 
 ### 2. Scan phase — sub-agents
 
@@ -135,20 +139,20 @@ For each feature (or batch), spawn a **read-only** sub-agent (host subagent API 
 4. Note mock/MSW: which APIs the feature calls and whether handlers cover success + error shapes.
 5. Return structured JSON/markdown only (template in [REFERENCE.md](REFERENCE.md)).
 
-Orchestrator merges into **`$AGENT_DOCS/REPORT.md`**:
+Orchestrator merges into the **`## Report`** section of `$REPORT`:
 
 ```markdown
-## Feature: <id>
-### Covered
+### Feature: <id>
+#### Covered
 - backend-unit: …
 - client-unit: …
 - mocks: …
 - e2e-web: …
 - e2e-native: …
-### Missing (priority)
+#### Missing (priority)
 1. [layer] <behavior> — why it matters — suggested test location matching repo patterns
 2. …
-### Commands to run later
+#### Commands to run later
 - unit: …
 - e2e: …
 ```
@@ -189,7 +193,7 @@ On failure: fix tests or product within scope; re-run failed command; do not hid
 
 ### 5. Handoff / ship (optional)
 
-- Default: leave topic branch + `$AGENT_DOCS/REPORT.md` + list of new tests; commit via **`organize-commits`** if user wants commits.
+- Default: leave topic branch + `$REPORT` + list of new tests; commit via **`organize-commits`** if user wants commits.
 - `open-pr` / `ship`: **`finish-and-push`** (PR, no merge unless they said merge).
 - Parallel worktrees + merge campaign: hand off to **`ship-missing-tests`** (do not half-implement lanes here).
 - Do not use `ship-one-feature` unless they want full merge+reinstall of a product feature (not a missing-tests campaign).
@@ -213,9 +217,7 @@ mode: full | scan-only
 headless: true | false (user override)
 surface: web | native | all
 features_scanned: N
-run_id: <YYYY-MM-DDTHHMMSSZ>
-report: docs/agent/find-missing-tests/<run-id>/REPORT.md
-features: docs/agent/find-missing-tests/<run-id>/FEATURES.md
+report: <RUN_DIR>/report.md
 gaps_filled: N
 unit: <cmd> → pass|fail
 e2e_web: <cmd> → pass|fail|skip

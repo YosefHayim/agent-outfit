@@ -92,38 +92,39 @@ Each taste variant **must** change **at least 2** of these four axes vs live, wi
 | Pixel-match a hand mock | `image-to-code` only if they supply PNG |
 | Multi-feature code cleanup | **stop** → `clean-repo-by-feature` |
 
-## Artifact paths (mandatory)
+## Run folder (mandatory)
 
-Run-scoped (UTC `date -u +%Y-%m-%dT%H%M%SZ`) so parallel campaigns do not overwrite:
+Each run gets one folder outside the repo, so parallel campaigns do not overwrite. Never write run files into the repo. STATE, MATRIX, AUDIT and TASTE below are `##` sections of one `report.md`:
 
 ```text
-docs/agent/improve-ux/
-  CURRENT                              # one line: active run-id
-  <run-id>/                            # e.g. 2026-08-09T143022Z
-    STATE.md
-    MATRIX.md          # flows / lanes
-    AUDIT.md           # scores + evidence
-    TASTE.md           # variants + chosen direction
+${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/improve-ux/
+  <YYYY-MM-DD-HHMM>/   # one folder per run, local time
+    report.md          # ## State, ## Matrix (flows / lanes), ## Audit (scores + evidence), ## Taste (variants + chosen direction)
     planpage-*.json
     mocks/
-    *.html             # planpage outputs (allowlist if *.md ignored)
+    *.html             # planpage outputs
 ```
 
 ```bash
-RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)
-AGENT_DOCS="docs/agent/improve-ux/$RUN_ID"
-mkdir -p "$AGENT_DOCS"
-printf '%s\n' "$RUN_ID" > docs/agent/improve-ux/CURRENT
+SKILL="improve-ux"
+COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+REPO=$(basename "$REPO_ROOT")
+RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+[ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+mkdir -p "$RUN_DIR"
+REPORT="$RUN_DIR/report.md"
 ```
 
-Resume → use `CURRENT` / explicit run-id (do not mint a new one).  
-`LANE-BRIEF.md` lives **inside each worktree**, not only under `docs/agent/`; include `AGENT_DOCS`.
+Resume → the run folder the user gives, else the newest one: `ls -1 "$RUNS" | tail -n 1` (do not start a new run).  
+`LANE-BRIEF.md` lives **inside each worktree**; include `RUN_DIR`. Lanes share this run and never start their own.
 
 Templates: [REFERENCE.md](REFERENCE.md).
 
 ## Control loop (no lazy stop / no repeated boards)
 
-### STATE.md
+### State section
 
 | Field | Values |
 |-------|--------|
@@ -185,7 +186,7 @@ Restyle is **allowed** when the journey clearly improves. Prefer product-appropr
 2. Scope from user: one flow / feature / multi / all app. If all-app, inventory journeys; still **one global taste** later.  
 3. Map current journeys: steps, routes, entry/exit, drop-off risks.  
 4. Score MUST axes with proof (file paths, route names, step counts).  
-5. Write `AUDIT.md` + `MATRIX.md` (proposed lanes = flows/features user scoped).  
+5. Write the Audit + Matrix sections of `report.md` (proposed lanes = flows/features user scoped).  
 6. **planpage (audit):**  
    - Mermaid **before** flow diagrams (current)  
    - Proposed **after** flow diagrams (target)  
@@ -241,7 +242,7 @@ feel_test: pass|fail — why
 
 ### 3. High-fidelity mock rules (each variant)
 
-Each mock `$AGENT_DOCS/mocks/<id>.html` **must**:
+Each mock `$RUN_DIR/mocks/<id>.html` **must**:
 
 | Rule | Detail |
 |------|--------|
@@ -250,7 +251,7 @@ Each mock `$AGENT_DOCS/mocks/<id>.html` **must**:
 | **Real micro-UI** | Real labels, chips, empty states, secondary actions, status, lists — dense |
 | **Hard axes met** | ≥2 axes (bold ≥3) with visible proof in the mock itself |
 | **Journey delta** | How steps drop **inside** the redesigned dense UI |
-| **Motion** | If motion is a claimed axis: **CSS animations that run on load/hover/click** in the HTML; optional `$AGENT_DOCS/mocks/<id>-motion.mp4` / gif. Caption-only = fail |
+| **Motion** | If motion is a claimed axis: **CSS animations that run on load/hover/click** in the HTML; optional `$RUN_DIR/mocks/<id>-motion.mp4` / gif. Caption-only = fail |
 | **Click + density** | before→after steps; density ≥ production unless justified |
 
 **Side-by-side planpage:** current (same state) | variant A | … with hard-axis chips.  
@@ -270,7 +271,7 @@ Rebuild if any:
 
 ### 5. Write + stop
 
-1. `TASTE.md`: chrome inventory, `compare_state`, per-variant hard axes + proofs, click/density, feel_test.  
+1. Taste section: chrome inventory, `compare_state`, per-variant hard axes + proofs, click/density, feel_test.  
 2. Render planpage + open mocks (user can open HTML to **see** CSS motion).  
 3. **Stop** for pick / like / “go with X”.  
 4. On pick: freeze `direction_id` + design rules (include hard-axis commitments), STATE → implement.
@@ -339,8 +340,8 @@ Load the **`plan-page`** skill. Prefer `plan-brief`, `before-after`, `code-style
 
 ```bash
 npx planpage render plan-brief \
-  --data "$AGENT_DOCS/planpage-audit.json" \
-  --out "$AGENT_DOCS/audit.html" \
+  --data "$RUN_DIR/planpage-audit.json" \
+  --out "$RUN_DIR/audit.html" \
   --open
 ```
 
@@ -398,6 +399,7 @@ prs: […]
 proof: diagrams=… preview=… e2e=…
 merged: none|[…]
 residual: …
+report: <RUN_DIR>/report.md
 ```
 
 **“Agents ran” is not success.**  

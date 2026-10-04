@@ -22,11 +22,11 @@ Turn repeated user requests into evidence-backed skill candidates. The audit is 
 
    ```bash
    python3 scripts/runSessionAudit.py
-   # or with explicit paths:
-   python3 scripts/runSessionAudit.py --home "$HOME" --out "./docs/session-audit-$(date +%F)"
+   # or with an explicit session home:
+   python3 scripts/runSessionAudit.py --home "$HOME"
    ```
 
-   Resolve `scripts/runSessionAudit.py` from this skill’s install directory (global or project). The script discovers Codex + Grok stores under `$HOME`, writes coverage, prompts, clusters, intent buckets, shards, and `REPORT.md`.
+   Resolve `scripts/runSessionAudit.py` from this skill’s install directory (global or project). The script discovers Codex + Grok stores under `$HOME`, writes coverage, prompts, clusters, intent buckets, shards, and `report.md`. It covers all sessions, not one repo, so each run gets a new folder `${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/global/find-repeated-prompts/<YYYY-MM-DD-HHMM>/`, outside every repo. Never write the audit into a repository `docs/` folder.
 
 2. If the script is unavailable, run the same pipeline manually: discover stores → coverage manifest → sample formats → extract user prompts → normalize → exact + fuzzy cluster → intent map → skill compare.
 
@@ -57,6 +57,6 @@ Publish a sanitized report with:
 - existing-skill overlap and a prioritized create/improve recommendation;
 - limitations that prevent “all sessions” or completeness claims.
 
-When the script ran, point to its `REPORT.md` plus `coverage-manifest.json` and `intent-buckets.json` as primary evidence.
+When the script ran, point to its `report.md` plus `coverage-manifest.json` and `intent-buckets.json` as primary evidence.
 
 Never include raw transcript dumps. A result is not a skill opportunity merely because its words repeat; it must represent a reusable job with a stable trigger and workflow.

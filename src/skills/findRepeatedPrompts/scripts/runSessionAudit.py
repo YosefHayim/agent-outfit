@@ -622,7 +622,16 @@ def write_report_md(
         "- A repeated string is not a skill unless it is a reusable job with a stable trigger.",
         "",
     ]
-    (out / "REPORT.md").write_text("\n".join(lines), encoding="utf-8")
+    (out / "report.md").write_text("\n".join(lines), encoding="utf-8")
+
+
+def default_out_dir() -> Path:
+    state_home = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    stamp = datetime.now().strftime("%Y-%m-%d-%H%M")
+    run_dir = Path(state_home) / "agent-outfit" / "runs" / "global" / "find-repeated-prompts" / stamp
+    if run_dir.exists():
+        run_dir = run_dir.with_name(f"{stamp}-{os.getpid()}")
+    return run_dir
 
 
 def main() -> int:
@@ -635,14 +644,14 @@ def main() -> int:
     parser.add_argument(
         "--out",
         default="",
-        help="Output directory (default: ./docs/session-audit-<date>)",
+        help="Output directory (default: a new run folder under "
+        "$XDG_STATE_HOME/agent-outfit/runs/global/find-repeated-prompts/)",
     )
     parser.add_argument("--shards", type=int, default=20, help="Shard count for agent fan-out")
     args = parser.parse_args()
 
     home = Path(args.home).expanduser()
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    out = Path(args.out).expanduser() if args.out else Path.cwd() / "docs" / f"session-audit-{stamp}"
+    out = Path(args.out).expanduser() if args.out else default_out_dir()
     out.mkdir(parents=True, exist_ok=True)
 
     print(f"Extracting from {home} → {out}", file=sys.stderr)
@@ -710,7 +719,7 @@ def main() -> int:
 
     write_report_md(out, manifest, intents, exact, fuzzy, installed)
 
-    print(f"Wrote REPORT.md and artifacts to {out}", file=sys.stderr)
+    print(f"Wrote report.md and artifacts to {out}", file=sys.stderr)
     # Print short summary to stdout for agents
     top = [
         {

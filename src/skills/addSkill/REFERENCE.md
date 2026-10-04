@@ -79,7 +79,7 @@ All paths are in the agent-outfit repo. Put the new skill next to related skills
    ```
 
 3. **Catalog tests** — `src/catalog/featureCatalog.test.ts` has three lists in catalog order: `expectedFeatureIds` (add `"<id>"`), `expectedSourceDirectories` (add `"<sourceDirectory>"`), and the shipped-paths list in "derives defaults, installed skills, and exact shipped allowlists" (add `["<id>", [<shippedPaths>]]`). With `dependencies`, also add `["<id>", [<dependencies>]]` to the list in "expands dependencies once and returns stable catalog order".
-   A skill that writes run records under `docs/agent/<id>/` also gets a row in the "agent run folder isolation" list of `src/catalog/featureCatalog.skillPayload.test.ts` and in the `which-skill` REFERENCE "Agent artifact paths" table.
+   A skill that writes run records starts its run with the "start a run" snippet from `src/skills/_shared/agent-artifacts.md` (`SKILL="<id>"`, `RUN_DIR`, one `report.md`). It also gets a row in the "run report folders" list of `src/catalog/featureCatalog.skillPayload.test.ts`, which checks its SKILL.md for `SKILL="<id>"` and `RUN_DIR`, and a row in the `which-skill` REFERENCE "Agent artifact paths" table.
 4. **Routing** — a row in the fitting table of `src/skills/whichSkill/REFERENCE.md`: the user's phrases → `` `<id>` ``.
 5. **Siblings** — when the new skill takes work from a sibling, add "For …, use <id>." to that sibling's description.
 6. **README** — run `pnpm generate-readme`. Never edit the generated sections by hand.

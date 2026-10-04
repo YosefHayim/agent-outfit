@@ -67,19 +67,24 @@ This skill owns: task parsing, lane isolation, SDLC mandate, matrix board, merge
 #### 1. Parse tasks
 
 1. Repo root, default branch from `origin/HEAD`, `git fetch` (do not mutate other worktrees).
-2. Read `AGENTS.md`, `CODE-STYLE.md`, ADRs, package verify/test scripts.
+2. Read `AGENTS.md`, `CODE-STYLE.md`, package verify/test scripts.
 3. Split the request into **independent** numbered tasks. Accept forms: `1. …`, `1) …`, `- [ ] …`, or explicit “Task N:”.
 4. Name each with a short kebab slug. Flag overlaps; sequence or batch only when paths do not collide.
-5. Mint a **run-scoped** board path (never a fixed file that parallel runs overwrite):
+5. Start a run: one new folder outside the repo, never a file that parallel runs overwrite:
 
    ```bash
-   RUN_ID=$(date -u +%Y-%m-%dT%H%M%SZ)
-   AGENT_DOCS="docs/agent/run-tasks-in-parallel/$RUN_ID"
-   mkdir -p "$AGENT_DOCS"
-   printf '%s\n' "$RUN_ID" > docs/agent/run-tasks-in-parallel/CURRENT
+   SKILL="run-tasks-in-parallel"
+   COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+   REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
+   REPO=$(basename "$REPO_ROOT")
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
+   [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
+   mkdir -p "$RUN_DIR"
+   REPORT="$RUN_DIR/report.md"
    ```
 
-   Write `BOARD.md` (and optional `STATE.md`) only under `$AGENT_DOCS`. Put `AGENT_DOCS` in every `LANE-BRIEF.md` so all lanes share this run. Resume → use `CURRENT` / explicit run-id (do not mint a new one). Never put campaign MD at repo root or under product `docs/agents/`.
+   Write the board as the `## Board` section of `$REPORT` (and an optional `## State` section). Put `RUN_DIR` in every `LANE-BRIEF.md` so all lanes share this run. Resume → use the run folder the user gives, else the newest one: `ls -1 "$RUNS" | tail -n 1` (do not start a new run). Never write the board into the repository.
 6. Host mode: **A** subagents (default “just run it”), **B** cmux watchable, **C** briefs only.
 
 #### 2. Fan out lanes (same mechanics as setup-lanes)
@@ -103,7 +108,7 @@ For each task:
 
 Each agent must complete **only its task**:
 
-1. **Clarify** acceptance against issue body; stop if blocked (record on BOARD).
+1. **Clarify** acceptance against issue body; stop if blocked (record on the Board).
 2. **Implement** using repo patterns (`reuse-before-build` only when build-vs-buy is ambiguous).
 3. **Unit happy path** — add/extend; run repo unit command → green. Hard stop if red.
 4. **E2E/integration happy path** — real suite or smallest durable e2e; headless default → green. Hard stop if red when stack exists; honest skip only if env missing (cap confidence).
@@ -116,7 +121,7 @@ Each agent must complete **only its task**:
 
 #### 4. Orchestrator after lanes
 
-1. Refresh BOARD: task → issue → worktree → branch → PR → unit → e2e → QA → confidence → merge.
+1. Refresh the Board section: task → issue → worktree → branch → PR → unit → e2e → QA → confidence → merge.
 2. If merge authorized: order merges (contracts → domain → UI → e2e-heavy last); `gh pr merge`; rebase remaining open PRs on conflicts; never force-push default.
 3. Optional reinstall/smoke on default tip when user asked full ship (see REFERENCE).
 4. Done receipt (Verification section). Unfinished lanes stay open.
@@ -147,14 +152,13 @@ Same fan-out as execute steps 2–3 **without** forcing full SDLC gates unless t
 mode: execute
 repo: <path>
 default: <branch> @ <sha>
-board: docs/agent/run-tasks-in-parallel/<run-id>/BOARD.md
-run_id: <YYYY-MM-DDTHHMMSSZ>
 
 host: A|B|C
 lanes:
   - N | task | issue | worktree | branch | pr | unit | e2e | qa | confidence | merge
 skills_reused: organize-commits, finish-and-push, run-local-and-check[, …]
 residual: <blocked / deferred / overlaps>
+report: <RUN_DIR>/report.md
 ```
 
 Done only when each started lane has issue + worktree + branch + PR (or honest block), unit/e2e evidence (or skip reason), no default-branch product commits, no remote deletes, and merges only when authorized + gates green. **“Agents ran” is not done.**

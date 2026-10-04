@@ -1,20 +1,18 @@
-# TEACH-FORMAT.md — how to write `TEACH.md`
+# TEACH-FORMAT.md — how to write the chat answer
 
-`TEACH.md` is **the user's personal learning record** for a project: *why this stack, and how it
-works*, in plain language they can re-read and re-explain. It grows as decisions are recorded and is
-**deduped** — never re-write a decision or term already present.
+The answer teaches the user *why this stack, and how it works*, in plain language they can re-read
+and re-explain. It stays in chat; never save it to a file. It is **deduped** within the chat — never
+repeat a decision or term already explained earlier in the conversation.
 
-It is **not** `LANGUAGE.md` (that's the shared human↔agent glossary for *domain* terms) and **not** an
-ADR (that's the terse, maintainer-facing record). This file teaches *the human*.
+It is **not** `LANGUAGE.md` (that's the shared human↔agent glossary for *domain* terms) and **not** a
+PR description (that's the terse, maintainer-facing record). This answer teaches *the human*.
 
-## File layout
+## Answer layout
 
-Two top-level sections. Append under them; never rewrite existing entries.
+Two sections, in this order.
 
 ```markdown
-# TEACH.md — why this stack, in plain terms
-
-## Decisions            <- one lean decision-record per choice, newest last
+## Decisions            <- one lean decision block per choice
 ## Glossary             <- one entry per term, alphabetical-ish, self-closing
 ```
 
@@ -59,8 +57,8 @@ Rules for glossary entries:
   diagram — not pseudo-filler. Pick the snippet style that fits the term (see the styles below).
 - **Cite official docs** for named tools/technologies (their own docs page), not blogs.
 - **Order** foundational terms before the specific ones that build on them.
-- **Dedup:** before adding a term, grep `TEACH.md` — if it's already defined, skip it. Terms only
-  get added the first time they appear.
+- **Dedup:** if a term was already explained earlier in this chat, skip it. Terms only get explained
+  the first time they appear.
 - **Beginner-safe:** assume the reader is new to the term. Better to define one they knew than to
   leave one they didn't.
 
