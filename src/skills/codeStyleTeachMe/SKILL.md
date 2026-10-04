@@ -61,7 +61,7 @@ plainly mirrors an exemplar — just note "following `<exemplar>`" and move on.
 
 Per decision: the concept (1–2 lines) → who/when it runs → the exemplar to imitate. Over a session
 this compounds into real understanding of the repo's architecture — you're building my mental model,
-not narrating keystrokes. If I ask "why this way?", give the ADR/`CODE-STYLE.md` rationale, not just
+not narrating keystrokes. If I ask "why this way?", give the `CODE-STYLE.md` rationale, not just
 the rule.
 
 ## Never
