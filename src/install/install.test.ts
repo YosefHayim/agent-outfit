@@ -24,6 +24,11 @@ const contextGuardRuntime = {
 
 const autorunSkill = { "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n" };
 
+const sessionRehomeRuntime = {
+  "hooks/sessionRehome/hooks/rehomeEndedSession.js": "export {};\n",
+  "hooks/sessionRehome/hooks/announceMovedSession.js": "export {};\n",
+};
+
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -103,6 +108,26 @@ layer(NodeContext.layer)("install", (it) => {
         ".claude/agent-outfit/config.json",
         ".claude/settings.json",
       ]);
+    }),
+  );
+
+  it.scoped("adds named features to the installed selection and keeps every installed feature", () =>
+    Effect.gen(function* () {
+      const { root, preparedRoot, writeFiles, readText, exists, readReceipt } = yield* workspace;
+      yield* writeFiles(preparedRoot, { ...contextGuardRuntime, ...sessionRehomeRuntime });
+      yield* install(installRequest({ root, preparedRoot }));
+
+      const installation = yield* install({
+        ...installRequest({ root, preparedRoot }),
+        features: { _tag: "selected", ids: ["session-rehome"] },
+      });
+
+      expect(installation.features).toEqual(["context-guard", "session-rehome"]);
+      expect((yield* readReceipt).features).toEqual(["context-guard", "session-rehome"]);
+      expect(yield* exists(".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js")).toBe(true);
+      const commands = hookCommands(yield* readText(".claude/settings.json"));
+      expect(commands.some((command) => command.includes("contextGuard/hooks/contextGuard.js"))).toBe(true);
+      expect(commands.some((command) => command.includes("sessionRehome/hooks/rehomeEndedSession.js"))).toBe(true);
     }),
   );
 

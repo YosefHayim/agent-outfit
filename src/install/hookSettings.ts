@@ -2,7 +2,6 @@
 
 import type { Path } from "@effect/platform";
 import { Either, Schema, ParseResult as SchemaParseIssue } from "effect";
-import { findNodeAtLocation, parseTree } from "jsonc-parser";
 
 import type { AgentDefinition } from "../catalog/agentCatalog.js";
 import { featureCatalog } from "../catalog/featureCatalog.js";
@@ -11,15 +10,8 @@ import { findDuplicateJsonKey } from "./findDuplicateJsonKey.js";
 import { applicationOwner, checkFileChange, expectedCurrent, type FileSnapshot } from "./hostFiles.js";
 import { settingsPath } from "./installPaths.js";
 import { InstallError } from "./installRequest.js";
-import {
-  captureJsonValueLexical,
-  editJsonValue,
-  hashJsonValue,
-  jsonPointerPath,
-  objectProperties,
-  restoreJsonLexical,
-} from "./jsonEdit.js";
-import type { JsonValuesOwnership, OwnedFile, OwnedJsonValue, PreviousJsonValue } from "./ownership.js";
+import { appendJsonArrayItem, editJsonValue, hashJsonValue, removeJsonArrayItem } from "./jsonEdit.js";
+import type { HookEntriesOwnership, OwnedFile, OwnedHookEvent, OwnedJsonValue } from "./ownership.js";
 import { installedHookFile, registrationEntrypoint } from "./packageFiles.js";
 import type { FileChange } from "./plan.js";
 
@@ -80,64 +72,302 @@ const decodeHookGroups = (value: unknown, event: string): Either.Either<Readonly
     () => new InstallError({ issue: `settings.json hook event ${event} must contain an array.` }),
   );
 
-// The user's own groups for an event: from the receipt when agent-outfit already edited it, else from the file.
-const baseHookGroups = (input: {
-  ownership: JsonValuesOwnership | undefined;
+const changedEntriesError = (input: { filePath: string; pointer: string }) =>
+  new InstallError({
+    issue: `Receipted hook entries in ${input.filePath} ${input.pointer} changed after installation.`,
+  });
+
+const hashGroups = (groups: ReadonlyArray<unknown>): ReadonlyArray<string> =>
+  groups.map((group) => hashJsonValue(group));
+
+// Receipts written before entry ownership hashed a whole event array: the user's groups, then agent-outfit's.
+// That installed array is still the start of the current one when other tools only appended entries since.
+const migrateLegacyEvent = (input: {
+  filePath: string;
+  value: OwnedJsonValue;
   document: SettingsDocument;
-  event: string;
-  source: string;
-}): Either.Either<{ groups: ReadonlyArray<unknown>; previous: PreviousJsonValue }, InstallError> => {
-  const history = input.ownership?.values.find((value) => value.pointer === `/hooks/${input.event}`)?.previous;
-  if (history?._tag === "value") {
-    if (history.lexical === undefined) {
-      return Either.left(
-        new InstallError({ issue: `Receipted hook event ${input.event} lacks lexical restoration evidence.` }),
-      );
+}): Either.Either<OwnedHookEvent, InstallError> => {
+  const pointer = input.value.pointer;
+  const event = hookEventFromPointer(pointer);
+  const current = event === undefined ? undefined : input.document.hooks?.[event];
+  if (event === undefined || current === undefined) {
+    return Either.left(changedEntriesError({ filePath: input.filePath, pointer }));
+  }
+
+  const previous = input.value.previous;
+  const userGroups: Either.Either<ReadonlyArray<unknown>, InstallError> = previous._tag === "value"
+    ? decodeHookGroups(previous.value, event)
+    : Either.right([]);
+
+  return Either.flatMap(userGroups, (groups) => {
+    const prefixLengths = Array.from(
+      { length: current.length - groups.length + 1 },
+      (_, offset) => current.length - offset,
+    );
+    const installedLength = prefixLengths.find((length) => {
+      const installedPrefix = current.slice(0, length);
+
+      return hashJsonValue(installedPrefix) === input.value.installed.hash;
+    });
+    if (installedLength === undefined) {
+      return Either.left(changedEntriesError({ filePath: input.filePath, pointer }));
     }
 
-    return Either.map(decodeHookGroups(history.value, input.event), (groups) => ({ groups, previous: history }));
-  }
+    const ownedGroups = current.slice(groups.length, installedLength);
+    const entries = hashGroups(ownedGroups);
 
-  if (history?._tag === "missing") {
-    return Either.right({ groups: [], previous: history });
-  }
-
-  const current = input.document.hooks?.[input.event];
-  if (current === undefined) {
-    return Either.right({ groups: [], previous: { _tag: "missing" } });
-  }
-
-  return Either.flatMap(decodeHookGroups(current, input.event), (groups) =>
-    Either.map(captureJsonValueLexical({ source: input.source, path: ["hooks", input.event] }), (lexical) => ({
-      groups,
-      previous: { _tag: "value", value: groups, lexical },
-    })),
-  );
+    return Either.right({ pointer, previouslyPresent: previous._tag === "value", entries });
+  });
 };
 
-// agent-outfit owns only whole hook events, so every owned pointer is /hooks/<event>.
-const settingsValueAtPointer = (document: SettingsDocument, pointer: string): unknown => {
-  const [container, key, extra] = jsonPointerPath(pointer);
-
-  return container === "hooks" && key !== undefined && extra === undefined ? document.hooks?.[key] : undefined;
-};
-
-const installedJsonValueMatches = (value: OwnedJsonValue, current: unknown): boolean =>
-  current !== undefined && hashJsonValue(current) === value.installed.hash;
-
-const validateCurrentSettingsOwnership = (
-  document: SettingsDocument,
-  ownership: JsonValuesOwnership | undefined,
-): Either.Either<void, InstallError> => {
-  const conflict = ownership?.values.find(
-    (value) => !installedJsonValueMatches(value, settingsValueAtPointer(document, value.pointer)),
-  );
-
-  return conflict === undefined
-    ? Either.right(undefined)
-    : Either.left(
-        new InstallError({ issue: `Receipted settings value ${conflict.pointer} changed after installation.` }),
+const previousHookEntries = (input: {
+  file: OwnedFile;
+  document: SettingsDocument;
+}): Either.Either<HookEntriesOwnership, InstallError> => {
+  const ownership = input.file.ownership;
+  switch (ownership._tag) {
+    case "hookEntries":
+      return Either.right(ownership);
+    case "jsonValues": {
+      const migratedEvents = ownership.values.map((value) =>
+        migrateLegacyEvent({ filePath: input.file.path, value, document: input.document }),
       );
+      const allMigratedEvents = Either.all(migratedEvents);
+
+      return Either.map(
+        allMigratedEvents,
+        (events): HookEntriesOwnership => ({
+          _tag: "hookEntries",
+          filePreviouslyPresent: ownership.filePreviouslyPresent,
+          createdContainers: ownership.createdContainers,
+          events,
+        }),
+      );
+    }
+    case "wholeFile":
+    case "managedBlock":
+    case "yamlSequenceValue":
+      return Either.left(
+        new InstallError({
+          issue: `Receipted settings entry ${input.file.path} has invalid ownership ${ownership._tag}.`,
+        }),
+      );
+  }
+};
+
+const countOf = (hashes: ReadonlyArray<string>, hash: string): number =>
+  hashes.filter((candidate) => candidate === hash).length;
+
+const ownedEntriesPresent = (input: { event: OwnedHookEvent; document: SettingsDocument }): boolean => {
+  const eventName = hookEventFromPointer(input.event.pointer);
+  const current = eventName === undefined ? undefined : input.document.hooks?.[eventName];
+  if (current === undefined) {
+    return false;
+  }
+
+  const currentHashes = hashGroups(current);
+
+  return input.event.entries.every((hash) => countOf(currentHashes, hash) >= countOf(input.event.entries, hash));
+};
+
+// Only agent-outfit's own entries are checked, so entries other tools add to the same event never count as drift.
+const validateOwnedEntries = (input: {
+  filePath: string;
+  ownership: HookEntriesOwnership | undefined;
+  document: SettingsDocument;
+}): Either.Either<void, InstallError> => {
+  const changed = input.ownership?.events.find((event) => !ownedEntriesPresent({ event, document: input.document }));
+
+  return changed === undefined
+    ? Either.right(undefined)
+    : Either.left(changedEntriesError({ filePath: input.filePath, pointer: changed.pointer }));
+};
+
+// The nth occurrence of a hash is extra when the baseline holds fewer of it, e.g. [a, a, b] over [a] → a, b.
+const isExtraOccurrence = (input: {
+  hashes: ReadonlyArray<string>;
+  index: number;
+  baseline: ReadonlyArray<string>;
+}): boolean => {
+  const hash = input.hashes[input.index];
+  const seen = input.hashes.slice(0, input.index + 1);
+
+  return hash !== undefined && countOf(seen, hash) > countOf(input.baseline, hash);
+};
+
+const applyEdits = <Item>(input: {
+  source: string;
+  items: ReadonlyArray<Item>;
+  edit: (source: string, item: Item) => Either.Either<string, InstallError>;
+}): Either.Either<string, InstallError> =>
+  input.items.reduce<Either.Either<string, InstallError>>(
+    (edited, item) => Either.flatMap(edited, (source) => input.edit(source, item)),
+    Either.right(input.source),
+  );
+
+const managedHookGroupSchema = Schema.Struct({
+  matcher: Schema.optional(
+    Schema.NonEmptyString.annotations({
+      description: "Optional tool matcher copied from the feature registration.",
+    }),
+  ),
+  hooks: Schema.Tuple(
+    Schema.Struct({
+      type: Schema.Literal("command").annotations({
+        description: "Claude hook leaf kind used for a spawned command.",
+      }),
+      command: Schema.NonEmptyString.annotations({
+        description: "Fully resolved command invoking one installed runtime entrypoint.",
+      }),
+    }),
+  ).annotations({
+    description: "Single agent-outfit-authored command leaf for this registration.",
+  }),
+});
+
+type ManagedHookGroup = Schema.Schema.Type<typeof managedHookGroupSchema>;
+
+type HookEventPlan = {
+  readonly event: string;
+  readonly current: ReadonlyArray<unknown> | undefined;
+  readonly owned: OwnedHookEvent | undefined;
+  readonly desired: ReadonlyArray<ManagedHookGroup>;
+};
+
+const eventPreviouslyPresent = (plan: HookEventPlan): boolean =>
+  plan.owned === undefined ? plan.current !== undefined : plan.owned.previouslyPresent;
+
+const ownedHookEvent = (plan: HookEventPlan): ReadonlyArray<OwnedHookEvent> => {
+  const entries = hashGroups(plan.desired);
+
+  return entries.length === 0
+    ? []
+    : [{ pointer: `/hooks/${plan.event}`, previouslyPresent: eventPreviouslyPresent(plan), entries }];
+};
+
+// Removes agent-outfit's stale entries and appends its new ones; every other entry in the array keeps its bytes.
+const editHookEvent = (input: { source: string; plan: HookEventPlan }): Either.Either<string, InstallError> => {
+  const { event, current, owned, desired } = input.plan;
+  const path = ["hooks", event];
+  if (current === undefined) {
+    return desired.length === 0
+      ? Either.right(input.source)
+      : editJsonValue({ source: input.source, path, value: desired });
+  }
+
+  const ownedHashes = owned === undefined ? [] : owned.entries;
+  const desiredHashes = hashGroups(desired);
+  const currentHashes = hashGroups(current);
+  const staleHashes = ownedHashes.filter((_, index) =>
+    isExtraOccurrence({ hashes: ownedHashes, index, baseline: desiredHashes }),
+  );
+  // The last occurrence of each stale hash goes, highest index first so the lower indexes stay valid.
+  const staleIndexes = currentHashes
+    .flatMap((hash, index) => {
+      const later = currentHashes.slice(index + 1);
+
+      return countOf(later, hash) < countOf(staleHashes, hash) ? [index] : [];
+    })
+    .reverse();
+  const addedGroups = desired.filter((_, index) =>
+    isExtraOccurrence({ hashes: desiredHashes, index, baseline: ownedHashes }),
+  );
+  const withoutStale = applyEdits({
+    source: input.source,
+    items: staleIndexes,
+    edit: (source, index) => removeJsonArrayItem({ source, path, index }),
+  });
+  const withAdded = Either.flatMap(withoutStale, (source) =>
+    applyEdits({
+      source,
+      items: addedGroups,
+      edit: (edited, group) => appendJsonArrayItem({ source: edited, path, value: group }),
+    }),
+  );
+  const emptiedCreatedEvent =
+    current.length - staleIndexes.length + addedGroups.length === 0 && !eventPreviouslyPresent(input.plan);
+
+  return emptiedCreatedEvent
+    ? Either.flatMap(withAdded, (source) => editJsonValue({ source, path, value: undefined }))
+    : withAdded;
+};
+
+type HookSettingsEdit = {
+  readonly source: string;
+  readonly document: SettingsDocument;
+  readonly events: ReadonlyArray<OwnedHookEvent>;
+  readonly createdContainers: ReadonlyArray<string>;
+};
+
+// A hooks object agent-outfit created goes again once it is empty; a user's own empty hooks object stays.
+const removeEmptyCreatedHooks = (input: {
+  source: string;
+  ownsHooksContainer: boolean;
+}): Either.Either<{ source: string; document: SettingsDocument }, InstallError> => {
+  const document = parseSettings(input.source, "Generated settings.json");
+  if (Either.isLeft(document)) {
+    return Either.left(document.left);
+  }
+
+  const hooks = document.right.hooks;
+  if (!input.ownsHooksContainer || hooks === undefined || Object.keys(hooks).length > 0) {
+    return Either.right({ source: input.source, document: document.right });
+  }
+
+  const withoutHooks = editJsonValue({ source: input.source, path: ["hooks"], value: undefined });
+
+  return Either.flatMap(withoutHooks, (source) => {
+    const withoutHooksDocument = parseSettings(source, "Generated settings.json");
+
+    return Either.map(withoutHooksDocument, (edited) => ({ source, document: edited }));
+  });
+};
+
+const editHookSettings = (input: {
+  filePath: string;
+  decoded: DecodedSettings;
+  previous: HookEntriesOwnership | undefined;
+  desiredGroups: ReadonlyMap<string, ReadonlyArray<ManagedHookGroup>>;
+}): Either.Either<HookSettingsEdit, InstallError> => {
+  const document = input.decoded.document;
+  const ownedEntries = validateOwnedEntries({ filePath: input.filePath, ownership: input.previous, document });
+  if (Either.isLeft(ownedEntries)) {
+    return Either.left(ownedEntries.left);
+  }
+
+  // Events agent-outfit no longer wants are edited first, newest first, then every desired event.
+  const ownedEvents = input.previous === undefined ? [] : input.previous.events;
+  const previousEvents = ownedEvents.flatMap((owned) => {
+    const event = hookEventFromPointer(owned.pointer);
+
+    return event === undefined ? [] : [event];
+  });
+  const removedEvents = previousEvents.filter((event) => !input.desiredGroups.has(event)).reverse();
+  const events = [...new Set([...removedEvents, ...input.desiredGroups.keys()])];
+  const plans = events.map(
+    (event): HookEventPlan => ({
+      event,
+      current: document.hooks?.[event],
+      owned: ownedEvents.find((owned) => owned.pointer === `/hooks/${event}`),
+      desired: input.desiredGroups.get(event) || [],
+    }),
+  );
+  const createsHooksContainer = document.hooks === undefined && input.desiredGroups.size > 0;
+  const ownsHooksContainer = input.previous?.createdContainers.includes("/hooks") === true || createsHooksContainer;
+  const withContainer = createsHooksContainer
+    ? editJsonValue({ source: input.decoded.source, path: ["hooks"], value: {} })
+    : Either.right(input.decoded.source);
+  const withEvents = Either.flatMap(withContainer, (source) =>
+    applyEdits({ source, items: plans, edit: (edited, plan) => editHookEvent({ source: edited, plan }) }),
+  );
+  const edited = Either.flatMap(withEvents, (source) => removeEmptyCreatedHooks({ source, ownsHooksContainer }));
+
+  return Either.map(edited, ({ source, document: editedDocument }) => ({
+    source,
+    document: editedDocument,
+    events: plans.flatMap(ownedHookEvent),
+    createdContainers: ownsHooksContainer ? ["/hooks"] : [],
+  }));
 };
 
 // A file agent-outfit created and left empty is removed; anything else keeps its remaining user bytes.
@@ -161,28 +391,6 @@ const restoreOrRemove = (input: {
         bytes: textEncoder.encode(input.source),
         expectedCurrent: expectedCurrent(input.snapshot),
       };
-
-const managedHookGroupSchema = Schema.Struct({
-  matcher: Schema.optional(
-    Schema.NonEmptyString.annotations({
-      description: "Optional tool matcher copied from the feature registration.",
-    }),
-  ),
-  hooks: Schema.Tuple(
-    Schema.Struct({
-      type: Schema.Literal("command").annotations({
-        description: "Claude hook leaf kind used for a spawned command.",
-      }),
-      command: Schema.NonEmptyString.annotations({
-        description: "Fully resolved command invoking one installed runtime entrypoint.",
-      }),
-    }),
-  ).annotations({
-    description: "Single agent-outfit-authored command leaf for this registration.",
-  }),
-});
-
-type ManagedHookGroup = Schema.Schema.Type<typeof managedHookGroupSchema>;
 
 export const desiredHookGroups = (input: {
   root: string;
@@ -231,122 +439,64 @@ export const planSettings = (input: {
   desiredGroups: ReadonlyMap<string, ReadonlyArray<ManagedHookGroup>>;
 }): Either.Either<FileChange | undefined, InstallError> => {
   const filePath = input.filePath === undefined ? settingsPath : input.filePath;
-  const previousOwnership =
-    input.previousFile?.ownership._tag === "jsonValues" ? input.previousFile.ownership : undefined;
+  const previousFile = input.previousFile;
   if (
-    input.previousFile !== undefined &&
-    (input.previousFile.path !== filePath ||
-      input.previousFile.kind._tag !== "settings" ||
-      input.previousFile.owner._tag !== "application" ||
-      previousOwnership === undefined)
+    previousFile !== undefined &&
+    (previousFile.path !== filePath ||
+      previousFile.kind._tag !== "settings" ||
+      previousFile.owner._tag !== "application")
   ) {
     return Either.left(
       new InstallError({ issue: "Receipted settings entry must keep its exact path, kind, and application owner." }),
     );
   }
 
-  if (previousOwnership !== undefined && input.snapshot._tag === "missing") {
+  if (previousFile !== undefined && input.snapshot._tag === "missing") {
     return Either.left(new InstallError({ issue: "Receipted settings.json was removed after installation." }));
   }
 
-  const currentOwnership = validateCurrentSettingsOwnership(input.decoded.document, previousOwnership);
-  if (Either.isLeft(currentOwnership)) {
-    return Either.left(currentOwnership.left);
+  const previous: Either.Either<HookEntriesOwnership | undefined, InstallError> =
+    previousFile === undefined
+      ? Either.right(undefined)
+      : previousHookEntries({ file: previousFile, document: input.decoded.document });
+  if (Either.isLeft(previous)) {
+    return Either.left(previous.left);
   }
 
-  // Events agent-outfit no longer wants are restored first, newest first, then every desired event is written.
-  const previousEvents = (previousOwnership?.values || []).flatMap((value) => {
-    const event = hookEventFromPointer(value.pointer);
-
-    return event === undefined ? [] : [event];
+  const previousOwnership = previous.right;
+  const edited = editHookSettings({
+    filePath,
+    decoded: input.decoded,
+    previous: previousOwnership,
+    desiredGroups: input.desiredGroups,
   });
-  const removedEvents = previousEvents.filter((event) => !input.desiredGroups.has(event)).reverse();
-  const events = [...new Set([...removedEvents, ...input.desiredGroups.keys()])];
-  const createsHooksContainer = input.decoded.document.hooks === undefined && input.desiredGroups.size > 0;
-  const ownsHooksContainer = previousOwnership?.createdContainers.includes("/hooks") === true || createsHooksContainer;
-  const ownershipValues: Array<OwnedJsonValue> = [];
-  let source = input.decoded.source;
-
-  if (createsHooksContainer) {
-    const edited = editJsonValue({ source, path: ["hooks"], value: {} });
-    if (Either.isLeft(edited)) {
-      return Either.left(edited.left);
-    }
-
-    source = edited.right;
+  if (Either.isLeft(edited)) {
+    return Either.left(edited.left);
   }
 
-  for (const event of events) {
-    const base = baseHookGroups({ ownership: previousOwnership, document: input.decoded.document, event, source });
-    if (Either.isLeft(base)) {
-      return Either.left(base.left);
-    }
+  const { source, document, events, createdContainers } = edited.right;
+  if (events.length === 0 && previousFile !== undefined && previousOwnership !== undefined) {
+    const restoration = restoreOrRemove({
+      file: previousFile,
+      source,
+      document,
+      snapshot: input.snapshot,
+      filePreviouslyPresent: previousOwnership.filePreviouslyPresent,
+    });
 
-    const desired = input.desiredGroups.get(event);
-    const previous = base.right.previous;
-    const value = desired === undefined ? undefined : [...base.right.groups, ...desired];
-    const edited =
-      desired === undefined && previous._tag === "value" && previous.lexical !== undefined
-        ? restoreJsonLexical({ source, path: ["hooks", event], lexical: previous.lexical })
-        : editJsonValue({ source, path: ["hooks", event], value });
-    if (Either.isLeft(edited)) {
-      return Either.left(edited.left);
-    }
-
-    source = edited.right;
-    if (desired !== undefined) {
-      ownershipValues.push({
-        pointer: `/hooks/${event}`,
-        installed: { _tag: "value", hash: hashJsonValue(value) },
-        previous,
-      });
-    }
+    return checkFileChange(restoration);
   }
 
-  let mergedDocument = parseSettings(source, "Generated settings.json");
-  if (Either.isLeft(mergedDocument)) {
-    return Either.left(mergedDocument.left);
+  if (events.length === 0) {
+    return Either.right(undefined);
   }
 
-  const hooks = mergedDocument.right.hooks;
-  if (ownsHooksContainer && hooks !== undefined && Object.keys(hooks).length === 0) {
-    const edited = editJsonValue({ source, path: ["hooks"], value: undefined });
-    if (Either.isLeft(edited)) {
-      return Either.left(edited.left);
-    }
-
-    source = edited.right;
-    mergedDocument = parseSettings(source, "Generated settings.json");
-    if (Either.isLeft(mergedDocument)) {
-      return Either.left(mergedDocument.left);
-    }
-  }
-
-  if (ownershipValues.length === 0) {
-    if (input.previousFile === undefined || previousOwnership === undefined) {
-      return Either.right(undefined);
-    }
-
-    return checkFileChange(
-      restoreOrRemove({
-        file: input.previousFile,
-        source,
-        document: mergedDocument.right,
-        snapshot: input.snapshot,
-        filePreviouslyPresent: previousOwnership.filePreviouslyPresent,
-      }),
-    );
-  }
-
-  const createdContainers = [
-    ...new Set([...(previousOwnership?.createdContainers || []), ...(ownsHooksContainer ? ["/hooks"] : [])]),
-  ].filter((container) => ownershipValues.some((value) => value.pointer.startsWith(`${container}/`)));
-  const ownership: JsonValuesOwnership = {
-    _tag: "jsonValues",
+  const ownership: HookEntriesOwnership = {
+    _tag: "hookEntries",
     filePreviouslyPresent:
       previousOwnership === undefined ? input.snapshot._tag === "file" : previousOwnership.filePreviouslyPresent,
     createdContainers,
-    values: ownershipValues,
+    events,
   };
 
   return checkFileChange({
@@ -357,27 +507,11 @@ export const planSettings = (input: {
   });
 };
 
-const restorePointer = (source: string, value: OwnedJsonValue): Either.Either<string, InstallError> => {
-  const path = jsonPointerPath(value.pointer);
-  if (value.previous._tag === "missing") {
-    return editJsonValue({ source, path, value: undefined });
-  }
-
-  return value.previous.lexical === undefined
-    ? Either.left(new InstallError({ issue: `Settings value ${value.pointer} lacks lexical restoration evidence.` }))
-    : restoreJsonLexical({ source, path, lexical: value.previous.lexical });
-};
-
 export const restoreSettings = (input: {
   file: OwnedFile;
   snapshot: FileSnapshot;
 }): Either.Either<FileChange, InstallError> => {
-  const ownership = input.file.ownership;
-  if (
-    input.file.kind._tag !== "settings" ||
-    input.file.owner._tag !== "application" ||
-    ownership._tag !== "jsonValues"
-  ) {
+  if (input.file.kind._tag !== "settings" || input.file.owner._tag !== "application") {
     return Either.left(
       new InstallError({ issue: `Settings restoration for ${input.file.path} has invalid ownership.` }),
     );
@@ -394,50 +528,28 @@ export const restoreSettings = (input: {
     return Either.left(decoded.left);
   }
 
-  const currentOwnership = validateCurrentSettingsOwnership(decoded.right.document, ownership);
-  if (Either.isLeft(currentOwnership)) {
-    return Either.left(currentOwnership.left);
+  const previous = previousHookEntries({ file: input.file, document: decoded.right.document });
+  if (Either.isLeft(previous)) {
+    return Either.left(previous.left);
   }
 
-  // Undo edits in reverse order, then drop only the containers agent-outfit created that are now empty.
-  let source = decoded.right.source;
-  for (const value of [...ownership.values].reverse()) {
-    const restored = restorePointer(source, value);
-    if (Either.isLeft(restored)) {
-      return Either.left(restored.left);
-    }
-
-    source = restored.right;
+  const edited = editHookSettings({
+    filePath: input.file.path,
+    decoded: decoded.right,
+    previous: previous.right,
+    desiredGroups: new Map(),
+  });
+  if (Either.isLeft(edited)) {
+    return Either.left(edited.left);
   }
 
-  for (const pointer of [...ownership.createdContainers].reverse()) {
-    const pointerPath = jsonPointerPath(pointer);
-    const root = parseTree(source);
-    const container = root === undefined ? undefined : findNodeAtLocation(root, [...pointerPath]);
-    if (container?.type !== "object" || objectProperties(container).length > 0) {
-      continue;
-    }
+  const restoration = restoreOrRemove({
+    file: input.file,
+    source: edited.right.source,
+    document: edited.right.document,
+    snapshot: input.snapshot,
+    filePreviouslyPresent: previous.right.filePreviouslyPresent,
+  });
 
-    const restored = editJsonValue({ source, path: pointerPath, value: undefined });
-    if (Either.isLeft(restored)) {
-      return Either.left(restored.left);
-    }
-
-    source = restored.right;
-  }
-
-  const document = parseSettings(source, "Generated settings.json");
-  if (Either.isLeft(document)) {
-    return Either.left(document.left);
-  }
-
-  return checkFileChange(
-    restoreOrRemove({
-      file: input.file,
-      source,
-      document: document.right,
-      snapshot: input.snapshot,
-      filePreviouslyPresent: ownership.filePreviouslyPresent,
-    }),
-  );
+  return checkFileChange(restoration);
 };

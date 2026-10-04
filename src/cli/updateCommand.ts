@@ -1,4 +1,4 @@
-/** `agent-outfit update [feature-id...]` — preserve installed features unless IDs are explicit. */
+/** `agent-outfit update [feature-id...]` — refresh every installed feature and keep the receipt selection. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -21,7 +21,7 @@ export const showUpdate = (updateSummary: {
 export const updateCommand = Command.make(
   "update",
   {
-    featureIds: featureIdsArgument("Replacement feature IDs; omitted preserves the receipt selection"),
+    featureIds: featureIdsArgument("Feature IDs that must already be installed; the whole installation is refreshed"),
     scope: scopeOption,
     format: formatOption,
   },
@@ -33,7 +33,7 @@ export const updateCommand = Command.make(
         destination: destinationForScope({ scope: args.scope, homeRoot: host.homeRoot, projectRoot: host.projectRoot }),
         host: { homeRoot: host.homeRoot },
         preparedPackage: yield* preparePackage,
-        features: args.featureIds.length === 0 ? { _tag: "preserve" } : { _tag: "selected", ids: args.featureIds },
+        features: args.featureIds.length === 0 ? { _tag: "preserve" } : { _tag: "refresh", ids: args.featureIds },
         agents: { _tag: "detected", evidence: host.agentEvidence },
         interaction: { _tag: "scripted" },
         configuration: { _tag: "automatic" },
@@ -46,4 +46,4 @@ export const updateCommand = Command.make(
       yield* showUpdate(updateSummary);
       yield* TerminalUI.outro("Done.");
     }),
-).pipe(Command.withDescription("Refresh installed features; explicit IDs replace the receipt selection"));
+).pipe(Command.withDescription("Refresh every installed feature and keep the receipt selection"));

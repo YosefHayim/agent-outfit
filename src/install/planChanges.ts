@@ -4,6 +4,7 @@ import { Either, Schema } from "effect";
 
 import {
   fileOwnerSchema,
+  type HookEntriesOwnership,
   installedJsonValueSchema,
   type JsonValuesOwnership,
   type OwnedFile,
@@ -135,19 +136,47 @@ const retainedFileIssues = ({ file, previous, path }: RetainedFile) => [
       ]),
 ];
 
+// Settings receipts from before entry ownership owned whole hook event arrays; the next install migrates them.
+const ownershipChangeAllowed = ({ file, previous }: RetainedFile): boolean =>
+  previous.ownership._tag === file.ownership._tag ||
+  (file.kind._tag === "settings" && previous.ownership._tag === "jsonValues" && file.ownership._tag === "hookEntries");
+
+const ownershipChangeIssues = (retained: RetainedFile) => {
+  const { file, previous, path } = retained;
+
+  return ownershipChangeAllowed(retained)
+    ? []
+    : [
+        {
+          path: [...path, "ownership", "_tag"],
+          message: `Cannot change ownership from ${previous.ownership._tag} to ${file.ownership._tag} at ${file.path}; remove the prior ownership first.`,
+        },
+      ];
+};
+
+type JsonPointerOwnership = JsonValuesOwnership | HookEntriesOwnership;
+
+const ownedJsonPointers = (ownership: JsonPointerOwnership): ReadonlyArray<string> =>
+  ownership._tag === "jsonValues"
+    ? ownership.values.map((value) => value.pointer)
+    : ownership.events.map((event) => event.pointer);
+
+const jsonPointerOwnership = (ownership: Ownership): JsonPointerOwnership | undefined =>
+  ownership._tag === "jsonValues" || ownership._tag === "hookEntries" ? ownership : undefined;
+
 // A created container is deletion authority, so it may only be acquired together with a newly owned value inside it.
 const jsonContainerAcquisitionIssues = ({ file, previous, path }: RetainedFile) => {
-  if (previous.ownership._tag !== "jsonValues" || file.ownership._tag !== "jsonValues") {
+  const previousOwnership = jsonPointerOwnership(previous.ownership);
+  const desiredOwnership = jsonPointerOwnership(file.ownership);
+  if (previousOwnership === undefined || desiredOwnership === undefined) {
     return [];
   }
 
-  const previousOwnership = previous.ownership;
-  const desiredOwnership = file.ownership;
+  const previousPointers = ownedJsonPointers(previousOwnership);
+  const desiredPointers = ownedJsonPointers(desiredOwnership);
   return desiredOwnership.createdContainers.flatMap((container, containerIndex) => {
-    const ownsNewDescendant = desiredOwnership.values.some(
-      (value) =>
-        value.pointer.startsWith(`${container}/`) &&
-        !previousOwnership.values.some((previousValue) => previousValue.pointer === value.pointer),
+    const ownsNewDescendant = desiredPointers.some(
+      (pointer) => pointer.startsWith(`${container}/`) && !previousPointers.includes(pointer),
     );
 
     return previousOwnership.createdContainers.includes(container) || ownsNewDescendant
@@ -189,16 +218,7 @@ const installPlanInputSchema = Schema.Struct({
         ? [{ path: ["previous", "receipt", "scope"], message: "Previous and desired receipt scopes must match." }]
         : []),
       ...restorationConsistencyIssues(staleFiles, input.restorations),
-      ...retainedFiles.flatMap(({ file, previous, path }) =>
-        previous.ownership._tag === file.ownership._tag
-          ? []
-          : [
-              {
-                path: [...path, "ownership", "_tag"],
-                message: `Cannot change ownership from ${previous.ownership._tag} to ${file.ownership._tag} at ${file.path}; remove the prior ownership first.`,
-              },
-            ],
-      ),
+      ...retainedFiles.flatMap(ownershipChangeIssues),
       ...retainedFiles.flatMap(retainedFileIssues),
       ...retainedFiles.flatMap(jsonContainerAcquisitionIssues),
       ...desiredFiles.flatMap((file, index) => {
@@ -231,21 +251,50 @@ const uninstallPlanInputSchema = Schema.Struct({
   Schema.filter((input) => restorationConsistencyIssues(reverseValues(input.receipt.ownedFiles), input.restorations)),
 );
 
+const preservedContainers = (previous: JsonPointerOwnership, desired: JsonPointerOwnership): ReadonlyArray<string> => {
+  const desiredPointers = ownedJsonPointers(desired);
+
+  return [
+    ...previous.createdContainers.filter((container) =>
+      desiredPointers.some((pointer) => pointer.startsWith(`${container}/`)),
+    ),
+    ...desired.createdContainers.filter((container) => !previous.createdContainers.includes(container)),
+  ];
+};
+
 const preserveJsonRestoration = (previous: JsonValuesOwnership, desired: JsonValuesOwnership): Ownership => ({
   ...desired,
   filePreviouslyPresent: previous.filePreviouslyPresent,
-  createdContainers: [
-    ...previous.createdContainers.filter((container) =>
-      desired.values.some((value) => value.pointer.startsWith(`${container}/`)),
-    ),
-    ...desired.createdContainers.filter((container) => !previous.createdContainers.includes(container)),
-  ],
+  createdContainers: preservedContainers(previous, desired),
   values: desired.values.map((value) => {
     const priorValue = previous.values.find((candidate) => candidate.pointer === value.pointer);
 
     return priorValue === undefined ? value : { ...value, previous: priorValue.previous };
   }),
 });
+
+// Whether each hook event array existed before agent-outfit first owned it, from either settings receipt format.
+const priorEventPresence = (previous: JsonPointerOwnership): ReadonlyMap<string, boolean> =>
+  new Map(
+    previous._tag === "jsonValues"
+      ? previous.values.map((value) => [value.pointer, value.previous._tag === "value"])
+      : previous.events.map((event) => [event.pointer, event.previouslyPresent]),
+  );
+
+const preserveHookEntriesRestoration = (previous: JsonPointerOwnership, desired: HookEntriesOwnership): Ownership => {
+  const presence = priorEventPresence(previous);
+
+  return {
+    ...desired,
+    filePreviouslyPresent: previous.filePreviouslyPresent,
+    createdContainers: preservedContainers(previous, desired),
+    events: desired.events.map((event) => {
+      const previouslyPresent = presence.get(event.pointer);
+
+      return previouslyPresent === undefined ? event : { ...event, previouslyPresent };
+    }),
+  };
+};
 
 // A retained path keeps the restoration evidence from when it was first owned, not from this install.
 const preserveRestoration = (previous: Ownership, desired: Ownership): Ownership => {
@@ -255,6 +304,11 @@ const preserveRestoration = (previous: Ownership, desired: Ownership): Ownership
 
   if (previous._tag === "jsonValues" && desired._tag === "jsonValues") {
     return preserveJsonRestoration(previous, desired);
+  }
+
+  const previousJsonOwnership = jsonPointerOwnership(previous);
+  if (previousJsonOwnership !== undefined && desired._tag === "hookEntries") {
+    return preserveHookEntriesRestoration(previousJsonOwnership, desired);
   }
 
   if (previous._tag === "managedBlock" && desired._tag === "managedBlock") {
@@ -301,6 +355,21 @@ const installedOwnershipEqual = (left: Ownership, right: Ownership): boolean => 
           candidate !== undefined &&
           value.pointer === candidate.pointer &&
           installedJsonValuesEqual(value.installed, candidate.installed)
+        );
+      })
+    );
+  }
+
+  if (left._tag === "hookEntries" && right._tag === "hookEntries") {
+    return (
+      left.events.length === right.events.length &&
+      left.events.every((event, index) => {
+        const candidate = right.events[index];
+
+        return (
+          candidate !== undefined &&
+          event.pointer === candidate.pointer &&
+          event.entries.join(",") === candidate.entries.join(",")
         );
       })
     );

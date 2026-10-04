@@ -1,4 +1,4 @@
-/** `agent-outfit install [feature-id...]` — thin adapter over the install capability. */
+/** `agent-outfit install [feature-id...]` — add features to the installed selection. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -26,7 +26,7 @@ export const showInstallation = (installation: {
 export const installCommand = Command.make(
   "install",
   {
-    featureIds: featureIdsArgument("Feature IDs from `agent-outfit catalog`; omitted means catalog defaults"),
+    featureIds: featureIdsArgument("Feature IDs from `agent-outfit catalog` to add; omitted adds catalog defaults"),
     scope: scopeOption,
     format: formatOption,
   },
@@ -51,4 +51,4 @@ export const installCommand = Command.make(
       yield* showInstallation(installation);
       yield* TerminalUI.outro("Done.");
     }),
-).pipe(Command.withDescription("Install catalog defaults or the named features"));
+).pipe(Command.withDescription("Add catalog defaults or the named features; installed features are kept"));

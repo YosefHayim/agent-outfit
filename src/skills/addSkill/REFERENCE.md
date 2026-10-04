@@ -86,16 +86,11 @@ All paths are in the agent-outfit repo. Put the new skill next to related skills
 
 ## Install
 
-Explicit feature IDs replace the installed selection, so always pass what is already installed plus the new id. Run from the agent-outfit repo after `pnpm verify` (it builds `dist/`, which the hooks install from):
+`install <id>` adds the feature and keeps everything already installed. Run from the agent-outfit repo after `pnpm verify` (it builds `dist/`, which the hooks install from):
 
 ```bash
-receipt=~/.claude/agent-outfit/receipt.json
-if [ -f "$receipt" ]; then
-  pnpm cli install $(node -p "require('$receipt').features.join(' ')") <id>
-else
-  pnpm cli install <id>
-fi
+pnpm cli install <id>
 ls ~/.claude/skills/<id>/SKILL.md
 ```
 
-For a project install, run the same commands from the target repo: set `receipt=.claude/agent-outfit/receipt.json`, replace `pnpm cli` with `node <agent-outfit repo>/dist/src/cli/main.js` (the project is the current folder), add `--scope project` to both `install` lines, and check `.claude/skills/<id>/SKILL.md`.
+For a project install, run the same command from the target repo: replace `pnpm cli` with `node <agent-outfit repo>/dist/src/cli/main.js` (the project is the current folder), add `--scope project`, and check `.claude/skills/<id>/SKILL.md`.
