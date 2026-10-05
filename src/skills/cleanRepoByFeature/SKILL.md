@@ -2,6 +2,7 @@
 name: clean-repo-by-feature
 description: Use when a project is messy and you want to clean it one feature at a time. It backs up main, gives each feature its own agent and branch, and opens one PR per feature for you to review. Say "messy repo", "clean up the whole project", or "one agent per feature".
 type: flow
+disable-model-invocation: true
 ---
 
 # Clean repo by feature
@@ -17,7 +18,7 @@ Reuse existing skills rather than inventing a second ship path:
 | Worktree layout, lane isolation, land later | `run-tasks-in-parallel` (**setup-lanes** / **land-lanes**) |
 | Commit / push on a feature branch | `organize-commits` + `finish-and-push` |
 | Lean structure / ceremony kill | `simplify-code` (then `make-code-readable` for readability if needed) |
-| Missing style SSOT | `code-style-existing-project` (once, before mass fan-out when absent) |
+| Missing style SSOT | `code-style` (once, before mass fan-out when absent) |
 | UI / local proof | `run-local-and-check` |
 | After lanes merge messily | `run-tasks-in-parallel` **land-lanes** only |
 
@@ -94,7 +95,7 @@ If they already said e.g. “cmux terminal for each sub agent”, skip re-asking
 
 1. Create the **backup/** branch of `origin/<default>` (see Safety).
 2. Ensure working policy: product commits only on topic branches; PRs target default branch.
-3. If CODE-STYLE is missing and the user wants consistency across lanes, run `code-style-existing-project` **once** on the main checkout (or a single docs-only branch) before fan-out so agents share one `## Never` list.
+3. If CODE-STYLE is missing and the user wants consistency across lanes, run `code-style` **once** on the main checkout (or a single docs-only branch) before fan-out so agents share one `## Never` list.
 
 ### 3. Fan out lanes (delegate to run-tasks-in-parallel setup-lanes)
 

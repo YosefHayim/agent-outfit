@@ -8,7 +8,7 @@ before writing code.
 | File | Role |
 | --- | --- |
 | `PROJECT.md` | Purpose & direction (this file) |
-| `CONTEXT.md` | Orientation — [CONTEXT-FORMAT.md](../../questionPlanWithDocs/CONTEXT-FORMAT.md) |
+| `CONTEXT.md` | Orientation — [CONTEXT-FORMAT.md](CONTEXT-FORMAT.md) |
 | `LANGUAGE.md` | Names-only glossary — [LANGUAGE-FORMAT.md](LANGUAGE-FORMAT.md) |
 | PR description | Individual hard-to-reverse decisions |
 | `AGENTS.md` | Current structure / how to work in the repo |
@@ -75,7 +75,7 @@ approval.
 
 ## What to ask
 
-`question-plan-with-docs` owns PROJECT.md for every repo — new or existing. Fire every
+`question-my-plan` owns PROJECT.md for every repo — new or existing. Fire every
 unanswered item in **one** `AskUserQuestion`, each with a recommended default
 pulled from the repo, `README`, or the conversation (same as any grill). Skip a
 question only when the docs already answer it unambiguously.

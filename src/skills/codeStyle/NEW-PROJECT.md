@@ -1,7 +1,4 @@
----
-name: code-style-new-project
-description: Use when you start a new project and want to decide how the code is written and organized. It asks you questions, shows a plan, and writes CODE-STYLE.md and the base project docs after you approve. Say "code style for a new project" or "set up conventions". For a project with code, use code-style-existing-project.
----
+# Code style — new project
 
 <what-to-do>
 
@@ -9,7 +6,7 @@ Interview me relentlessly about **how this project is built** — its code style
 
 Fire every ready question in **one** `AskUserQuestion` (the host TUI question card). Recommended option first, marked `(Recommended)`; code variants go in each option's `preview`. Do not drip questions one-by-one. A second card is only for questions that could not exist until these answers landed (language/runtime when unknown is the only allowed gate card — Q0+Q1 together). If the host rejects the card for size, split into the fewest cards that fit — still never one question per turn.
 
-This is the **greenfield** variant: there is little or no code to read. Your source of truth is my **taste** (grill me) plus the project's **purpose** and its **language/framework** conventions. Never write generic advice ("use clear names", "keep functions small") — every rule must be a real, load-bearing decision for THIS project. If the project already has meaningful code, stop and use `code-style-existing-project` instead.
+This is the **greenfield** variant: there is little or no code to read. Your source of truth is my **taste** (grill me) plus the project's **purpose** and its **language/framework** conventions. Never write generic advice ("use clear names", "keep functions small") — every rule must be a real, load-bearing decision for THIS project. If the project already has meaningful code, stop and use Existing project mode ([EXISTING-PROJECT.md](EXISTING-PROJECT.md)) instead.
 
 **Nothing is written to disk until I approve.** You grill (Steps 0–5) — the code-style grill is a **pick-the-code gallery**: I pick from illustrative code variants shown in **one** TUI question card (Step 2); then you compose the **golden path for adding a unit + its slop guard** (Step 5). You render an **interactive HTML plan** as the review gate (Step 6, built with the **planpage** kit — I approve, adjust, or flip any decision in the browser), and only then write the files (Step 7).
 
@@ -56,8 +53,8 @@ The answer gates:
 
 A project can't have a code style before it has a spine. Before grilling code, **ensure the three structure docs** — gather the missing ones' content now, validate the present ones, and **never restructure a doc that already exists** (report drift, don't rewrite it). Defer the actual file writes to Step 7 so the plan can show them.
 
-- **PROJECT.md** — purpose & direction. Missing/thin → gather via `question-plan-with-docs`' PROJECT.md flow (seven-part checklist in [PROJECT-FORMAT.md](_shared/PROJECT-FORMAT.md)). Title: `# PROJECT.md — {Project}`. Don't write your own purpose questions — `question-plan-with-docs` owns PROJECT.md.
-- **CONTEXT.md** — orientation only (what it is, actors, shape — NOT a glossary). Create/validate against [CONTEXT-FORMAT.md](../questionPlanWithDocs/CONTEXT-FORMAT.md) (exemplar: `ai-browser-bridge/CONTEXT.md`). Title: `# CONTEXT.md — {Project}`. No `## Language` / `_Avoid_:` blocks.
+- **PROJECT.md** — purpose & direction. Missing/thin → gather via `question-my-plan`' PROJECT.md flow (seven-part checklist in [PROJECT-FORMAT.md](_shared/PROJECT-FORMAT.md)). Title: `# PROJECT.md — {Project}`. Don't write your own purpose questions — `question-my-plan` owns PROJECT.md.
+- **CONTEXT.md** — orientation only (what it is, actors, shape — NOT a glossary). Create/validate against [CONTEXT-FORMAT.md](_shared/CONTEXT-FORMAT.md) (exemplar: `ai-browser-bridge/CONTEXT.md`). Title: `# CONTEXT.md — {Project}`. No `## Language` / `_Avoid_:` blocks.
 - **LANGUAGE.md** — glossary / human↔agent bridge: **names only**. Create/validate against [LANGUAGE-FORMAT.md](_shared/LANGUAGE-FORMAT.md) (exemplar: `ai-browser-bridge/LANGUAGE.md` — bold term on its own line, definition, `_Avoid_:`). Never tables, bullet glossaries, or colon-on-bold.
 
 Record each doc's state — `create` · `validate ✓` · `drift` (with the gap) — for the Step 6 plan.
@@ -117,7 +114,7 @@ See **[STEPS.md](_shared/STEPS.md)** for the shared procedures (the golden-path 
 
 - **Step 6** → Reference framework practices (detect stack, point to official skills), then render the interactive planpage plan (the review gate) — including the **golden-path + guard block**.
 - **Step 7** → On approval, write the files (CODE-STYLE.md incl. `## Golden path`, formatter + lint config, structure docs, AGENTS.md digest incl. the tight golden-path mirror); decisions go in the PR description.
-- **Re-running** → Idempotent refresh; once real code exists, hand off to `code-style-existing-project`.
+- **Re-running** → Idempotent refresh; once real code exists, switch to Existing project mode ([EXISTING-PROJECT.md](EXISTING-PROJECT.md)).
 
 > **Step 8 (capstone reorg) does not apply to greenfield** — there's no code to reorganize.
 

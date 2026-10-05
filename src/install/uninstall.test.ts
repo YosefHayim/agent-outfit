@@ -15,6 +15,7 @@ const packageFiles = {
   "hooks/contextGuard/watchers/autorunWatcher.js": "export {};\n",
   "hooks/contextGuard/watchers/idleCompactWatcher.js": "export {};\n",
   "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
+  "skills/autorun/agents/openai.yaml": "policy:\n  allow_implicit_invocation: false\n",
 };
 
 const workspace = Effect.gen(function* () {

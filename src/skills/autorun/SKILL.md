@@ -1,6 +1,7 @@
 ---
 name: autorun
 description: Use when you want the agent to keep working without you. When the context is full, it compacts it and continues the task. You can pause or stop it. macOS and Ghostty only. Say "autorun", "autorun 3", "autorun stop", or "keep going alone".
+disable-model-invocation: true
 ---
 
 # autorun

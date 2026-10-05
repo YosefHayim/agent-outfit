@@ -20,6 +20,7 @@ type Frontmatter = {
   description?: string;
   type?: string;
   arguments?: string[] | string;
+  "disable-model-invocation"?: string;
 };
 
 const parseFrontmatter = (file: string): { frontmatter: Frontmatter | null; body: string } => {
@@ -37,7 +38,7 @@ const parseFrontmatter = (file: string): { frontmatter: Frontmatter | null; body
     if (key === "arguments") {
       // e.g. "stop exit" → ["stop","exit"] (JSON array also accepted)
       frontmatter.arguments = value.startsWith("[") ? JSON.parse(value) : value.split(/\s+/).filter(Boolean);
-    } else if (key === "name" || key === "description" || key === "type") {
+    } else if (key === "name" || key === "description" || key === "type" || key === "disable-model-invocation") {
       frontmatter[key] = value;
     }
   }
@@ -56,6 +57,7 @@ const installedSkills = skillsForFeatures(featureCatalog.map((feature) => featur
   return {
     skillId: skill.id,
     sourceDirectory: feature.sourceDirectory,
+    shippedPaths: skill.shippedPaths,
   };
 });
 
@@ -98,6 +100,22 @@ describe("shipped skills", () => {
   });
 });
 
+describe("manual-only skills", () => {
+  it.each(installedSkills)("$skillId is hidden from the model in both Claude Code and Codex, or in neither", ({
+    sourceDirectory,
+    shippedPaths,
+  }) => {
+    const { frontmatter } = parseFrontmatter(path.join(skillRoot, sourceDirectory, "SKILL.md"));
+    const codexPolicy = path.join(skillRoot, sourceDirectory, "agents", "openai.yaml");
+    const hiddenFromClaude = frontmatter?.["disable-model-invocation"] === "true";
+    const hiddenFromCodex =
+      existsSync(codexPolicy) && readFileSync(codexPolicy, "utf8").includes("allow_implicit_invocation: false");
+
+    expect(hiddenFromCodex).toBe(hiddenFromClaude);
+    expect(shippedPaths.includes("agents")).toBe(existsSync(codexPolicy));
+  });
+});
+
 const shippedSkillFiles = readdirSync(skillRoot, { recursive: true, encoding: "utf8" })
   .filter((relativePath) => !relativePath.includes("node_modules"))
   .filter((relativePath) => /\.(md|mjs|js|ts|py|sh|json|txt)$/.test(relativePath))
@@ -122,7 +140,7 @@ describe("run report folders", () => {
     ["restructureRepo", "restructure-repo"],
     ["cleanRepoByFeature", "clean-repo-by-feature"],
     ["improveUx", "improve-ux"],
-    ["codeStyleExistingProject", "code-style-existing-project"],
+    ["codeStyle", "code-style"],
     ["benchmarkAgents", "benchmark-agents"],
   ] as const)("%s starts its run folder as %s", (sourceDirectory, skillId) => {
     const skillMd = path.join(skillRoot, sourceDirectory, "SKILL.md");

@@ -2,6 +2,7 @@
 name: install-skills
 description: Use when you want to install, update, or sync skills for all your coding agents, for your whole computer or for one project. It checks that each agent can really find the skills. Say "install skills", "sync skills", or "update skills everywhere".
 type: flow
+disable-model-invocation: true
 ---
 
 # Install skills

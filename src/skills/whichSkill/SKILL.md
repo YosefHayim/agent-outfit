@@ -35,6 +35,7 @@ The wiring lives in voxkey; this skill defines **what** the refined string must 
 ## Safety
 
 - Do not invent skills that are not installed or cataloged.
+- Manual-only skills (`disable-model-invocation: true` in their SKILL.md) start only when the user types `/<name>`: never run one in mode B; give the user the command to type instead.
 - Do not skip safety of the target skill (no silent main commits, no remote delete, no deploy unless authorized).
 - Prefer the **smallest** skill that fits.
 - One **primary** skill; others are supporting only.
@@ -58,7 +59,7 @@ Keep user wording. Note workspace if known. Strip secrets from logs, not from th
 | Prod live prove | redeploy, is live, curl | `deploy-and-check` |
 | Lean / ceremony | deslop, AI slop, ban payload | `simplify-code` |
 | Whole-repo restructure | folders, names, deps, official docs | `restructure-repo` |
-| Style system (existing code) | CODE-STYLE, grill with docs | `code-style-existing-project` |
+| Style system (new or existing code) | CODE-STYLE, style rules, style audit | `code-style` |
 | Kill ports | free ports, metro 8081 | `free-ports` |
 | Bootstrap Code folder | clone all GH repos | `clone-all-repos` |
 | Cloudflare ops | wrangler, D1 (not prove live) | `manage-cloudflare` |

@@ -13,7 +13,7 @@ attention) only where a machine can't.
 **Read first:** the cards in `CODE-STYLE.md` (each rule's `verify` command + exemplars), plus
 `PROJECT.md`/`CONTEXT.md`, and **my original prompt/intent** (ask me for it if you don't have it —
 Tier 3 checks the diff *did what I asked* and flags scope creep). No `CODE-STYLE.md`? Offer
-`code-style-new-project` or `code-style-existing-project` first.
+`code-style` first.
 
 **Scope the diff** (ask if unclear): `git diff <base>...HEAD` (branch/PR), the uncommitted working
 tree, or a named PR. That file list is the review surface.

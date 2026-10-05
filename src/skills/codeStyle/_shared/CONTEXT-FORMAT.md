@@ -6,7 +6,7 @@ and not coding rules.
 
 | File | Role |
 | --- | --- |
-| `PROJECT.md` | Purpose & direction — [PROJECT-FORMAT.md](../code-style-new-project/_shared/PROJECT-FORMAT.md) |
+| `PROJECT.md` | Purpose & direction — [PROJECT-FORMAT.md](PROJECT-FORMAT.md) |
 | `CONTEXT.md` | Orientation (this file) |
 | `LANGUAGE.md` | Names-only glossary — [LANGUAGE-FORMAT.md](./LANGUAGE-FORMAT.md) |
 | PR description | Individual hard-to-reverse decisions |
