@@ -501,6 +501,17 @@ describe("receiptSchema", () => {
   ])("rejects %s in receipt features", (_case, features) => {
     expect(() => decodeReceipt({ ...receiptWithFiles([]), features })).toThrow(/feature|dependency|catalog order/i);
   });
+
+  it("reads retired feature IDs as the features that replaced them", () => {
+    const features = [
+      "question-my-plan",
+      "code-style-new-project",
+      "code-style-existing-project",
+      "question-plan-with-docs",
+    ];
+
+    expect(decodeReceipt({ ...receiptWithFiles([]), features }).features).toEqual(["question-my-plan", "code-style"]);
+  });
 });
 
 describe("readReceipt", () => {
