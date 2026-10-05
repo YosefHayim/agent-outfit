@@ -788,6 +788,13 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
   }),
 ]);
 
+// Features merged into another one. Receipts written before the merge still name the old ID.
+export const retiredFeatureIds = new Map([
+  ["code-style-new-project", "code-style"],
+  ["code-style-existing-project", "code-style"],
+  ["question-plan-with-docs", "question-my-plan"],
+]);
+
 export class UnknownFeatureError extends Schema.TaggedError<UnknownFeatureError>()("UnknownFeatureError", {
   featureId: Schema.String.annotations({
     description: "Unknown feature ID supplied by the caller.",

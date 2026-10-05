@@ -3,7 +3,7 @@
 import { FileSystem } from "@effect/platform";
 import { Effect, Either, Option, Schema, ParseResult as SchemaParseIssue } from "effect";
 
-import { addDependencies, featureIdSchema } from "../catalog/featureCatalog.js";
+import { addDependencies, featureIdSchema, retiredFeatureIds } from "../catalog/featureCatalog.js";
 import { decodeStrictText, isNotFound } from "./fileBytes.js";
 import { findDuplicateJsonKey } from "./findDuplicateJsonKey.js";
 import { type OwnedFile, ownedFileSchema, pathsConflict } from "./ownership.js";
@@ -60,7 +60,19 @@ const receiptFeatureIssues = (features: ReadonlyArray<string>) => {
   return [];
 };
 
-const featureListSchema = Schema.Array(featureIdSchema).pipe(Schema.filter(receiptFeatureIssues));
+// A receipt from before a feature merge reads as the feature that replaced the retired ID.
+const withCurrentFeatureIds = (features: ReadonlyArray<string>) => {
+  if (!features.some((feature) => retiredFeatureIds.has(feature))) return features;
+  const renamed = features.map((feature) => retiredFeatureIds.get(feature) || feature);
+  const resolved = addDependencies(renamed);
+  return Either.getOrElse(resolved, () => renamed);
+};
+
+const featureListSchema = Schema.transform(
+  Schema.Array(Schema.String),
+  Schema.Array(featureIdSchema).pipe(Schema.filter(receiptFeatureIssues)),
+  { strict: true, decode: withCurrentFeatureIds, encode: (features) => features },
+);
 
 export const versionSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.pattern(SEMVER_PATTERN, {
