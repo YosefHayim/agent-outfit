@@ -25,7 +25,7 @@ Good readability work may rename symbols, reorder imports, move files, split or 
 
 Before proposing any style, read the repo's own style guide if it exists: `CODE-STYLE.md` (the SSOT) and the `## Conventions` digest in `AGENTS.md`. When present, they are the **authoritative target style** for this repo — the generic doctrine below only fills the gaps they don't cover, and where the two conflict, **CODE-STYLE.md wins**. Code that breaks its Rules or hits its "Never" list is a primary readability target, called out first.
 
-You **enforce** the guide; you never edit it. If one of its rules looks wrong or is fighting readability, flag it in the review and point the user to `code-style-existing-project` to evolve the guide — don't silently deviate from it. If neither file exists, proceed on the generic doctrine below exactly as before.
+You **enforce** the guide; you never edit it. If one of its rules looks wrong or is fighting readability, flag it in the review and point the user to `code-style` to evolve the guide — don't silently deviate from it. If neither file exists, proceed on the generic doctrine below exactly as before.
 
 ## Review First
 

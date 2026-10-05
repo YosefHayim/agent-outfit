@@ -16,13 +16,13 @@ When a dimension is language-specific, a note like `[TS/JS only]` appears in the
 
 ## How to run it
 
-### Existing codebase (code-style-existing-project)
+### Existing codebase (Existing project mode)
 
 - **One card, skip what doesn't apply.** Fire every applicable dimension in **one** `AskUserQuestion`. Skip a whole round when it doesn't apply (no UI → skip Frontend; no HTTP surface → trim API/IO). Do not serialize dimensions or rounds. If the host rejects the card for size, split into the fewest cards that fit — still never one question per turn.
 - **Variants are the repo's REAL code.** Variant **A** is the actual incumbent, pulled **verbatim** from the scan with a `file:symbol` cite — warts and all, so you're reacting to *your* code, not a textbook. Variant **B** is the de-slopped rewrite. Two variants by default; add a third only when there's a genuine spectrum (e.g. throw / Result / neverthrow).
 - **Uncontested → keep/kill, not a fake choice.** If the repo already settles a dimension one way and it isn't slop, show the single incumbent and ask **keep or kill** — never fabricate an alternative just to fill the slot. (An uncontested dimension is still shown — that's how you stay un-surprised.)
 
-### Greenfield (code-style-new-project)
+### Greenfield (New project mode)
 
 - **One card, skip what doesn't apply.** Same structure as above. Language/runtime unknown → one 2-question gate card (Q0+Q1), then the catalog card.
 - **Variants are illustrative, grounded in purpose.** With no code to cite, variant **A** is the common/default idiom for this language + framework (the one the agent would reach for), variant **B** is the alternative worth considering. Two variants by default; add a third only when there's a genuine spectrum. Make the snippets concrete to THIS project's domain — not `foo`/`bar`.

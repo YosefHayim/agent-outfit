@@ -194,8 +194,8 @@ This file covers only what is specific to THIS project on top of those.
 
 | Skill | Role |
 | --- | --- |
-| `code-style-new-project` | Greenfield — write the full guide on approval |
-| `code-style-existing-project` | Existing codebase — rewrite/refresh from evidence |
+| `code-style` (New project mode) | Greenfield — write the full guide on approval |
+| `code-style` (Existing project mode) | Existing codebase — rewrite/refresh from evidence |
 | `code-style-teach-me` / `code-style-review` | **Read** the `CODE-STYLE.md` cards; do not invent alternate formats |
 | `make-code-readable` / `simplify-code` | Enforce `## Never` + golden path per-diff |
 

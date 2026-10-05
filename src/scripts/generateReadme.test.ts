@@ -29,7 +29,6 @@ describe("README generation", () => {
     // Third-party skills are credited in the community table, not the owned catalog.
     expect(catalog).not.toContain("**make-code-readable**");
     expect(catalog).not.toContain("**question-my-plan**");
-    expect(catalog).not.toContain("**question-plan-with-docs**");
 
     expect(catalog).not.toContain("**agents-sdk**");
     expect(catalog).not.toContain("**cloudflare**");
@@ -40,9 +39,9 @@ describe("README generation", () => {
     const community = generatedSection("SKILLS");
 
     expect(community).toContain("**make-code-readable**");
-    expect(community).toContain("(upstream name: `deslop`)");
+    expect(community).toContain("(upstream: `deslop`)");
     expect(community).toContain("**question-my-plan**");
-    expect(community).toContain("**question-plan-with-docs**");
+    expect(community).toContain("(upstream: `grill-me`, `grill-with-docs`)");
     expect(community).toContain("https://github.com/mattpocock/skills");
     expect(community).toContain("https://github.com/mikecann/agent-skills");
     expect(community).not.toContain("**image-to-code**");

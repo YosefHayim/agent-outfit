@@ -311,7 +311,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     title: "Autorun",
     summary:
       "Let the agent keep working alone. When the context is almost full and a fresh handoff note exists, it runs /compact and continues the task. macOS + Ghostty only (it types into your terminal). The hook code lives in context-guard.",
-    shippedPaths: ["SKILL.md"],
+    shippedPaths: ["SKILL.md", "agents"],
     dependencies: ["context-guard"],
     platform: "macos+ghostty",
   }),
@@ -427,7 +427,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     title: "Write blog post (voice + cover)",
     summary:
       "Write a new portfolio blog post in the owner's voice, add it to the blog data file, and make a matching cover image in ChatGPT.",
-    shippedPaths: ["SKILL.md"],
+    shippedPaths: ["SKILL.md", "agents"],
   }),
   skillFeature({
     id: "write-readme",
@@ -464,16 +464,18 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     id: "question-my-plan",
     sourceDirectory: "questionMyPlan",
     title: "Question my plan",
-    summary: "Ask hard questions about your plan or design until you both understand it the same way.",
+    summary:
+      "Ask hard questions about your plan or design until you both understand it the same way, and keep the project docs up to date as you decide.",
     shippedPaths: ["SKILL.md"],
+    dependencies: ["code-style"],
   }),
   skillFeature({
-    id: "code-style-new-project",
-    sourceDirectory: "codeStyleNewProject",
-    title: "Code style — new project",
+    id: "code-style",
+    sourceDirectory: "codeStyle",
+    title: "Code style",
     summary:
-      "For a new project — ask you questions about code style, folder structure, and CLI, then write CODE-STYLE.md, a formatter config, and the project docs.",
-    shippedPaths: ["SKILL.md", "_shared"],
+      "Ask you questions about code style, folder structure, and CLI, reading the real code when there is some, then write CODE-STYLE.md, a formatter config, and the project docs. Can also only check code against the rules.",
+    shippedPaths: ["SKILL.md", "NEW-PROJECT.md", "EXISTING-PROJECT.md", "SCAN.md", "_shared", "references", "scripts"],
   }),
   skillFeature({
     id: "code-style-teach-me",
@@ -492,29 +494,12 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     shippedPaths: ["SKILL.md"],
   }),
   skillFeature({
-    id: "code-style-existing-project",
-    sourceDirectory: "codeStyleExistingProject",
-    title: "Code style — existing project",
-    summary:
-      "For a project that already has code — read the real code, ask you questions, then write or update CODE-STYLE.md and the formatter config. Can also only check code against the rules.",
-    shippedPaths: ["SKILL.md", "SCAN.md", "references", "scripts"],
-    dependencies: ["code-style-new-project"],
-  }),
-  skillFeature({
     id: "explain-my-stack",
     sourceDirectory: "explainMyStack",
     title: "Explain my stack",
     summary:
       "Understand why the project uses each technology (language, framework, services), with honest trade-offs and a plain glossary, all in chat.",
     shippedPaths: ["SKILL.md", "TEACH-FORMAT.md"],
-  }),
-  skillFeature({
-    id: "question-plan-with-docs",
-    sourceDirectory: "questionPlanWithDocs",
-    title: "Question plan with docs",
-    summary: "Check your plan against the project docs and decisions, and update the docs as you decide.",
-    shippedPaths: ["SKILL.md", "CONTEXT-FORMAT.md", "LANGUAGE-FORMAT.md"],
-    dependencies: ["code-style-new-project"],
   }),
   skillFeature({
     id: "plan-page",
@@ -545,7 +530,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     title: "Make promo video",
     summary:
       "Make a short promo video for a project — story, images, animation, voice, music, and a cut for each social app.",
-    shippedPaths: ["SKILL.md", "reference", "scripts"],
+    shippedPaths: ["SKILL.md", "reference", "scripts", "agents"],
     dependencies: ["plan-page"],
     platform: "macos",
   }),
@@ -607,7 +592,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "installSkills",
     title: "Install skills",
     summary: "Install or update skills in all your coding agents and check that each agent can really find them.",
-    shippedPaths: ["SKILL.md"],
+    shippedPaths: ["SKILL.md", "agents"],
   }),
   skillFeature({
     id: "fix-env-config",
@@ -675,7 +660,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "shipMissingTests",
     title: "Ship missing tests",
     summary: "Find missing tests in many features, fill them in parallel branches, and merge to main after checks.",
-    shippedPaths: ["SKILL.md", "REFERENCE.md", "references"],
+    shippedPaths: ["SKILL.md", "REFERENCE.md", "references", "agents"],
     dependencies: [
       "find-missing-tests",
       "clean-repo-by-feature",
@@ -690,7 +675,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "simplifyRepoWithTests",
     title: "Simplify repo with tests",
     summary: "Find over-engineering across the repo, simplify it, and use tests to prove the behavior did not change.",
-    shippedPaths: ["SKILL.md", "REFERENCE.md", "references"],
+    shippedPaths: ["SKILL.md", "REFERENCE.md", "references", "agents"],
     dependencies: [
       "simplify-code",
       "run-tasks-in-parallel",
@@ -729,7 +714,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "cloneAllRepos",
     title: "Clone all repos",
     summary: "Clone or update all your GitHub repos into your Code folder and report what changed.",
-    shippedPaths: ["SKILL.md"],
+    shippedPaths: ["SKILL.md", "agents"],
   }),
   skillFeature({
     id: "manage-cloudflare",
@@ -744,7 +729,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     title: "Clean repo by feature",
     summary:
       "Back up main, then clean a messy project with one agent and one branch per feature, and open one PR per feature for you to review.",
-    shippedPaths: ["SKILL.md"],
+    shippedPaths: ["SKILL.md", "agents"],
     dependencies: ["run-tasks-in-parallel", "finish-and-push", "organize-commits"],
   }),
   skillFeature({
@@ -775,7 +760,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "benchmarkAgents",
     title: "Benchmark agents",
     summary: "Run the same tasks with different agents, skills, or tools and compare tokens, time, cost, and success.",
-    shippedPaths: ["SKILL.md", "REFERENCE.md"],
+    shippedPaths: ["SKILL.md", "REFERENCE.md", "agents"],
   }),
   skillFeature({
     id: "release-mobile-app",
@@ -798,7 +783,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     title: "Finish old sessions",
     summary:
       "Find unfinished work in past agent sessions, compare it with the repos, and finish each task or mark it honestly.",
-    shippedPaths: ["SKILL.md"],
+    shippedPaths: ["SKILL.md", "agents"],
     dependencies: ["finish-and-push", "find-repeated-prompts"],
   }),
 ]);

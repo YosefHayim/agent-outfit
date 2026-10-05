@@ -91,7 +91,7 @@ REPORT="$RUN_DIR/report.md"
 
 Scouts read `git ls-files`, every package manifest, the workspace and framework configs, CI, and the repo's docs. Write to the Report section: each framework with its installed version, and each surface (client, server, shared, deploy) with its path.
 
-If `PROJECT.md` or `LANGUAGE.md` is missing, offer `question-plan-with-docs` to write them first. If the user declines, use `README.md` and the words the code already uses most.
+If `PROJECT.md` or `LANGUAGE.md` is missing, offer `question-my-plan` to write them first. If the user declines, use `README.md` and the words the code already uses most.
 
 ### 3. Official docs
 
@@ -127,7 +127,7 @@ The order is delete, move, rewrite, then name, so each phase leaves less work fo
 ### 6. Wrap up
 
 - Show a short "Project structure" section for `README.md`, and the `AGENTS.md` layout table change when there is one (or offer `update-agent-docs`). Apply them after approval in one `docs:` commit.
-- When the repo has no `CODE-STYLE.md`, offer `code-style-existing-project` to record the decisions.
+- When the repo has no `CODE-STYLE.md`, offer `code-style` to record the decisions.
 - Push and open a PR only when the user asks, through `finish-and-push`.
 
 For a big rewrite that needs tests first, hand off to `simplify-repo-with-tests`. For why a framework is used at all, hand off to `explain-my-stack`.

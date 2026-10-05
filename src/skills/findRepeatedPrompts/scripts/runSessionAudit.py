@@ -98,13 +98,9 @@ INTENT_TO_SKILL: dict[str, list[str]] = {
     "simplify_code": ["simplify-code", "make-code-readable"],
     "question_my_plan_family": [
         "question-my-plan",
-        "code-style-existing-project",
-        "code-style-new-project",
+        "code-style",
     ],
-    "code_style_docs": [
-        "code-style-existing-project",
-        "code-style-new-project",
-    ],
+    "code_style_docs": ["code-style"],
     "skill_authoring": ["install-skills", "find-repeated-prompts", "save-as-skill"],
     "session_ops": ["finish-old-sessions", "find-repeated-prompts"],
     "readme_agent_docs": ["write-readme", "update-agent-docs"],

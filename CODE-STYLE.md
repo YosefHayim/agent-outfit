@@ -1,6 +1,6 @@
 # agent-outfit code style
 
-This file is the **project dialect** (prescriptive SSOT) for maintained code in this repository. The rule-card format is owned by this package: `src/skills/codeStyleNewProject/_shared/CODE-STYLE-FORMAT.md`, with this file as the living exemplar and `src/templates/projectDocs/CODE-STYLE.md` as the greenfield scaffold. When another guide elsewhere conflicts with this one, **this file wins for agent-outfit**.
+This file is the **project dialect** (prescriptive SSOT) for maintained code in this repository. The rule-card format is owned by this package: `src/skills/codeStyle/_shared/CODE-STYLE-FORMAT.md`, with this file as the living exemplar and `src/templates/projectDocs/CODE-STYLE.md` as the greenfield scaffold. When another guide elsewhere conflicts with this one, **this file wins for agent-outfit**.
 
 The maintained tree conforms to this contract. A new rule is not complete until its verifier gates the same change when the rule is mechanically decidable.
 

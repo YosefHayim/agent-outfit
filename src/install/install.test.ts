@@ -22,7 +22,10 @@ const contextGuardRuntime = {
   "hooks/contextGuard/watchers/idleCompactWatcher.js": "export {};\n",
 };
 
-const autorunSkill = { "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n" };
+const autorunSkill = {
+  "skills/autorun/SKILL.md": "---\nname: autorun\n---\nRun @@AUTORUN_CONTROL@@ when armed.\n",
+  "skills/autorun/agents/openai.yaml": "policy:\n  allow_implicit_invocation: false\n",
+};
 
 const sessionRehomeRuntime = {
   "hooks/sessionRehome/hooks/rehomeEndedSession.js": "export {};\n",

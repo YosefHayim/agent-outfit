@@ -2,6 +2,7 @@
 name: simplify-repo-with-tests
 description: Use when you want to find over-engineering in the whole repo and prove that a simpler version works the same. Helper agents find it and show before and after, then it simplifies with tests first. Say "find over-engineering" or "fewer files, same behavior". For a small cleanup, use simplify-code.
 type: flow
+disable-model-invocation: true
 ---
 
 # Simplify repo with tests — find over-engineering, then prove same behavior
@@ -44,7 +45,7 @@ Never write run records into the repository: no `docs/` folder, no report at the
 |-----|--------|-------------------|
 | Line / structure / ceremony smell **catalogs** + local kill apply | `simplify-code` | **Load and follow**; never copy catalogs into this folder |
 | Readability rename/reorder only | `make-code-readable` | After lean if names still muddy |
-| Lock `CODE-STYLE.md` / grill `## Never` from scratch | `code-style-existing-project` | Read guide if present; do **not** rewrite style docs here |
+| Lock `CODE-STYLE.md` / grill `## Never` from scratch | `code-style` | Read guide if present; do **not** rewrite style docs here |
 | Audit “does code follow CODE-STYLE / PROJECT / AGENTS?” | style-compliance skill (other track) if present; else read those files | Reference only — not this workflow |
 | Missing **business** tests before a safe lean | `find-missing-tests` (fill only business gaps) | Call when parity tests are absent |
 | Parallel worktrees / cmux | `run-tasks-in-parallel` | setup-lanes when applying multi-feature lean |

@@ -7,7 +7,7 @@ description: Use when code is over-engineered and you want only what the job nee
 
 Make code and structure do exactly what the job needs — no more. Where `make-code-readable` makes the pipeline *readable* (naming, ordering, splitting for clarity), `simplify-code` makes it *lean*: it deletes abstractions, layers, folders, packages, **and tool-ceremony** that carry their weight in process instead of product. The two are complementary — run `make-code-readable` for comprehension, `simplify-code` for over-engineering. When both apply, simplify-code removes the extra code first, then make-code-readable names what remains.
 
-**Pairing with the grill:** `code-style-new-project` / `code-style-existing-project` **detect** these families (mandatory scan + Round 7) and lock kills into `CODE-STYLE.md` `## Never`. This skill **applies** the kill list (delete wrappers, typegen theater, orphan generated files). Prefer running after a grill when the repo has no `## Never` yet; when the guide exists, enforce it first.
+**Pairing with the grill:** `code-style` **detects** these families (mandatory scan + Round 7) and lock kills into `CODE-STYLE.md` `## Never`. This skill **applies** the kill list (delete wrappers, typegen theater, orphan generated files). Prefer running after a grill when the repo has no `## Never` yet; when the guide exists, enforce it first.
 
 Default mode is **review-first**: show the current shape, the excess, and concrete before/after examples before changing files. Do not apply edits until the user approves, unless the user says to apply immediately.
 
@@ -23,7 +23,7 @@ Everything below is those tests applied to a specific shape. More code, more ind
 
 ## Style source (read first)
 
-Before proposing anything, read the repo's own guide if present: `CODE-STYLE.md` (the SSOT) and the `## Conventions` digest in `AGENTS.md`. Their `## Never` / anti-pattern lists are the **authoritative** over-engineering targets for this repo — call those out first. You **enforce** the guide, you never edit it; if a rule is itself over-engineered, flag it and point the user to `code-style-existing-project`. If neither file exists, use the three axes below.
+Before proposing anything, read the repo's own guide if present: `CODE-STYLE.md` (the SSOT) and the `## Conventions` digest in `AGENTS.md`. Their `## Never` / anti-pattern lists are the **authoritative** over-engineering targets for this repo — call those out first. You **enforce** the guide, you never edit it; if a rule is itself over-engineered, flag it and point the user to `code-style`. If neither file exists, use the three axes below.
 
 ## Three axes of over-engineering
 

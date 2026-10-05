@@ -11,21 +11,21 @@ const ROOT = path.resolve(import.meta.dirname, "..", "..");
 const README_PATH = path.join(ROOT, "README.md");
 const SKILLS_ROOT = path.join(ROOT, "src/skills");
 
-type CommunitySkill = { author: string; url: string; upstreamName: string };
+type CommunitySkill = { author: string; url: string; upstreamNames: ReadonlyArray<string> };
 
 // Skills bundled for convenience but written by others: credited in their own table, left out of the owned one.
 const COMMUNITY_SKILLS: ReadonlyMap<string, CommunitySkill> = new Map([
   [
     "make-code-readable",
-    { author: "Mike Cann", url: "https://github.com/mikecann/agent-skills", upstreamName: "deslop" },
+    { author: "Mike Cann", url: "https://github.com/mikecann/agent-skills", upstreamNames: ["deslop"] },
   ],
   [
     "question-my-plan",
-    { author: "Matt Pocock", url: "https://github.com/mattpocock/skills", upstreamName: "grill-me" },
-  ],
-  [
-    "question-plan-with-docs",
-    { author: "Matt Pocock", url: "https://github.com/mattpocock/skills", upstreamName: "grill-with-docs" },
+    {
+      author: "Matt Pocock",
+      url: "https://github.com/mattpocock/skills",
+      upstreamNames: ["grill-me", "grill-with-docs"],
+    },
   ],
 ]);
 
@@ -81,14 +81,13 @@ const communitySection = (descriptions: ReadonlyMap<string, string>): string =>
     "| --- | --- | --- |",
     ...[...COMMUNITY_SKILLS].flatMap(([id, credit]) => {
       const description = descriptions.get(id);
+      const upstreamNames = credit.upstreamNames.map((name) => `\`${name}\``).join(", ");
       return description
-        ? [
-            `| **${id}** | ${description} | [${credit.author}](${credit.url}) (upstream name: \`${credit.upstreamName}\`) |`,
-          ]
+        ? [`| **${id}** | ${description} | [${credit.author}](${credit.url}) (upstream: ${upstreamNames}) |`]
         : [];
     }),
     "",
-    "> `code-style-new-project` and `code-style-existing-project` are agent-outfit-original skills that build on Matt Pocock's grilling pattern — they stay in the owned catalog above.",
+    "> `code-style` is an agent-outfit-original skill that builds on Matt Pocock's grilling pattern — it stays in the owned catalog above.",
   ].join("\n");
 
 const defaultText = (value: unknown): string => (value === undefined ? "absent" : `\`${JSON.stringify(value)}\``);

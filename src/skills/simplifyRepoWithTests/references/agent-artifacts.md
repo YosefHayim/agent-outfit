@@ -52,7 +52,7 @@ REPORT="$RUN_DIR/report.md"
 | find-missing-tests | Features, Report | none |
 | ship-missing-tests | Ship (reads the newest find-missing-tests `report.md`) | none |
 | simplify-repo-with-tests | Features, Report | none |
-| code-style-existing-project | Findings | none |
+| code-style | Findings | none |
 | clean-repo-by-feature | Matrix, State, Audit, Health | planpage JSON |
 | restructure-repo | Plan (checkbox lines), Report | none |
 | improve-ux | State, Matrix, Audit, Taste | `mocks/` |

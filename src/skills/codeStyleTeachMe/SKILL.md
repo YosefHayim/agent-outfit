@@ -13,7 +13,7 @@ the file to imitate. I get better; the code stays on-style.
 **Read first (never coach from memory):** the cards in `CODE-STYLE.md` (each rule's `verify`
 command + exemplars), the rest of `CODE-STYLE.md`, and `PROJECT.md` / `CONTEXT.md` (so "where does
 this go" comes from *my* docs, not generic advice). No `CODE-STYLE.md` in the repo? Say so and offer to run
-`code-style-new-project` / `code-style-existing-project` first.
+`code-style` first.
 
 **Only grill me on what matters.** Each rule's `verify` field tells you what to skip and what to teach:
 

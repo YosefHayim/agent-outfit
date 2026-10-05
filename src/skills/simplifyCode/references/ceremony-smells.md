@@ -4,7 +4,7 @@ Third axis of over-engineering (with line-smells + structure-smells). This is **
 
 **The tool-first test:** *If the framework, SDK, package manager, or cloud CLI already does the job, do not write a house script, typegen, wrapper, or parallel type system. Call the tool. Custom code earns a place only when it adds product-specific glue the tool cannot express.*
 
-Grill (`code-style-new-project` / `code-style-existing-project`) **detects** these families on every run. `simplify-code` **kills** them after approval. Generated artifacts die with the custom script that produced them.
+Grill (`code-style`) **detects** these families on every run. `simplify-code` **kills** them after approval. Generated artifacts die with the custom script that produced them.
 
 ---
 

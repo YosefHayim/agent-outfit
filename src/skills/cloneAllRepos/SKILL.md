@@ -2,6 +2,7 @@
 name: clone-all-repos
 description: Use when you want all your GitHub repos on this computer. It clones or updates every repo into your Code folder, can run pnpm install in each one, and reports what changed. Say "clone all my repos", "pull all repos", or "sync my Code folder".
 type: flow
+disable-model-invocation: true
 ---
 
 # Clone all repos

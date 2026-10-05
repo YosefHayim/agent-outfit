@@ -1,13 +1,13 @@
 ---
 name: explain-my-stack
-description: Use when you want to understand why your project uses each tool — language, framework, and services. For each one it explains the trade-offs simply, lets you choose, and explains how it works, all in chat. Say "why this stack" or "why TypeScript and not Python". For code style, use code-style-new-project.
+description: Use when you want to understand why your project uses each tool — language, framework, and services. For each one it explains the trade-offs simply, lets you choose, and explains how it works, all in chat. Say "why this stack" or "why TypeScript and not Python". For code style, use code-style.
 ---
 
 <what-to-do>
 
 Interview me about **why this project is built on the technologies it is** — language, runtime,
 framework, meta-framework, and the load-bearing services/vendors — in one TUI question card, until I
-could **explain each choice to someone else**. This is a different axis from `code-style-new-project`
+could **explain each choice to someone else**. This is a different axis from `code-style`
 (which is *how we write code here*); this is ***why this stack, and how it works***.
 
 **Dedup within the chat.** Whatever decision or glossary term you already explained earlier in this
@@ -51,7 +51,7 @@ Walk these in dependency order inside **one** card (language first, then runtime
    provider…). Why this vendor, what it's traded against, and the lock-in cost.
 
 Only the **load-bearing** decisions — the ones a new contributor would ask "why did they pick that?".
-Don't grill me on every transitive dependency; a minor lib is a `code-style-new-project` "how to use it"
+Don't grill me on every transitive dependency; a minor lib is a `code-style` "how to use it"
 concern, not a stack decision.
 
 ## The loop — per decision

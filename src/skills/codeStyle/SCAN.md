@@ -7,8 +7,9 @@ Goal: surface the **most-repeated** patterns in an existing codebase as evidence
 From this skill directory:
 
 ```bash
-node scripts/inventory-repository.mjs --root <repo> --out /tmp/style-inventory.json
-node scripts/scan-style-compliance.mjs --root <repo> --out /tmp/style-findings.json
+SCAN_DIR=$(mktemp -d)
+node scripts/inventory-repository.mjs --root <repo> --out "$SCAN_DIR/style-inventory.json"
+node scripts/scan-style-compliance.mjs --root <repo> --out "$SCAN_DIR/style-findings.json"
 ```
 
 Feed counts and top offenders into the AI-slop and ceremony angles below so sub-agents start with measured prevalence, not a cold tree walk. Finding IDs: [references/finding-taxonomy.md](references/finding-taxonomy.md).
@@ -45,4 +46,4 @@ Spawn a small set of read-only sub-agents in parallel (prefer the `Explore` agen
 
 ## Bring back
 
-Merge into one compact "current reality" brief: for each dimension, the dominant pattern + a real *before* candidate. Feed that into the grill — "the code does X here; keep it, or is this the slop to kill?" Do not treat the dominant pattern as correct by default; it's just the starting evidence. Include the **directory tree + import edges** (for §⑤), the **de-facto extension path** (the ordered seams recent units touched, for the Step 6 golden path), the **AI-slop fingerprint tally** (each tell + count + a real offender, to drive the `Never`-list grill), the **ceremony kill list** (C1–C8 hits with replace-with tool + orphans — drives Round 7 keep/kill and the plan's cleanup section), and each dimension's **verbatim incumbent snippet** (variant A of its pick-the-code choice — see [STYLE-CATALOG.md](../code-style-new-project/_shared/STYLE-CATALOG.md)).
+Merge into one compact "current reality" brief: for each dimension, the dominant pattern + a real *before* candidate. Feed that into the grill — "the code does X here; keep it, or is this the slop to kill?" Do not treat the dominant pattern as correct by default; it's just the starting evidence. Include the **directory tree + import edges** (for §⑤), the **de-facto extension path** (the ordered seams recent units touched, for the Step 6 golden path), the **AI-slop fingerprint tally** (each tell + count + a real offender, to drive the `Never`-list grill), the **ceremony kill list** (C1–C8 hits with replace-with tool + orphans — drives Round 7 keep/kill and the plan's cleanup section), and each dimension's **verbatim incumbent snippet** (variant A of its pick-the-code choice — see [STYLE-CATALOG.md](_shared/STYLE-CATALOG.md)).

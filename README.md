@@ -115,10 +115,9 @@ Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each i
 | **write-readme** | Write or fix the README and other start-here docs. Reads the repo first, then asks you questions one by one. | 🟢 any OS |
 | **update-agent-docs** | Create or update agent instruction files (AGENTS.md, CLAUDE.md, GEMINI.md, Cursor rules, and more) based on each agent's official docs. | 🟢 any OS |
 | **simplify-code** | Remove extra code — wrappers, layers, folders, generic names, and scripts the job does not need. | 🟢 any OS |
-| **code-style-new-project** | For a new project — ask you questions about code style, folder structure, and CLI, then write CODE-STYLE.md, a formatter config, and the project docs. | 🟢 any OS |
+| **code-style** | Ask you questions about code style, folder structure, and CLI, reading the real code when there is some, then write CODE-STYLE.md, a formatter config, and the project docs. Can also only check code against the rules. | 🟢 any OS |
 | **code-style-teach-me** | While you build, stop at each real choice, show two options, and explain the rule so you learn your own architecture. | 🟢 any OS |
 | **code-style-review** | Check a big change (branch or PR) against the style rules and get a short report, so you do not need to read every file. | 🟢 any OS |
-| **code-style-existing-project** | For a project that already has code — read the real code, ask you questions, then write or update CODE-STYLE.md and the formatter config. Can also only check code against the rules. | 🟢 any OS |
 | **explain-my-stack** | Understand why the project uses each technology (language, framework, services), with honest trade-offs and a plain glossary, all in chat. | 🟢 any OS |
 | **plan-page** | Show a plan, approval step, or report as an interactive HTML page (open-source planpage package) where you can approve or change choices. | 🟢 any OS |
 | **website-speed-ci** | Add website speed checks (Lighthouse CI, Core Web Vitals, CrUX) to CI so a slow change fails the PR. | 🟢 any OS |
@@ -164,11 +163,10 @@ These skills ship with agent-outfit for convenience — installable the same way
 
 | Skill | What it does | By |
 | --- | --- | --- |
-| **make-code-readable** | Use when you want code that is easier to read — clearer names, order, files, and functions. It shows before and after, and changes code only after you approve. Say "make this readable", "rename for clarity", or "clean this up". To remove extra layers, use simplify-code. For a whole repo, use restructure-repo. | [Mike Cann](https://github.com/mikecann/agent-skills) (upstream name: `deslop`) |
-| **question-my-plan** | Use when you want the agent to ask you hard questions about your plan until you both understand it the same way. Say "grill me", "question my plan", or "stress-test this plan". | [Matt Pocock](https://github.com/mattpocock/skills) (upstream name: `grill-me`) |
-| **question-plan-with-docs** | Use when you want your plan checked against the project docs and past decisions. It asks hard questions, makes the words clear, and updates the project docs as you decide. Say "grill me with docs" or "check my plan against the docs". | [Matt Pocock](https://github.com/mattpocock/skills) (upstream name: `grill-with-docs`) |
+| **make-code-readable** | Use when you want code that is easier to read — clearer names, order, files, and functions. It shows before and after, and changes code only after you approve. Say "make this readable", "rename for clarity", or "clean this up". To remove extra layers, use simplify-code. For a whole repo, use restructure-repo. | [Mike Cann](https://github.com/mikecann/agent-skills) (upstream: `deslop`) |
+| **question-my-plan** | Use when you want the agent to ask you hard questions about your plan until you both understand it the same way. When the repo has PROJECT.md, CONTEXT.md, or LANGUAGE.md, or you ask for it, it also checks the plan against them and updates them as you decide. Say "grill me", "question my plan", or "grill me with docs". | [Matt Pocock](https://github.com/mattpocock/skills) (upstream: `grill-me`, `grill-with-docs`) |
 
-> `code-style-new-project` and `code-style-existing-project` are agent-outfit-original skills that build on Matt Pocock's grilling pattern — they stay in the owned catalog above.
+> `code-style` is an agent-outfit-original skill that builds on Matt Pocock's grilling pattern — it stays in the owned catalog above.
 <!-- AUTO:SKILLS:END -->
 
 ## Settings
