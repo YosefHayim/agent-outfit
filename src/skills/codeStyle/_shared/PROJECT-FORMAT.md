@@ -75,7 +75,7 @@ approval.
 
 ## What to ask
 
-`question-my-plan` owns PROJECT.md for every repo — new or existing. Fire every
+`question-my-plan` and `code-style` both ask these when PROJECT.md is missing or thin. Fire every
 unanswered item in **one** `AskUserQuestion`, each with a recommended default
 pulled from the repo, `README`, or the conversation (same as any grill). Skip a
 question only when the docs already answer it unambiguously.

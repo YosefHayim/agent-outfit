@@ -107,7 +107,7 @@ Do **not** emit any of these (historical drift; convert on sight):
 
 | Skill | Role |
 | --- | --- |
-| `code-style` | Ensure the file exists; create from this format when missing; report structure drift (do not invent terms without evidence) |
+| `code-style` | Create from this format when missing and the code or docs give a real domain term; report structure drift (do not invent terms without evidence) |
 | `question-my-plan` / domain-modeling moments | **Owner of term content** — when a term is resolved, update `LANGUAGE.md` inline using this format |
 | `explain-my-stack` | Leave alone unless a genuine *domain* term surfaces (tech teaching stays in chat) |
 

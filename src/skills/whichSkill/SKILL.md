@@ -35,7 +35,7 @@ The wiring lives in voxkey; this skill defines **what** the refined string must 
 ## Safety
 
 - Do not invent skills that are not installed or cataloged.
-- Manual-only skills (`disable-model-invocation: true` in their SKILL.md) start only when the user types `/<name>`: never run one in mode B; give the user the command to type instead.
+- Manual-only skills (`disable-model-invocation: true` in their SKILL.md) start only when the user types `/<name>` (Claude Code) or `$<name>` (Codex): never run one in mode B; give the user the command to type instead.
 - Do not skip safety of the target skill (no silent main commits, no remote delete, no deploy unless authorized).
 - Prefer the **smallest** skill that fits.
 - One **primary** skill; others are supporting only.

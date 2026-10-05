@@ -23,8 +23,9 @@ When I already have `CODE-STYLE.md` / structure docs and want confirmation that 
 2. Run mechanical inventory + scan from this skill directory (paths relative to the installed skill root):
 
    ```bash
-   node scripts/inventory-repository.mjs --root <repo> --out /tmp/style-inventory.json
-   node scripts/scan-style-compliance.mjs --root <repo> --out /tmp/style-findings.json
+   SCAN_DIR=$(mktemp -d)
+   node scripts/inventory-repository.mjs --root <repo> --out "$SCAN_DIR/style-inventory.json"
+   node scripts/scan-style-compliance.mjs --root <repo> --out "$SCAN_DIR/style-findings.json"
    ```
 
 3. Map apps, packages, feature slices, and cross-slice imports from the inventory.

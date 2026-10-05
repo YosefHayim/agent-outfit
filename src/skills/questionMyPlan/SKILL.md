@@ -91,7 +91,7 @@ Matt Pocock's upstream domain-modeling skill keeps this anatomy inside `CONTEXT.
 
 Purpose, goals, and product direction do NOT belong in `LANGUAGE.md` (glossary), `CONTEXT.md` (orientation), or PR descriptions (individual decisions) — they live in `PROJECT.md`. When the project's "why" or "where it's going" comes up — or when you notice a `CONTEXT.md` that has bloated into problem statements and roadmaps — capture/extract it into `PROJECT.md` using the format in [PROJECT-FORMAT.md](../code-style/_shared/PROJECT-FORMAT.md).
 
-This skill is the **single owner of PROJECT.md** — for any repo, new or existing. When purpose is thin or absent, fire the seven-part **"What to ask"** checklist in [PROJECT-FORMAT.md](../code-style/_shared/PROJECT-FORMAT.md) as **one** `AskUserQuestion`, each with a recommended default, to produce a professional PROJECT.md. Other skills (`code-style`) don't write their own purpose questions — they offer to run this flow and hand off here.
+This skill keeps PROJECT.md current — for any repo, new or existing. When purpose is thin or absent, fire the seven-part **"What to ask"** checklist in [PROJECT-FORMAT.md](../code-style/_shared/PROJECT-FORMAT.md) as **one** `AskUserQuestion`, each with a recommended default, to produce a professional PROJECT.md. `code-style` asks the same checklist when it sets up a project and writes PROJECT.md only after its plan is approved.
 
 ### Put decisions in the PR description
 

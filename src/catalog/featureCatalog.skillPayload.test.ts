@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
+import { parse } from "yaml";
 
 import { featureCatalog, skillsForFeatures } from "./featureCatalog.js";
 
@@ -100,18 +101,34 @@ describe("shipped skills", () => {
   });
 });
 
+// Skills with side effects the user starts by name; the model never runs them on its own.
+const manualOnlySkillIds = [
+  "autorun",
+  "benchmark-agents",
+  "clean-repo-by-feature",
+  "clone-all-repos",
+  "finish-old-sessions",
+  "install-skills",
+  "make-promo-video",
+  "ship-missing-tests",
+  "simplify-repo-with-tests",
+  "write-blog-post",
+];
+
 describe("manual-only skills", () => {
-  it.each(installedSkills)("$skillId is hidden from the model in both Claude Code and Codex, or in neither", ({
+  it.each(installedSkills)("$skillId is hidden from the model in Claude Code and Codex only when it is manual-only", ({
+    skillId,
     sourceDirectory,
     shippedPaths,
   }) => {
     const { frontmatter } = parseFrontmatter(path.join(skillRoot, sourceDirectory, "SKILL.md"));
     const codexPolicy = path.join(skillRoot, sourceDirectory, "agents", "openai.yaml");
-    const hiddenFromClaude = frontmatter?.["disable-model-invocation"] === "true";
-    const hiddenFromCodex =
-      existsSync(codexPolicy) && readFileSync(codexPolicy, "utf8").includes("allow_implicit_invocation: false");
+    const codexPolicyText = existsSync(codexPolicy) ? readFileSync(codexPolicy, "utf8") : "";
+    const codexPolicyDocument = parse(codexPolicyText);
+    const isManualOnly = manualOnlySkillIds.includes(skillId);
 
-    expect(hiddenFromCodex).toBe(hiddenFromClaude);
+    expect(frontmatter?.["disable-model-invocation"] === "true").toBe(isManualOnly);
+    expect(codexPolicyDocument?.policy?.allow_implicit_invocation === false).toBe(isManualOnly);
     expect(shippedPaths.includes("agents")).toBe(existsSync(codexPolicy));
   });
 });

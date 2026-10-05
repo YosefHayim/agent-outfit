@@ -35,7 +35,7 @@ These gate which [STYLE-CATALOG.md](_shared/STYLE-CATALOG.md) sections apply and
 
 Read whatever exists first so you grill about CODE, not product. Then **ensure the three structure docs** — gather the missing ones' content, validate the present ones against their role, and **never restructure a doc that already exists** (report drift, don't rewrite it). Defer file writes to Step 7 so the plan can show them.
 
-- **PROJECT.md** — purpose & direction. Missing/thin → gather via `question-my-plan`' PROJECT.md flow ([PROJECT-FORMAT.md](_shared/PROJECT-FORMAT.md)). Title: `# PROJECT.md — {Project}`. `question-my-plan` owns PROJECT.md.
+- **PROJECT.md** — purpose & direction. Missing/thin → ask the seven-part **What to ask** checklist in [PROJECT-FORMAT.md](_shared/PROJECT-FORMAT.md) (the same questions `question-my-plan` asks; don't write your own). Title: `# PROJECT.md — {Project}`.
 - **CONTEXT.md** — orientation only. Validate against [CONTEXT-FORMAT.md](_shared/CONTEXT-FORMAT.md) (exemplar: `ai-browser-bridge/CONTEXT.md`). Title: `# CONTEXT.md — {Project}`. Flag `## Language` / glossary `_Avoid_:` blocks as **drift** → migrate to `LANGUAGE.md`.
 - **LANGUAGE.md** — glossary / human↔agent bridge: **names only**. Validate against [LANGUAGE-FORMAT.md](_shared/LANGUAGE-FORMAT.md) and the code's real vocabulary (exemplar: `ai-browser-bridge/LANGUAGE.md`). Flag tables / bullet glossaries / colon-on-bold as **drift**.
 

@@ -68,6 +68,8 @@ layer(NodeContext.layer)("update", (it) => {
       expect(updateExecution._tag).toBe("updated");
       for (const removed of [
         ".claude/skills/autorun/SKILL.md",
+        ".claude/skills/autorun/agents/openai.yaml",
+        ".agents/skills/autorun/agents/openai.yaml",
         ".cursor/rules/autorun.mdc",
         ".aider.conf.yml",
         ".continue/config.json",

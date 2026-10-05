@@ -53,7 +53,7 @@ The answer gates:
 
 A project can't have a code style before it has a spine. Before grilling code, **ensure the three structure docs** — gather the missing ones' content now, validate the present ones, and **never restructure a doc that already exists** (report drift, don't rewrite it). Defer the actual file writes to Step 7 so the plan can show them.
 
-- **PROJECT.md** — purpose & direction. Missing/thin → gather via `question-my-plan`' PROJECT.md flow (seven-part checklist in [PROJECT-FORMAT.md](_shared/PROJECT-FORMAT.md)). Title: `# PROJECT.md — {Project}`. Don't write your own purpose questions — `question-my-plan` owns PROJECT.md.
+- **PROJECT.md** — purpose & direction. Missing/thin → ask the seven-part **What to ask** checklist in [PROJECT-FORMAT.md](_shared/PROJECT-FORMAT.md) (the same questions `question-my-plan` asks; don't write your own). Title: `# PROJECT.md — {Project}`.
 - **CONTEXT.md** — orientation only (what it is, actors, shape — NOT a glossary). Create/validate against [CONTEXT-FORMAT.md](_shared/CONTEXT-FORMAT.md) (exemplar: `ai-browser-bridge/CONTEXT.md`). Title: `# CONTEXT.md — {Project}`. No `## Language` / `_Avoid_:` blocks.
 - **LANGUAGE.md** — glossary / human↔agent bridge: **names only**. Create/validate against [LANGUAGE-FORMAT.md](_shared/LANGUAGE-FORMAT.md) (exemplar: `ai-browser-bridge/LANGUAGE.md` — bold term on its own line, definition, `_Avoid_:`). Never tables, bullet glossaries, or colon-on-bold.
 

@@ -76,6 +76,8 @@ layer(NodeContext.layer)("uninstall", (it) => {
           .filter((packagePath) => packagePath.startsWith("hooks/"))
           .map((packagePath) => `.claude/agent-outfit/${packagePath}`),
         ".claude/skills/autorun/SKILL.md",
+        ".claude/skills/autorun/agents/openai.yaml",
+        ".agents/skills/autorun/agents/openai.yaml",
         ".cursor/rules/autorun.mdc",
       ];
       yield* writeFiles(root, originals);

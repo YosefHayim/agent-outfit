@@ -7,8 +7,9 @@ Goal: surface the **most-repeated** patterns in an existing codebase as evidence
 From this skill directory:
 
 ```bash
-node scripts/inventory-repository.mjs --root <repo> --out /tmp/style-inventory.json
-node scripts/scan-style-compliance.mjs --root <repo> --out /tmp/style-findings.json
+SCAN_DIR=$(mktemp -d)
+node scripts/inventory-repository.mjs --root <repo> --out "$SCAN_DIR/style-inventory.json"
+node scripts/scan-style-compliance.mjs --root <repo> --out "$SCAN_DIR/style-findings.json"
 ```
 
 Feed counts and top offenders into the AI-slop and ceremony angles below so sub-agents start with measured prevalence, not a cold tree walk. Finding IDs: [references/finding-taxonomy.md](references/finding-taxonomy.md).
