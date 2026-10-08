@@ -106,3 +106,8 @@ pnpm --dir src/skills/imageToCode/scripts typecheck
 - Issues live on GitHub (`YosefHayim/agent-outfit`); use the `gh` CLI.
 - Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
 - Before changing image-to-code, read `src/skills/imageToCode/CONTEXT.md` and `TECH-GLOSSARY.md`.
+
+## Local CI
+
+Run `act workflow_dispatch -W .github/workflows/ci.yml` before opening a PR.
+The root `.actrc` selects the local Docker runner and keeps the pnpm store outside the workspace.
