@@ -265,7 +265,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     title: "Context guard",
     summary:
       "Guard long sessions near their context cap and optionally compact idle Claude Code, Codex, or Grok sessions in their exact Ghostty terminal.",
-    selectedByDefault: true,
+    selectedByDefault: false,
     dependencies: [],
     platform: "any",
     runtime: {
