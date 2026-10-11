@@ -107,7 +107,7 @@ For each task:
    - **sonnet** (default): bug fixes, tests, dedup, small features.
    - **opus**: design, unclear bugs, cross-cutting refactors, or a lane that failed on sonnet.
    - Split a lane that would need more than about 100 tool calls. Every call re-reads the whole lane context.
-   - Re-run a lane one model up when its checks stay red or it reports a gap it did not fix.
+   - Re-run a lane one model up when its checks stay red or it reports a gap it did not fix. An opus lane that still fails gets split or a sharper brief.
 
 #### 3. Per-agent SDLC mandate (every lane)
 

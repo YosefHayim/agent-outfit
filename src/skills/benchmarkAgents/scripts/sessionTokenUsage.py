@@ -19,12 +19,17 @@ from pathlib import Path
 
 # USD per million tokens (input, 5m cache write, 1h cache write, cache read, output),
 # from platform.claude.com/docs/en/about-claude/pricing on 2026-10-11. The longest matching prefix wins.
+# Fast mode bills twice these prices.
 PRICES = {
     "claude-fable-5-1": (10, 12.5, 20, 0.25, 50),
     "claude-fable-5": (10, 12.5, 20, 1, 50),
     "claude-opus-5-5": (4, 5, 8, 0.20, 20),
     "claude-opus-5": (5, 6.25, 10, 0.50, 25),
-    "claude-opus-4": (5, 6.25, 10, 0.50, 25),
+    "claude-opus-4-8": (5, 6.25, 10, 0.50, 25),
+    "claude-opus-4-7": (5, 6.25, 10, 0.50, 25),
+    "claude-opus-4-6": (5, 6.25, 10, 0.50, 25),
+    "claude-opus-4-5": (5, 6.25, 10, 0.50, 25),
+    "claude-opus-4": (15, 18.75, 30, 1.50, 75),
     "claude-sonnet-5-5": (2, 2.5, 4, 0.10, 10),
     "claude-sonnet-5": (2, 2.5, 4, 0.20, 10),
     "claude-sonnet-4": (3, 3.75, 6, 0.30, 15),
@@ -33,6 +38,7 @@ PRICES = {
 }
 HAIKU_LONG_PROMPT_PRICES = (0.50, 0.625, 1, 0.05, 2.50)
 HAIKU_LONG_PROMPT_TOKENS = 100_000
+FAST_MODE_MULTIPLIER = 2
 CHARS_PER_TOKEN = 3.6
 LARGE_CONTEXT_TOKENS = 150_000
 FILE_DUMP_COMMANDS = ("cat ", "sed -n", "head ", "tail ")
@@ -71,7 +77,8 @@ def callCost(model: str, usage: dict) -> float | None:
     if prices is None:
         return None
     tokenCounts = (inputTokens, writtenFiveMinutes, writtenOneHour, readTokens, usage.get("output_tokens") or 0)
-    return sum(count * price for count, price in zip(tokenCounts, prices)) / 1e6
+    speedMultiplier = FAST_MODE_MULTIPLIER if usage.get("speed") == "fast" else 1
+    return speedMultiplier * sum(count * price for count, price in zip(tokenCounts, prices)) / 1e6
 
 
 def isHumanPrompt(entry: dict) -> bool:
