@@ -760,7 +760,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     sourceDirectory: "benchmarkAgents",
     title: "Benchmark agents",
     summary: "Run the same tasks with different agents, skills, or tools and compare tokens, time, cost, and success.",
-    shippedPaths: ["SKILL.md", "REFERENCE.md", "agents"],
+    shippedPaths: ["SKILL.md", "REFERENCE.md", "agents", "scripts"],
   }),
   skillFeature({
     id: "release-mobile-app",

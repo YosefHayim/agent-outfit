@@ -249,7 +249,7 @@ describe("featureCatalog", () => {
       ["add-skill", ["SKILL.md", "REFERENCE.md"]],
       ["improve-skill", ["SKILL.md"]],
       ["which-skill", ["SKILL.md", "REFERENCE.md"]],
-      ["benchmark-agents", ["SKILL.md", "REFERENCE.md", "agents"]],
+      ["benchmark-agents", ["SKILL.md", "REFERENCE.md", "agents", "scripts"]],
       ["release-mobile-app", ["SKILL.md"]],
       ["save-as-skill", ["SKILL.md"]],
       ["finish-old-sessions", ["SKILL.md", "agents"]],
