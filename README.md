@@ -10,10 +10,10 @@ It installs into global `~/.claude` or project-local `.claude/`, keeps Schema-va
 
 ## Quick start
 
-Install the safe default context guard globally:
+Install the safe default scratch folder guard globally:
 
 ```bash
-npx agent-outfit install context-guard
+npx agent-outfit install
 ```
 
 Then restart Claude Code so hooks and skills load in the next session.
@@ -99,7 +99,7 @@ Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each i
 
 ## What it installs
 
-`context-guard` and `scratch-folder-guard` are the safe defaults: `scratch-folder-guard` keeps agents from writing into `/tmp`, `/private/tmp`, or the macOS temporary folder and clears each ended Claude Code session's scratch folder. `duplicate-code-guard` blocks duplicate TypeScript functions and type shapes at write time where the agent platform supports it. `autorun` is a macOS-specific convenience driven in-session by `/autorun`. The remaining entries are pure skills with no hooks — no configuration needed, just ask your agent to do the thing (e.g. "convert this PNG to code"). Skills authored by others are bundled too, but credited separately under [Recommended community skills](#recommended-community-skills).
+`scratch-folder-guard` is the safe default: it keeps agents from writing into `/tmp`, `/private/tmp`, or the macOS temporary folder and clears each ended Claude Code session's scratch folder. The other hooks are opt-in. `context-guard` warns and then blocks edits as a session nears its context cap, and can compact idle sessions. `duplicate-code-guard` blocks duplicate TypeScript functions and type shapes at write time where the agent platform supports it. `autorun` is a macOS-specific convenience driven in-session by `/autorun`. The remaining entries are pure skills with no hooks — no configuration needed, just ask your agent to do the thing (e.g. "convert this PNG to code"). Skills authored by others are bundled too, but credited separately under [Recommended community skills](#recommended-community-skills).
 
 <!-- AUTO:FEATURES:START -->
 | Feature | What it does | Runs on |

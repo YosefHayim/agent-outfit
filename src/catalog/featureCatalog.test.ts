@@ -181,7 +181,7 @@ describe("featureCatalog", () => {
   });
 
   it("derives defaults, installed skills, and exact shipped allowlists", () => {
-    expect(defaultFeatureIds).toEqual(["context-guard", "scratch-folder-guard"]);
+    expect(defaultFeatureIds).toEqual(["scratch-folder-guard"]);
     expect(skillsForFeatures(["context-guard", "duplicate-code-guard"])).toEqual([]);
     expect(
       skillsForFeatures(featureCatalog.map((feature) => feature.id)).map((skill) => [skill.id, skill.shippedPaths]),
