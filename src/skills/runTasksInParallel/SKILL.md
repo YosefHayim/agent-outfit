@@ -102,7 +102,12 @@ For each task:
    - Branch: `feat|fix|refactor|chore|docs/<issue>-<short-slug>`
    - Dir: `.worktrees/<type>-<issue>-<slug>` (slashes → dashes). Ensure `.worktrees/` is gitignored when the repo agrees.
 3. Write **`<worktree>/LANE-BRIEF.md`** with the full SDLC mandate (template in REFERENCE). Include path globs, acceptance, unit + e2e requirement, UI QA when product is UI, “no main commits”, merge policy.
-4. Spawn one agent with `cwd` = worktree (or cmux workspace / brief-only).
+4. Spawn one agent with `cwd` = worktree (or cmux workspace / brief-only). Pick its model and record it on the Board. Pass it as the Agent tool's `model`, or `--model` for a CLI lane:
+   - **haiku**: mechanical edits with an exact spec and a check that proves them (rename, move, config value, regenerate).
+   - **sonnet** (default): bug fixes, tests, dedup, small features.
+   - **opus**: design, unclear bugs, cross-cutting refactors, or a lane that failed on sonnet.
+   - Split a lane that would need more than about 100 tool calls. Every call re-reads the whole lane context.
+   - Re-run a lane one model up when its checks stay red or it reports a gap it did not fix.
 
 #### 3. Per-agent SDLC mandate (every lane)
 
@@ -121,7 +126,7 @@ Each agent must complete **only its task**:
 
 #### 4. Orchestrator after lanes
 
-1. Refresh the Board section: task → issue → worktree → branch → PR → unit → e2e → QA → confidence → merge.
+1. Refresh the Board section: task → issue → worktree → branch → model → PR → unit → e2e → QA → confidence → merge.
 2. If merge authorized: order merges (contracts → domain → UI → e2e-heavy last); `gh pr merge`; rebase remaining open PRs on conflicts; never force-push default.
 3. Optional reinstall/smoke on default tip when user asked full ship (see REFERENCE).
 4. Done receipt (Verification section). Unfinished lanes stay open.

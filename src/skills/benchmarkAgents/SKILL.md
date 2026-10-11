@@ -102,6 +102,18 @@ When the user wants overnight improvement on a **verifiable metric** (coverage %
 
 If a condition is “skill v1 vs skill v2”, hand losing/winning diffs to `improve-skill` / `save-as-skill` with the bench report as evidence—not stars.
 
+### 8. Confirm a change on real sessions
+
+A suite shows a change on fixed tasks. To confirm it on real work, compare Claude Code usage before and after the change with `scripts/sessionTokenUsage.py`. It only reads `~/.claude/projects`. These runs cover all repos, so use `RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/global/benchmark-agents"` for the run folder.
+
+```bash
+python3 scripts/sessionTokenUsage.py --since <start> --until <change date> --out "$RUN_DIR/usage.json"
+# a week or more after the change, in a new run folder:
+python3 scripts/sessionTokenUsage.py --since <change date> --out "$RUN_DIR/usage.json" --compare "<baseline run folder>/usage.json"
+```
+
+Judge per-prompt and per-call numbers (`costPerPromptUsd`, `apiCallsPerPrompt`, `avgContextTokens`, `shareSingleToolCalls`), not totals, because the amount of work changes from week to week. Costs use API list prices, also on a subscription. Name the change and its date in the report.
+
 ## Verification
 
 Publish:
