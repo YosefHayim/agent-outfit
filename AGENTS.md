@@ -40,7 +40,7 @@ Public feature and installed-skill IDs are decoded catalog data and can differ f
 | `src/catalog/` | Decoded feature and agent catalogs |
 | `src/config/` | Schema-owned managed configuration (`configSchema.ts`), config.json bytes and install plan (`configFile.ts`), one scope's config read and save (`scopeConfig.ts`), host scan (`hostScan.ts`), and the list of every environment variable (`environmentVariables.ts`) |
 | `src/install/` | Install planning, package preparation, transactional apply, receipts, and agent formats |
-| `src/hooks/lib/` | Dependency-free code shared by every installed hook: `hookConfig` (config.json and install root), `hookOutput` (hook decisions on stdout), `processAlive` (is a pid running), `transcriptReader` (agent transcript lines) |
+| `src/hooks/lib/` | Dependency-free code shared by every installed hook: `hookConfig` (config.json and install root), `hookOutput` (hook decisions on stdout), `processAlive` (is a pid running), `transcriptReader` (agent transcript lines), `claudeLiveSessions` (which Claude Code sessions are running), `claudeScratchRoots` (where Claude Code keeps session scratch folders) |
 | `src/skills/<sourceDirectory>/` | Authored skill payload copied verbatim into an installed skill directory (`SKILL.md`, `reference/`, `scripts/`, `templates/`) |
 | `src/hooks/<sourceDirectory>/` | Feature-local dependency-free hook code compiled and installed to `.claude/agent-outfit/hooks/`: `hooks/` (registered agent hooks), `watchers/` (background processes a hook starts), `command/` (scripts the CLI or a skill runs), `lib/` |
 | `src/doctor/` | Structured installation health checks behind `agent-outfit doctor` |

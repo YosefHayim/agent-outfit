@@ -4,7 +4,12 @@ import path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { decodeTranscriptLine, readTranscriptLines, readTranscriptTail } from "./transcriptReader.js";
+import {
+  decodeTranscriptLine,
+  readTranscriptHead,
+  readTranscriptLines,
+  readTranscriptTail,
+} from "./transcriptReader.js";
 
 describe("decodeTranscriptLine", () => {
   it("reads a Claude Code entry's turn state and token usage from its message", () => {
@@ -57,6 +62,22 @@ describe("reading transcript files", () => {
 
   it("reads every line of a transcript", () => {
     expect(readTranscriptLines(transcript)).toHaveLength(4_002);
+  });
+
+  it("reads only the head of a long transcript, first line included", () => {
+    const head = readTranscriptHead(transcript);
+    expect(head.length).toBeLessThan(4_002);
+    expect(head.at(0)).toContain('"index":0');
+  });
+
+  it("reads a line that runs past the head whole", () => {
+    const longTranscript = path.join(folder, "long-first-line.jsonl");
+    const threadHeader = JSON.stringify({ type: "session_meta", instructions: "x".repeat(200_000), source: "cli" });
+    writeFileSync(longTranscript, `${threadHeader}\n${JSON.stringify({ type: "user", index: 1 })}\n`);
+
+    const head = readTranscriptHead(longTranscript);
+
+    expect(head.at(0)).toBe(threadHeader);
   });
 
   it("reads only the tail of a long transcript, newest line included", () => {

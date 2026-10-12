@@ -23,7 +23,7 @@ Application code is grouped by capability, not by technical layer:
 - `src/catalog/` — feature and agent catalogs (decoded data is the SSOT)
 - `src/config/` — managed configuration schema (`configSchema`), config.json bytes and install plan (`configFile`), one scope's config read and save (`scopeConfig`), host scan (`hostScan`), and the list of every environment variable
 - `src/install/` — install plans, package preparation, receipts, transactional apply, lifecycle
-- `src/hooks/lib/` — dependency-free code shared by every hook feature: `hookConfig` (config.json and install root), `hookOutput` (hook decisions on stdout), `processAlive` (is a pid running), `transcriptReader` (agent transcript lines)
+- `src/hooks/lib/` — dependency-free code shared by every hook feature: `hookConfig` (config.json and install root), `hookOutput` (hook decisions on stdout), `processAlive` (is a pid running), `transcriptReader` (agent transcript lines), `claudeLiveSessions` (which Claude Code sessions are running), `claudeScratchRoots` (where Claude Code keeps session scratch folders)
 - `src/skills/<sourceDirectory>/` — authored skill payload only (camelCase directories), shipped verbatim
 - `src/hooks/<sourceDirectory>/` — feature-local executable hook code: `hooks/` (registered agent hooks), `watchers/` (background processes a hook starts), `command/` (scripts the CLI or a skill runs), `lib/`
 - `src/doctor/` — installation health checks behind `agent-outfit doctor`

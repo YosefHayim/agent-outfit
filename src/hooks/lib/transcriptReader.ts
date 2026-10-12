@@ -1,9 +1,13 @@
-// Agent transcripts hold one JSON object per line; context-guard and session-rehome decode them here.
+// Agent transcripts hold one JSON object per line; context-guard, scratch-folder-guard, and session-rehome decode
+// them here.
 
 import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
 
 // The newest turns sit at the end, so per-check readers look only at this much of a long transcript.
 const TRANSCRIPT_TAIL_BYTES = 256 * 1024;
+// A session's opening lines say where and how it started; Codex's first line alone is over 20 KB.
+const TRANSCRIPT_HEAD_BYTES = 64 * 1024;
+const LINE_FEED = 0x0a;
 
 export type TokenUsage = {
   readonly inputTokens: number;
@@ -83,6 +87,44 @@ export const decodeTranscriptLine = (line: string): TranscriptEntry | undefined 
 };
 
 export const readTranscriptLines = (file: string): ReadonlyArray<string> => readFileSync(file, "utf8").split("\n");
+
+type HeadRead = { readonly descriptor: number; readonly position: number };
+
+const readHeadChunk = (read: HeadRead): Buffer => {
+  const bytes = Buffer.alloc(TRANSCRIPT_HEAD_BYTES);
+  const byteCount = readSync(read.descriptor, bytes, 0, TRANSCRIPT_HEAD_BYTES, read.position);
+  return bytes.subarray(0, byteCount);
+};
+
+const restOfOpenLine = (read: HeadRead): ReadonlyArray<Buffer> => {
+  const chunk = readHeadChunk(read);
+  const lineEnd = chunk.indexOf(LINE_FEED);
+  if (lineEnd !== -1) {
+    return [chunk.subarray(0, lineEnd)];
+  }
+
+  if (chunk.length < TRANSCRIPT_HEAD_BYTES) {
+    return [chunk];
+  }
+
+  const laterChunks = restOfOpenLine({ ...read, position: read.position + chunk.length });
+  return [chunk, ...laterChunks];
+};
+
+// Every line that starts in the head is read whole, however long: a cut line would not parse.
+export const readTranscriptHead = (file: string): ReadonlyArray<string> => {
+  const descriptor = openSync(file, "r");
+  try {
+    const head = readHeadChunk({ descriptor, position: 0 });
+    const openLineRest =
+      head.length < TRANSCRIPT_HEAD_BYTES ? [] : restOfOpenLine({ descriptor, position: head.length });
+    return Buffer.concat([head, ...openLineRest])
+      .toString("utf8")
+      .split("\n");
+  } finally {
+    closeSync(descriptor);
+  }
+};
 
 // The first line of the tail may be cut short.
 export const readTranscriptTail = (file: string): ReadonlyArray<string> => {

@@ -1,42 +1,38 @@
 #!/usr/bin/env node
-// SessionEnd hook that deletes the ended Claude Code session's own scratch folder; fails open.
+// SessionEnd hook: hands the ended session to a detached scratch watcher and exits at once, because both agents give
+// SessionEnd hooks only a second or two, too short to delete a large scratch folder. Fails open.
 
-import { readdirSync, readFileSync, rmSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-// e.g. "5cc2fa97-8a4b-4379-b0f0-4141d18275da" — not "../x" or "*"
-const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { SESSION_ID_PATTERN } from "../lib/sessionScratch.js";
 
 const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
   typeof candidate === "object" && candidate !== null && !Array.isArray(candidate);
 
-// Claude Code keeps each session's scratchpad and task output in <CLAUDE_CODE_TMPDIR or /tmp>/claude-<uid>/<project>/<session>.
-const claudeScratchRoot = (): string | undefined => {
-  const userId = process.getuid?.();
-  if (userId === undefined) {
-    return undefined;
-  }
-
-  return path.join(process.env.CLAUDE_CODE_TMPDIR || "/tmp", `claude-${userId}`);
-};
-
-const clearSessionScratch = (): void => {
+const handOverEndedSession = (): void => {
   const hookInput: unknown = JSON.parse(readFileSync(0, "utf8"));
-  const sessionId = isRecord(hookInput) ? hookInput.session_id : undefined;
-  const scratchRoot = claudeScratchRoot();
-  if (typeof sessionId !== "string" || !SESSION_ID_PATTERN.test(sessionId) || scratchRoot === undefined) {
+  const endedSessionId = isRecord(hookInput) ? hookInput.session_id : undefined;
+  if (typeof endedSessionId !== "string" || !SESSION_ID_PATTERN.test(endedSessionId)) {
     return;
   }
 
-  const projectFolders = readdirSync(scratchRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory());
-  for (const projectFolder of projectFolders) {
-    rmSync(path.join(scratchRoot, projectFolder.name, sessionId), { recursive: true, force: true });
-  }
+  // The watcher has this file's extension: .js when installed, .ts under tsx in tests, where execArgv carries the
+  // tsx loader.
+  const hookFile = fileURLToPath(import.meta.url);
+  const hookFolder = path.dirname(hookFile);
+  const watcherFile = path.join(hookFolder, "..", "watchers", `scratchWatcher${path.extname(hookFile)}`);
+  spawn(process.execPath, [...process.execArgv, watcherFile, endedSessionId], {
+    detached: true,
+    stdio: "ignore",
+  }).unref();
 };
 
 try {
-  clearSessionScratch();
+  handOverEndedSession();
 } catch {
-  // A missing scratch root means there is nothing to clear.
+  // Never block or delay the agent's exit.
 }
 process.exit(0);

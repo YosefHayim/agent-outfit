@@ -37,11 +37,11 @@ Zero-dependency script that runs on an agent hook event. Must be **fail-open**.
 _Avoid_: "callback", "handler" (imprecise).
 
 **hook library**
-Dependency-free code every hook feature shares under `src/hooks/lib/` (`hookConfig`, `hookOutput`, `processAlive`, `transcriptReader`), copied into each hook feature's `lib/` at install.
+Dependency-free code every hook feature shares under `src/hooks/lib/` (`hookConfig`, `hookOutput`, `processAlive`, `transcriptReader`, `claudeLiveSessions`, `claudeScratchRoots`), copied into each hook feature's `lib/` at install.
 _Avoid_: "payload", "bundle", "binary".
 
 **watcher**
-Background Node process a hook starts so it can act later: the autorun watcher, the idle compact watcher, and the rehome watcher. It lives in its feature's `watchers/` folder.
+Background Node process a hook starts so it can act later: the autorun watcher, the idle compact watcher, the rehome watcher, and the scratch watcher. It lives in its feature's `watchers/` folder.
 _Avoid_: "service", "background job", "worker".
 
 **decision**
@@ -113,7 +113,7 @@ Guard that blocks a copied function body or type shape at write time. `agent-out
 _Avoid_: "duplicate checker".
 
 **scratch-folder-guard**
-Guard that denies agent writes into system temporary folders and deletes an ended Claude Code session's own scratch folder. Code names say "scratch" because `temp`/`tmp` are forbidden name tokens.
+Guard that denies agent writes into system temporary folders, asks the agent at the end of a turn to delete the files its session left in its scratch folder, and deletes an ended Claude Code session's own scratch folder. Code names say "scratch" because `temp`/`tmp` are forbidden name tokens.
 _Avoid_: "temp guard", "tmp hook".
 
 **session-rehome**
