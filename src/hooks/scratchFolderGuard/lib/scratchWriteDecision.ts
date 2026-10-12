@@ -22,10 +22,11 @@ const COPY_INTO_SCRATCH =
 // e.g. "touch", "tee", "sed -i", "curl -o", "git clone", "writeFileSync(" — commands and calls that create or change files
 const FILE_MUTATION_COMMAND =
   /(?:^|[;&|]\s*|\b)(?:touch|mkdir|mkfifo|mknod|truncate|fallocate|tee|split|csplit)\b|\bdd\b[^\n]*\bof\s*=|\bsort\b[^\n]*(?:\s-o\s|\s--output(?:=|\s))|\b(?:sed|perl|ruby)\b[^\n]*\s-i(?:\s|['".]|$)|\b(?:tar|zip|unzip|gzip|bzip2|xz)\b[^\n]*(?:\s-f\s|\s--file(?:=|\s)|\s-d\s|\s--directory(?:=|\s))|\b(?:curl|wget)\b[^\n]*(?:\s-o\s|\s--output(?:=|\s)|\s-O(?:\s|$)|\s--remote-name(?:\s|$)|\s--output-dir(?:=|\s)|\s--output-document(?:=|\s)|\s--directory-prefix(?:=|\s)|\s--cookie-jar(?:=|\s)|\s--dump-header(?:=|\s)|\s--hsts(?:=|\s)|\s--alt-svc(?:=|\s)|\s--libcurl(?:=|\s))|\bgit\s+(?:clone|worktree\s+add)\b|\bgit\s+(?:archive|format-patch)\b[^\n]*(?:\s-o\s|\s--output(?:=|\s))|\b(?:write|writeFile|writeFileSync|WriteAllText|WriteAllBytes|appendFile|appendFileSync|copyFile|copyFileSync|cp|cpSync|createWriteStream|write_text|write_bytes|copyfile|copy2|copytree|file_put_contents|create_dir|createDirectory|CreateDirectory|createDirectories|createFile|newOutputStream|newBufferedWriter|mkdir|mkdirs|mkdirSync|rename|renameSync|move|symlink|truncate|truncateSync|OpenFile)\s*\(|\b(?:File|Files|Path|FileManager|Directory|fs(?:\.promises)?|os|shutil|std::fs|Deno|Bun)[:.]+(?:write|WriteAllText|WriteAllBytes|append|create|copy|cp|move|rename|mkdir|mkdirs|symlink|truncate|writeFile|appendFile|copyFile|createWriteStream|writeTextFile|writeFileSync|appendFileSync|copyFileSync|cpSync|mkdirSync|renameSync|truncateSync|write_text|write_bytes)\b|\bopen\s*\([^\n]*['"](?:w|a|x)[+b]?['"]/i;
-// e.g. the lines under "cat > notes.txt <<'EOF'" or "git commit -m \"$(cat <<'EOF'" — not under "bash <<'EOF'",
-// "cat <<EOF" (the shell expands it), "cat <<'EOF' | sh" or "cat <<'EOF' > >(sh)"
-const CAT_HEREDOC_TEXT =
-  /((?:^|[\n;&|]|\s(?:-[a-z]*m|--message|--body|--title)[ =]"\$\()[ \t]*cat\b[^\n;&|(]*<<-?[ \t]*(['"])(\w+)\2[^\n|(]*\n)[\s\S]*?\n[ \t]*\3[ \t]*(?=\n|$)/g;
+// e.g. the lines under "cat > notes.txt <<'EOF'", "git commit -m \"$(cat <<'EOF'", "git commit -F - <<'EOF'" or
+// "gh pr create --body-file - <<'EOF'" — not under "bash <<'EOF'", "git run-script <<'EOF'", "cat <<EOF" (the shell
+// expands it), "cat <<'EOF' | sh" or "cat <<'EOF' > >(sh)"
+const STORED_HEREDOC_TEXT =
+  /((?:^|[\n;&|]|\s(?:-[a-z]*m|--message|--body|--title)[ =]"\$\()[ \t]*(?:cat\b|(?:git|gh)\b[^\n;&|(]*\s(?:-F|--file|--body-file|--input)[ =]-(?=[\s<]))[^\n;&|(]*<<-?[ \t]*(['"])(\w+)\2[^\n|(]*\n)[\s\S]*?\n[ \t]*\3[ \t]*(?=\n|$)/g;
 // e.g. the quoted text in "git commit -m 'drop the /tmp log'" or "gh pr create --body \"plain words\"" — not
 // "-m \"$(date)\"", which the shell runs, or "touch -m '/tmp/a'"
 const QUOTED_MESSAGE_VALUE =
@@ -135,7 +136,7 @@ const patchTargetsOf = (commandText: string): ReadonlyArray<string> =>
 
 // Text a command only stores or sends is not a command; the content of a Write call is not judged either.
 const withoutMessageText = (commandText: string): string =>
-  commandText.replace(CAT_HEREDOC_TEXT, "$1").replace(QUOTED_MESSAGE_VALUE, "");
+  commandText.replace(STORED_HEREDOC_TEXT, "$1").replace(QUOTED_MESSAGE_VALUE, "");
 
 const shellCommandWritesScratch = (request: ScratchWriteRequest & { commandText: string }): boolean => {
   const { commandText } = request;

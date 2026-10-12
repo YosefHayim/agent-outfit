@@ -46,6 +46,10 @@ describe("decideScratchWrite", () => {
     ['git commit -m "stop writing logs to /tmp and mkdir the repo folder"'],
     ["git commit -am 'use mktemp no more'"],
     ["gh pr create --title \"guard\" --body 'the hook blocks touch /tmp/a'"],
+    ["git commit -F - <<'EOF'\nstop writing logs to /tmp\n\nmkdir the repo folder instead\nEOF"],
+    ["git commit --file=- <<'EOF'\nstop writing logs to /tmp and mkdir the repo folder\nEOF"],
+    ["cd repo && gh pr create --title guard --body-file - <<'EOF'\nthe hook blocks touch /tmp/a\nEOF"],
+    ['gh api repos/me/repo/issues/3/comments --input - <<\'EOF\'\n{"body":"touch /tmp/a is blocked"}\nEOF'],
   ])("allows a command whose message text only mentions a write (%j)", (command) => {
     expect(decisionTagFor("Bash", { command })).toBe("allow");
   });
@@ -63,6 +67,10 @@ describe("decideScratchWrite", () => {
     ['git commit -m "$(touch /tmp/x.log)"'],
     ["git commit -m 'x' && touch /tmp/x.log"],
     ["touch -m '/tmp/x.log'"],
+    ["git commit -F - <<EOF\n$(touch /tmp/x.log)\nEOF"],
+    ["git commit -F - <<'EOF' | sh\ntouch /tmp/x.log\nEOF"],
+    ["git run-script <<'EOF'\ntouch /tmp/x.log\nEOF"],
+    ["git commit -F - <<'EOF'\nhello\nEOF\ntouch /tmp/x.log"],
   ])("still blocks a write that sits beside or inside text the shell runs (%j)", (command) => {
     expect(decisionTagFor("Bash", { command })).toBe("block");
   });
