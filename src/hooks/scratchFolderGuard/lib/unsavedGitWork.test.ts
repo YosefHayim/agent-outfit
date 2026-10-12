@@ -18,7 +18,9 @@ const isolatedGitEnvironment = (): NodeJS.ProcessEnv => {
 
 const git = (request: { readonly folder: string; readonly command: ReadonlyArray<string> }) => {
   const identity = ["-c", "user.name=Scratch Test", "-c", "user.email=scratch@example.test"];
-  const execution = spawnSync("git", [...identity, "-c", "init.defaultBranch=main", ...request.command], {
+  // Git refuses to clone a submodule from a local folder unless the file protocol is allowed.
+  const settings = ["-c", "init.defaultBranch=main", "-c", "protocol.file.allow=always"];
+  const execution = spawnSync("git", [...identity, ...settings, ...request.command], {
     cwd: request.folder,
     encoding: "utf8",
     env: isolatedGitEnvironment(),
@@ -51,6 +53,32 @@ const createWorkspace = (): Workspace => {
   return { upstream, scratchFolder, clone };
 };
 
+// Adds a submodule at vendor/library to the clone and pushes that commit, so the clone itself stays fully pushed.
+const addPushedSubmodule = (workspace: Workspace): string => {
+  const library = path.join(path.dirname(workspace.upstream), "library");
+  mkdirSync(library);
+  git({ folder: library, command: ["init", "--quiet"] });
+  commitFile({ workTree: library, fileName: "library.ts" });
+  git({ folder: workspace.clone, command: ["submodule", "--quiet", "add", library, "vendor/library"] });
+  git({ folder: workspace.clone, command: ["commit", "--quiet", "--message", "add the library"] });
+  git({ folder: workspace.clone, command: ["push", "--quiet", "origin", "HEAD:refs/heads/with-library"] });
+  return path.join(workspace.clone, "vendor", "library");
+};
+
+type LinkedWorkTree = { readonly workTree: string; readonly submodule: string };
+
+// A linked worktree of the upstream repository inside the scratch folder, with the library submodule checked out.
+const addLinkedWorkTreeWithSubmodule = (workspace: Workspace): LinkedWorkTree => {
+  addPushedSubmodule(workspace);
+  const workTree = path.join(workspace.scratchFolder, "linked");
+  git({
+    folder: workspace.upstream,
+    command: ["worktree", "add", "--quiet", "-b", "feature", workTree, "with-library"],
+  });
+  git({ folder: workTree, command: ["submodule", "--quiet", "update", "--init"] });
+  return { workTree, submodule: path.join(workTree, "vendor", "library") };
+};
+
 afterEach(() => {
   vi.unstubAllEnvs();
   for (const workspace of workspaces.splice(0)) {
@@ -79,6 +107,72 @@ describe("unsavedWorkTrees", () => {
   it("finds a clone with a new file that is not tracked", () => {
     const workspace = createWorkspace();
     writeFileSync(path.join(workspace.clone, "feature.ts"), "export const feature = 1;\n");
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a new file in a clone whose git status is told to hide new files", () => {
+    const workspace = createWorkspace();
+    git({ folder: workspace.clone, command: ["config", "status.showUntrackedFiles", "no"] });
+    writeFileSync(path.join(workspace.clone, "feature.ts"), "export const feature = 1;\n");
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("lets go of a clone whose tracked files are only missing, the way a delete that was cut off leaves it", () => {
+    const workspace = createWorkspace();
+    rmSync(path.join(workspace.clone, "README.md"));
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone with a missing tracked file next to a new file", () => {
+    const workspace = createWorkspace();
+    rmSync(path.join(workspace.clone, "README.md"));
+    writeFileSync(path.join(workspace.clone, "feature.ts"), "export const feature = 1;\n");
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a clone with a deletion that was staged on purpose", () => {
+    const workspace = createWorkspace();
+    git({ folder: workspace.clone, command: ["rm", "--quiet", "README.md"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("lets go of a pushed clone whose submodule folder is only missing", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    rmSync(submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone whose missing submodule left a commit on no remote in its repository", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    commitFile({ workTree: submodule, fileName: "feature.ts" });
+    rmSync(submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a pushed clone whose submodule holds a commit that is on no remote", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    commitFile({ workTree: submodule, fileName: "feature.ts" });
+    git({ folder: workspace.clone, command: ["commit", "--quiet", "--all", "--message", "use the new library"] });
+    git({ folder: workspace.clone, command: ["push", "--quiet", "origin", "HEAD:refs/heads/with-library"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a changed file in a submodule that git status is told to ignore", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    git({ folder: workspace.clone, command: ["config", "submodule.vendor/library.ignore", "all"] });
+    writeFileSync(path.join(submodule, "library.ts"), "edited\n");
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
   });
@@ -124,6 +218,23 @@ describe("unsavedWorkTrees", () => {
     commitFile({ workTree: linkedWorkTree, fileName: "feature.ts" });
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([linkedWorkTree]);
+  });
+
+  it("lets go of a linked worktree whose pushed submodule folder is only missing", () => {
+    const workspace = createWorkspace();
+    const linked = addLinkedWorkTreeWithSubmodule(workspace);
+    rmSync(linked.submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a linked worktree whose missing submodule left a commit on no remote in its repository", () => {
+    const workspace = createWorkspace();
+    const linked = addLinkedWorkTreeWithSubmodule(workspace);
+    commitFile({ workTree: linked.submodule, fileName: "feature.ts" });
+    rmSync(linked.submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([linked.workTree]);
   });
 
   it("asks each work tree's own repository even when git variables point at another one", () => {
