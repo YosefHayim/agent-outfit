@@ -1,9 +1,12 @@
-// Agent transcripts hold one JSON object per line; context-guard and session-rehome decode them here.
+// Agent transcripts hold one JSON object per line; context-guard, scratch-folder-guard, and session-rehome decode
+// them here.
 
 import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
 
 // The newest turns sit at the end, so per-check readers look only at this much of a long transcript.
 const TRANSCRIPT_TAIL_BYTES = 256 * 1024;
+// A session's opening lines say where and how it started; Codex's first line alone is over 20 KB.
+const TRANSCRIPT_HEAD_BYTES = 64 * 1024;
 
 export type TokenUsage = {
   readonly inputTokens: number;
@@ -83,6 +86,18 @@ export const decodeTranscriptLine = (line: string): TranscriptEntry | undefined 
 };
 
 export const readTranscriptLines = (file: string): ReadonlyArray<string> => readFileSync(file, "utf8").split("\n");
+
+// The last line of the head may be cut short.
+export const readTranscriptHead = (file: string): ReadonlyArray<string> => {
+  const descriptor = openSync(file, "r");
+  try {
+    const bytes = Buffer.alloc(TRANSCRIPT_HEAD_BYTES);
+    const byteCount = readSync(descriptor, bytes, 0, TRANSCRIPT_HEAD_BYTES, 0);
+    return bytes.subarray(0, byteCount).toString("utf8").split("\n");
+  } finally {
+    closeSync(descriptor);
+  }
+};
 
 // The first line of the tail may be cut short.
 export const readTranscriptTail = (file: string): ReadonlyArray<string> => {

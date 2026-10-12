@@ -2,23 +2,12 @@
 // with an optional <session>/ folder of subagent transcripts and saved tool output beside it. `/resume` lists the
 // current folder's sessions, and `claude --resume <id>` scans every folder but refuses when two copies exist.
 
-import {
-  closeSync,
-  existsSync,
-  mkdirSync,
-  openSync,
-  readdirSync,
-  readFileSync,
-  readSync,
-  renameSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { claudeScratchRoots } from "../../lib/claudeScratchRoots.js";
 import { isProcessAlive } from "../../lib/processAlive.js";
-import { readTranscriptTail } from "../../lib/transcriptReader.js";
+import { readTranscriptHead, readTranscriptTail } from "../../lib/transcriptReader.js";
 import { appendJsonLine, decodeJsonLine, isRecord } from "./jsonLines.js";
 
 export type ClaudeSession = {
@@ -31,7 +20,6 @@ export type ClaudeSession = {
 
 // e.g. "5cc2fa97-8a4b-4379-b0f0-4141d18275da.jsonl"
 const TRANSCRIPT_NAME_PATTERN = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/u;
-const HEAD_BYTES = 64 * 1024;
 
 const claudeConfigRoot = (homeRoot: string): string => process.env.CLAUDE_CONFIG_DIR || path.join(homeRoot, ".claude");
 
@@ -41,24 +29,13 @@ const projectsRoot = (homeRoot: string): string => path.join(claudeConfigRoot(ho
 const projectFolderFor = (request: { readonly homeRoot: string; readonly folder: string }): string =>
   path.join(projectsRoot(request.homeRoot), request.folder.replace(/[^A-Za-z0-9-]/gu, "-"));
 
-const headLines = (file: string): ReadonlyArray<string> => {
-  const descriptor = openSync(file, "r");
-  try {
-    const bytes = Buffer.alloc(HEAD_BYTES);
-    const byteCount = readSync(descriptor, bytes, 0, HEAD_BYTES, 0);
-    return bytes.subarray(0, byteCount).toString("utf8").split("\n");
-  } finally {
-    closeSync(descriptor);
-  }
-};
-
 const homeFolderOf = (transcriptFile: string): string => {
   const relocatedCwd = readTranscriptTail(transcriptFile)
     .map(decodeJsonLine)
     .filter((line) => line.type === "relocated" && typeof line.relocatedCwd === "string")
     .map((line) => String(line.relocatedCwd))
     .at(-1);
-  const startCwd = headLines(transcriptFile)
+  const startCwd = readTranscriptHead(transcriptFile)
     .map(decodeJsonLine)
     .map((line) => line.cwd)
     .find((cwd): cwd is string => typeof cwd === "string");
@@ -187,16 +164,8 @@ export const moveClaudeSession = (request: {
   return { _tag: "moved", transcriptFile: targetTranscript };
 };
 
-const scratchRoots = (homeRoot: string): ReadonlyArray<string> => {
-  const userId = process.getuid?.();
-  const scratchParents = [process.env.CLAUDE_CODE_TMPDIR, path.join(claudeConfigRoot(homeRoot), "tmp"), "/tmp"];
-  return userId === undefined
-    ? []
-    : scratchParents.flatMap((parent) => (parent ? [path.join(parent, `claude-${userId}`)] : []));
-};
-
 const scratchFoldersFor = (request: { readonly homeRoot: string; readonly sessionId: string }) =>
-  scratchRoots(request.homeRoot).flatMap((root) => {
+  claudeScratchRoots(request.homeRoot).flatMap((root) => {
     try {
       return readdirSync(root).map((projectName) => path.join(root, projectName, request.sessionId));
     } catch {
