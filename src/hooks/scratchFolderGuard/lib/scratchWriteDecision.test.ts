@@ -55,6 +55,8 @@ describe("decideScratchWrite", () => {
     ["python3 - <<'EOF'\nopen('/tmp/x.log', 'w').write('a')\nEOF"],
     ["cat > notes/a.txt <<EOF\n$(touch /tmp/x.log)\nEOF"],
     ["cat <<'EOF' | sh\ntouch /tmp/x.log\nEOF"],
+    ["cat <<'EOF' > >(sh)\ntouch /tmp/x.log\nEOF"],
+    ["cat > >(sh) <<'EOF'\ntouch /tmp/x.log\nEOF"],
     ["bash -c \"$(cat <<'EOF'\ntouch /tmp/x.log\nEOF\n)\""],
     ["cat > /tmp/a.txt <<'EOF'\nhello\nEOF"],
     ["cat > notes/a.txt <<'EOF'\nhello\nEOF\ntouch /tmp/x.log"],
