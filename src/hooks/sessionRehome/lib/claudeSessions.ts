@@ -2,11 +2,21 @@
 // with an optional <session>/ folder of subagent transcripts and saved tool output beside it. `/resume` lists the
 // current folder's sessions, and `claude --resume <id>` scans every folder but refuses when two copies exist.
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
+import { claudeConfigRoots, liveClaudeSessionIds } from "../../lib/claudeLiveSessions.js";
 import { claudeScratchRoots } from "../../lib/claudeScratchRoots.js";
-import { isProcessAlive } from "../../lib/processAlive.js";
 import { readTranscriptHead, readTranscriptTail } from "../../lib/transcriptReader.js";
 import { appendJsonLine, decodeJsonLine, isRecord } from "./jsonLines.js";
 
@@ -21,9 +31,10 @@ export type ClaudeSession = {
 // e.g. "5cc2fa97-8a4b-4379-b0f0-4141d18275da.jsonl"
 const TRANSCRIPT_NAME_PATTERN = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/u;
 
-const claudeConfigRoot = (homeRoot: string): string => process.env.CLAUDE_CONFIG_DIR || path.join(homeRoot, ".claude");
-
-const projectsRoot = (homeRoot: string): string => path.join(claudeConfigRoot(homeRoot), "projects");
+const projectsRoot = (homeRoot: string): string => {
+  const configRoot = process.env.CLAUDE_CONFIG_DIR || path.join(homeRoot, ".claude");
+  return path.join(configRoot, "projects");
+};
 
 // Matches Claude Code's own folder naming, e.g. "/Users/me/Desktop/Code/vybekiit" → "-Users-me-Desktop-Code-vybekiit".
 const projectFolderFor = (request: { readonly homeRoot: string; readonly folder: string }): string =>
@@ -107,18 +118,16 @@ const jsonFilesIn = (folder: string): ReadonlyArray<string> => {
   }
 };
 
-// ~/.claude/sessions/<pid>.json names the session each running Claude process holds, and a background job's
-// state.json points at its transcript by absolute path, so moving either would break a live owner.
+// A running Claude process holds its session, and a background job's state.json points at its transcript by absolute
+// path, so moving either would break a live owner. Each Claude account keeps both under its own config root.
 export const claudeSessionIsLive = (request: {
   readonly homeRoot: string;
   readonly session: ClaudeSession;
   readonly quietSeconds: number;
 }): boolean => {
-  const configRoot = claudeConfigRoot(request.homeRoot);
-  const heldByProcess = jsonFilesIn(path.join(configRoot, "sessions"))
-    .map(readJsonFile)
-    .some((entry) => entry.sessionId === request.session.sessionId && isProcessAlive(Number(entry.pid)));
-  const ownedByJob = jsonFilesIn(path.join(configRoot, "jobs"))
+  const heldByProcess = liveClaudeSessionIds(request.homeRoot).has(request.session.sessionId);
+  const ownedByJob = claudeConfigRoots(request.homeRoot)
+    .flatMap((configRoot) => jsonFilesIn(path.join(configRoot, "jobs")))
     .filter((file) => path.basename(file) === "state.json")
     .map(readJsonFile)
     .some((state) => state.sessionId === request.session.sessionId);
@@ -174,43 +183,59 @@ const scratchFoldersFor = (request: { readonly homeRoot: string; readonly sessio
   });
 
 // A live Claude process may append between our read and our rename, so a grown file is re-read and filtered again.
-const removeHistoryLines = (request: { readonly homeRoot: string; readonly sessionIds: ReadonlySet<string> }) => {
-  const historyFile = path.join(claudeConfigRoot(request.homeRoot), "history.jsonl");
-  for (let attempt = 0; attempt < 5 && existsSync(historyFile); attempt += 1) {
-    const sizeBefore = statSync(historyFile).size;
-    const keptLines = readFileSync(historyFile, "utf8")
+// Claude Code keeps the prompt history readable by its owner only, and the rewritten file keeps that mode.
+const removeHistoryLines = (request: { readonly historyFile: string; readonly sessionIds: ReadonlySet<string> }) => {
+  for (let attempt = 0; attempt < 5 && existsSync(request.historyFile); attempt += 1) {
+    const historyBefore = statSync(request.historyFile);
+    const keptLines = readFileSync(request.historyFile, "utf8")
       .split("\n")
       .filter((line) => !line.trim() || !request.sessionIds.has(String(decodeJsonLine(line).sessionId)));
-    const rewrittenFile = `${historyFile}.rehome-${process.pid}`;
-    writeFileSync(rewrittenFile, keptLines.join("\n"));
-    if (statSync(historyFile).size === sizeBefore) {
-      renameSync(rewrittenFile, historyFile);
+    const rewrittenFile = `${request.historyFile}.rehome-${process.pid}`;
+    rmSync(rewrittenFile, { force: true });
+    writeFileSync(rewrittenFile, keptLines.join("\n"), { mode: historyBefore.mode & 0o777 });
+    if (statSync(request.historyFile).size === historyBefore.size) {
+      renameSync(rewrittenFile, request.historyFile);
       return;
     }
     rmSync(rewrittenFile, { force: true });
   }
 };
 
+// An account whose projects folder is this one, e.g. ~/.claude-work/projects linked to ~/.claude/projects, keeps files
+// for these same sessions. Any other .claude-* folder, a backup for one, holds sessions of its own and is left alone.
+const accountRootsSharingProjects = (homeRoot: string): ReadonlyArray<string> => {
+  const configuredProjects = projectsRoot(homeRoot);
+  const sharedProjects = realpathSync(configuredProjects);
+  return claudeConfigRoots(homeRoot).filter((configRoot) => {
+    const accountProjects = path.join(configRoot, "projects");
+    return existsSync(accountProjects) && realpathSync(accountProjects) === sharedProjects;
+  });
+};
+
+// Each Claude account keeps its own file history, session environment and prompt history under its config root.
 export const deleteClaudeSessions = (request: {
   readonly homeRoot: string;
   readonly sessions: ReadonlyArray<ClaudeSession>;
 }): void => {
-  const configRoot = claudeConfigRoot(request.homeRoot);
+  const configRoots = accountRootsSharingProjects(request.homeRoot);
   for (const session of request.sessions) {
-    const sessionFolders = [
-      path.join(session.projectFolder, session.sessionId),
+    const accountFolders = configRoots.flatMap((configRoot) => [
       path.join(configRoot, "file-history", session.sessionId),
       path.join(configRoot, "session-env", session.sessionId),
+    ]);
+    const sessionFolders = [
+      path.join(session.projectFolder, session.sessionId),
+      ...accountFolders,
       ...scratchFoldersFor({ homeRoot: request.homeRoot, sessionId: session.sessionId }),
     ];
     for (const removable of [session.transcriptFile, ...sessionFolders]) {
       rmSync(removable, { recursive: true, force: true });
     }
   }
-  removeHistoryLines({
-    homeRoot: request.homeRoot,
-    sessionIds: new Set(request.sessions.map((session) => session.sessionId)),
-  });
+  const sessionIds = new Set(request.sessions.map((session) => session.sessionId));
+  for (const configRoot of configRoots) {
+    removeHistoryLines({ historyFile: path.join(configRoot, "history.jsonl"), sessionIds });
+  }
 };
 
 // A deleted repo's project folder also holds its auto-memory; it goes once no session is left in it.
