@@ -26,7 +26,7 @@ export const environmentVariables = Schema.decodeUnknownSync(Schema.Array(enviro
     name: "AGENT_OUTFIT_AGENT_ID",
     defaultValue: "set by agent-outfit in hook commands",
     purpose:
-      "Which agent ran a hook (claude-code, codex, grok). Install writes AGENT_OUTFIT_AGENT_ID=<agent> in front of the hook commands that read it: idle compact and session rehome.",
+      "Which agent ran a hook (claude-code, codex, grok). Install writes AGENT_OUTFIT_AGENT_ID=<agent> in front of the hook commands that read it: idle compact, session rehome, and the scratch cleanup question.",
   },
   {
     name: "AGENT_OUTFIT_IDLE_COMPACT_AFTER",

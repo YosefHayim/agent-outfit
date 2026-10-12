@@ -363,6 +363,12 @@ describe("featureCatalog", () => {
             readsAgentId: false,
           },
           {
+            event: "Stop",
+            matcher: { _tag: "none" },
+            entrypoint: { _tag: "path", value: "hooks/askScratchCleanup.ts" },
+            readsAgentId: true,
+          },
+          {
             event: "SessionEnd",
             matcher: { _tag: "none" },
             entrypoint: { _tag: "path", value: "hooks/clearSessionScratch.ts" },

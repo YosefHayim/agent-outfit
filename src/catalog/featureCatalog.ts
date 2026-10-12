@@ -344,7 +344,7 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
     installedSkill: { _tag: "none" },
     title: "Scratch folder guard",
     summary:
-      "Block every agent write into system temporary folders (/tmp, /private/tmp, /var/tmp, /dev/shm, $TMPDIR) — files, edits, shell redirects, copies, and mktemp — so logs and scratch files stay in a gitignored repo folder. Also deletes each ended Claude Code session's own scratch folder.",
+      "Block every agent write into system temporary folders (/tmp, /private/tmp, /var/tmp, /dev/shm, $TMPDIR) — files, edits, shell redirects, copies, and mktemp — so logs and scratch files stay in a gitignored repo folder. When a turn ends with files left in the session's scratch folder, asks the agent to delete them once the user's tasks are finished, and deletes each ended Claude Code session's own scratch folder.",
     selectedByDefault: true,
     dependencies: [],
     platform: "any",
@@ -357,6 +357,12 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
           matcher: { _tag: "none" },
           entrypoint: { _tag: "featureDefault" },
           readsAgentId: false,
+        },
+        {
+          event: "Stop",
+          matcher: { _tag: "none" },
+          entrypoint: { _tag: "path", value: "hooks/askScratchCleanup.ts" },
+          readsAgentId: true,
         },
         {
           event: "SessionEnd",
