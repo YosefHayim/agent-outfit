@@ -97,14 +97,31 @@ const holdsUnsavedWork = (workTree: string): boolean => {
   return !everythingCommitted || !commitsKeptElsewhere || !submoduleCommitsKeptElsewhere;
 };
 
+const isWorkTree = (folder: string): boolean => existsSync(path.join(folder, ".git"));
+
 const workTreesIn = (folder: string): ReadonlyArray<string> => {
-  if (existsSync(path.join(folder, ".git"))) {
+  if (isWorkTree(folder)) {
     return [folder];
   }
 
   return subfoldersOf(folder).flatMap(workTreesIn);
 };
 
+// A work tree can hold another one that its own git status does not show, e.g. a linked worktree in an ignored
+// .worktrees folder. Its .git folder holds none.
+const workTreesInside = (workTree: string): ReadonlyArray<string> =>
+  subfoldersOf(workTree)
+    .filter((subfolder) => path.basename(subfolder) !== ".git")
+    .flatMap((subfolder) => {
+      const deeperWorkTrees = workTreesInside(subfolder);
+      return isWorkTree(subfolder) ? [subfolder, ...deeperWorkTrees] : deeperWorkTrees;
+    });
+
+// Unsaved work in a nested work tree keeps the outer one whole, since the nested one may live off its repository.
+const holdsUnsavedWorkAtAnyDepth = (workTree: string): boolean =>
+  holdsUnsavedWork(workTree) || workTreesInside(workTree).some(holdsUnsavedWork);
+
 // Agents sometimes work on a repo from a clone or worktree inside a scratch folder. One with changes that are not
 // committed, or with commits that exist nowhere else, holds work that deleting the folder would erase.
-export const unsavedWorkTrees = (folder: string): ReadonlyArray<string> => workTreesIn(folder).filter(holdsUnsavedWork);
+export const unsavedWorkTrees = (folder: string): ReadonlyArray<string> =>
+  workTreesIn(folder).filter(holdsUnsavedWorkAtAnyDepth);
