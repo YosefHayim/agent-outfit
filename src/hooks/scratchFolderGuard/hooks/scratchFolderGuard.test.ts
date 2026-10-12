@@ -40,6 +40,22 @@ describe("scratchFolderGuard process boundary", () => {
     expect(JSON.parse(execution.stdout)).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny" } });
   });
 
+  it("stays silent for a commit whose message only mentions /tmp", () => {
+    const command =
+      "git commit -m \"$(cat <<'EOF'\nstop writing logs to /tmp and git clone into the scratchpad\nEOF\n)\"";
+    const execution = runHook(JSON.stringify({ tool_name: "Bash", tool_input: { command }, cwd: "/repo" }));
+
+    expect(execution.status).toBe(0);
+    expect(execution.stdout).toBe("");
+  });
+
+  it("denies a shell script fed through a heredoc that writes into /tmp", () => {
+    const command = "bash <<'EOF'\necho hi > /tmp/e2e.log\nEOF";
+    const execution = runHook(JSON.stringify({ tool_name: "Bash", tool_input: { command }, cwd: "/repo" }));
+
+    expect(JSON.parse(execution.stdout)).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny" } });
+  });
+
   it("stays silent for a write inside the repository", () => {
     const execution = runHook(
       JSON.stringify({ tool_name: "Write", tool_input: { file_path: "/repo/a.ts", content: "a" }, cwd: "/repo" }),

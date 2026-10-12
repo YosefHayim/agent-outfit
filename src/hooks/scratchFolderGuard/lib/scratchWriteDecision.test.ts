@@ -40,6 +40,31 @@ describe("decideScratchWrite", () => {
     expect(decisionTagFor(toolName, toolInput)).toBe("allow");
   });
 
+  it.each([
+    ["cat > notes/commit.txt <<'EOF'\nImpact: /tmp is the scratch root.\nA git clone or worktree is kept.\nEOF"],
+    ["git commit -m \"$(cat <<'EOF'\nstop writing logs to /tmp\n\nmkdir the repo folder instead\nEOF\n)\""],
+    ['git commit -m "stop writing logs to /tmp and mkdir the repo folder"'],
+    ["git commit -am 'use mktemp no more'"],
+    ["gh pr create --title \"guard\" --body 'the hook blocks touch /tmp/a'"],
+  ])("allows a command whose message text only mentions a write (%j)", (command) => {
+    expect(decisionTagFor("Bash", { command })).toBe("allow");
+  });
+
+  it.each([
+    ["bash <<'EOF'\necho hi > /tmp/x.log\nEOF"],
+    ["python3 - <<'EOF'\nopen('/tmp/x.log', 'w').write('a')\nEOF"],
+    ["cat > notes/a.txt <<EOF\n$(touch /tmp/x.log)\nEOF"],
+    ["cat <<'EOF' | sh\ntouch /tmp/x.log\nEOF"],
+    ["bash -c \"$(cat <<'EOF'\ntouch /tmp/x.log\nEOF\n)\""],
+    ["cat > /tmp/a.txt <<'EOF'\nhello\nEOF"],
+    ["cat > notes/a.txt <<'EOF'\nhello\nEOF\ntouch /tmp/x.log"],
+    ['git commit -m "$(touch /tmp/x.log)"'],
+    ["git commit -m 'x' && touch /tmp/x.log"],
+    ["touch -m '/tmp/x.log'"],
+  ])("still blocks a write that sits beside or inside text the shell runs (%j)", (command) => {
+    expect(decisionTagFor("Bash", { command })).toBe("block");
+  });
+
   it("blocks any write command run from inside a system temporary folder", () => {
     const decision = decideScratchWrite({
       toolName: "Bash",
