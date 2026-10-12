@@ -1,11 +1,14 @@
 import { spawnSync } from "node:child_process";
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
+  symlinkSync,
   utimesSync,
   writeFileSync,
 } from "node:fs";
@@ -207,12 +210,45 @@ describe("rehome watcher with Claude Code sessions", () => {
     const deletedPrompt = JSON.stringify({ sessionId, display: "fix the aria checkout page" });
     const keptPrompt = JSON.stringify({ sessionId: "f7990b95-b427-4bfb-a8d6-cd6f5013ce14", display: "keep" });
     mkdirSync(fileHistory, { recursive: true });
+    symlinkSync(path.join(workspace.homeRoot, ".claude", "projects"), path.join(secondAccountRoot, "projects"));
     writeFileSync(promptHistory, `${deletedPrompt}\n${keptPrompt}\n`);
 
     runWatcher({ workspace, args: ["--sweep", "--delete-repo", "aria"] });
 
     expect(existsSync(fileHistory)).toBe(false);
     expect(readFileSync(promptHistory, "utf8")).toBe(`${keptPrompt}\n`);
+  });
+
+  it("leaves a backup folder's copy of a deleted session alone, since it has a projects folder of its own", () => {
+    const workspace = createWorkspace();
+    const ariaFolder = path.join(workspace.codeRoot, "aria");
+    createClaudeSession({ workspace, startFolder: ariaFolder, editedRepo: "aria" });
+    const backupRoot = path.join(workspace.homeRoot, ".claude-backup");
+    const fileHistory = path.join(backupRoot, "file-history", sessionId);
+    const promptHistory = path.join(backupRoot, "history.jsonl");
+    const backedUpPrompt = JSON.stringify({ sessionId, display: "fix the aria checkout page" });
+    mkdirSync(fileHistory, { recursive: true });
+    mkdirSync(path.join(backupRoot, "projects"));
+    writeFileSync(promptHistory, `${backedUpPrompt}\n`);
+
+    runWatcher({ workspace, args: ["--sweep", "--delete-repo", "aria"] });
+
+    expect(existsSync(fileHistory)).toBe(true);
+    expect(readFileSync(promptHistory, "utf8")).toBe(`${backedUpPrompt}\n`);
+  });
+
+  it("keeps the prompt history readable by its owner only after it removes a deleted session's lines", () => {
+    const workspace = createWorkspace();
+    const ariaFolder = path.join(workspace.codeRoot, "aria");
+    createClaudeSession({ workspace, startFolder: ariaFolder, editedRepo: "aria" });
+    const promptHistory = path.join(workspace.homeRoot, ".claude", "history.jsonl");
+    writeFileSync(promptHistory, `${JSON.stringify({ sessionId, display: "fix the aria checkout page" })}\n`);
+    chmodSync(promptHistory, 0o600);
+
+    runWatcher({ workspace, args: ["--sweep", "--delete-repo", "aria"] });
+
+    expect(readFileSync(promptHistory, "utf8")).toBe("");
+    expect(statSync(promptHistory).mode & 0o777).toBe(0o600);
   });
 
   it("deletes the sessions of a repo named for deletion, and that repo's project folder", () => {

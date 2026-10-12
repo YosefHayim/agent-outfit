@@ -2,7 +2,17 @@
 // with an optional <session>/ folder of subagent transcripts and saved tool output beside it. `/resume` lists the
 // current folder's sessions, and `claude --resume <id>` scans every folder but refuses when two copies exist.
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
 import { claudeConfigRoots, liveClaudeSessionIds } from "../../lib/claudeLiveSessions.js";
@@ -173,15 +183,17 @@ const scratchFoldersFor = (request: { readonly homeRoot: string; readonly sessio
   });
 
 // A live Claude process may append between our read and our rename, so a grown file is re-read and filtered again.
+// Claude Code keeps the prompt history readable by its owner only, and the rewritten file keeps that mode.
 const removeHistoryLines = (request: { readonly historyFile: string; readonly sessionIds: ReadonlySet<string> }) => {
   for (let attempt = 0; attempt < 5 && existsSync(request.historyFile); attempt += 1) {
-    const sizeBefore = statSync(request.historyFile).size;
+    const historyBefore = statSync(request.historyFile);
     const keptLines = readFileSync(request.historyFile, "utf8")
       .split("\n")
       .filter((line) => !line.trim() || !request.sessionIds.has(String(decodeJsonLine(line).sessionId)));
     const rewrittenFile = `${request.historyFile}.rehome-${process.pid}`;
-    writeFileSync(rewrittenFile, keptLines.join("\n"));
-    if (statSync(request.historyFile).size === sizeBefore) {
+    rmSync(rewrittenFile, { force: true });
+    writeFileSync(rewrittenFile, keptLines.join("\n"), { mode: historyBefore.mode & 0o777 });
+    if (statSync(request.historyFile).size === historyBefore.size) {
       renameSync(rewrittenFile, request.historyFile);
       return;
     }
@@ -189,12 +201,23 @@ const removeHistoryLines = (request: { readonly historyFile: string; readonly se
   }
 };
 
+// An account whose projects folder is this one, e.g. ~/.claude-work/projects linked to ~/.claude/projects, keeps files
+// for these same sessions. Any other .claude-* folder, a backup for one, holds sessions of its own and is left alone.
+const accountRootsSharingProjects = (homeRoot: string): ReadonlyArray<string> => {
+  const configuredProjects = projectsRoot(homeRoot);
+  const sharedProjects = realpathSync(configuredProjects);
+  return claudeConfigRoots(homeRoot).filter((configRoot) => {
+    const accountProjects = path.join(configRoot, "projects");
+    return existsSync(accountProjects) && realpathSync(accountProjects) === sharedProjects;
+  });
+};
+
 // Each Claude account keeps its own file history, session environment and prompt history under its config root.
 export const deleteClaudeSessions = (request: {
   readonly homeRoot: string;
   readonly sessions: ReadonlyArray<ClaudeSession>;
 }): void => {
-  const configRoots = claudeConfigRoots(request.homeRoot);
+  const configRoots = accountRootsSharingProjects(request.homeRoot);
   for (const session of request.sessions) {
     const accountFolders = configRoots.flatMap((configRoot) => [
       path.join(configRoot, "file-history", session.sessionId),
