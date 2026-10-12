@@ -83,6 +83,28 @@ describe("unsavedWorkTrees", () => {
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
   });
 
+  it("lets go of a clone whose tracked files are only missing, the way a delete that was cut off leaves it", () => {
+    const workspace = createWorkspace();
+    rmSync(path.join(workspace.clone, "README.md"));
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone with a missing tracked file next to a new file", () => {
+    const workspace = createWorkspace();
+    rmSync(path.join(workspace.clone, "README.md"));
+    writeFileSync(path.join(workspace.clone, "feature.ts"), "export const feature = 1;\n");
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a clone with a deletion that was staged on purpose", () => {
+    const workspace = createWorkspace();
+    git({ folder: workspace.clone, command: ["rm", "--quiet", "README.md"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
   it("finds a clone with a commit that is on no remote", () => {
     const workspace = createWorkspace();
     commitFile({ workTree: workspace.clone, fileName: "feature.ts" });

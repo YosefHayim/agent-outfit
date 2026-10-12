@@ -68,6 +68,26 @@ const createRepositoryWithUncommittedWork = (workTree: string) => {
   return initialization.status;
 };
 
+// A clone whose every commit is on its remote, with one tracked file gone the way a delete that was cut off leaves it.
+const createHalfDeletedClone = (request: { readonly upstream: string; readonly clone: string }) => {
+  const identity = ["-c", "user.name=Scratch Test", "-c", "user.email=scratch@example.test"];
+  mkdirSync(request.upstream, { recursive: true });
+  writeFileSync(path.join(request.upstream, "README.md"), "content\n");
+  writeFileSync(path.join(request.upstream, "feature.ts"), "export const feature = 1;\n");
+  const gitSteps = [
+    ["init", "--quiet"],
+    ["add", "."],
+    [...identity, "commit", "--quiet", "--message", "add files"],
+    ["clone", "--quiet", ".", request.clone],
+  ];
+  const stepStatuses = gitSteps.map((step) => {
+    const execution = spawnSync("git", step, { cwd: request.upstream, env: isolatedGitEnvironment() });
+    return execution.status;
+  });
+  rmSync(path.join(request.clone, "README.md"));
+  return stepStatuses;
+};
+
 const sessionEnvironment = (homeRoot: string): NodeJS.ProcessEnv => ({
   ...process.env,
   HOME: homeRoot,
@@ -178,6 +198,20 @@ describe("scratchWatcher process boundary", () => {
     expect(existsSync(path.join(workTree, "feature.ts"))).toBe(true);
     expect(readdirSync(abandonedFolder)).toEqual(["scratchpad"]);
     expect(readdirSync(path.join(abandonedFolder, "scratchpad"))).toEqual(["feature-clone"]);
+  });
+
+  it("removes an abandoned folder whose pushed clone was left half deleted", () => {
+    const homeRoot = createHomeRoot();
+    const abandonedFolder = createSessionFolder({ homeRoot, sessionId: otherSessionId });
+    const clone = path.join(abandonedFolder, "scratchpad", "main-check");
+    const stepStatuses = createHalfDeletedClone({ upstream: path.join(homeRoot, "upstream"), clone });
+    leaveUntouchedFor({ folder: abandonedFolder, days: 2 });
+
+    const execution = runWatcher({ homeRoot, watcherArguments: [] });
+
+    expect(stepStatuses).toEqual([0, 0, 0, 0]);
+    expect(execution.status).toBe(0);
+    expect(existsSync(abandonedFolder)).toBe(false);
   });
 
   it("fails open when the home folder cannot be read", () => {

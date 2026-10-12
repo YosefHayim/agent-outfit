@@ -14,20 +14,39 @@ const gitEnvironment = (): NodeJS.ProcessEnv => {
   return Object.fromEntries(variables);
 };
 
+// " D file": a tracked file that is only missing from the work tree, with nothing staged. A delete that was cut off
+// halfway leaves a clone full of these, and no content is lost with them: git already has every such file.
+const MISSING_TRACKED_FILE = /^ D /u;
+
+type GitQuestion = {
+  readonly workTree: string;
+  readonly query: ReadonlyArray<string>;
+  readonly ignoredLine?: RegExp;
+};
+
 // A git call that fails cannot vouch for the work tree, so only a successful empty answer counts as nothing.
-const gitFindsNothing = (request: { readonly workTree: string; readonly query: ReadonlyArray<string> }): boolean => {
+const gitFindsNothing = (question: GitQuestion): boolean => {
   // --no-optional-locks keeps this read from blocking an agent that is using the same work tree.
-  const git = spawnSync("git", ["--no-optional-locks", "-C", request.workTree, ...request.query], {
+  const git = spawnSync("git", ["--no-optional-locks", "-C", question.workTree, ...question.query], {
     encoding: "utf8",
     env: gitEnvironment(),
   });
-  return git.status === 0 && git.stdout.trim() === "";
+  if (git.status !== 0) {
+    return false;
+  }
+
+  const countedLines = git.stdout.split("\n").filter((line) => line !== "" && !question.ignoredLine?.test(line));
+  return countedLines.length === 0;
 };
 
 const holdsUnsavedWork = (workTree: string): boolean => {
   const standaloneClone = statSync(path.join(workTree, ".git")).isDirectory();
   const commitQuery = standaloneClone ? UNPUSHED_COMMIT_QUERY : BRANCHLESS_COMMIT_QUERY;
-  const everythingCommitted = gitFindsNothing({ workTree, query: UNCOMMITTED_CHANGE_QUERY });
+  const everythingCommitted = gitFindsNothing({
+    workTree,
+    query: UNCOMMITTED_CHANGE_QUERY,
+    ignoredLine: MISSING_TRACKED_FILE,
+  });
   const commitsKeptElsewhere = gitFindsNothing({ workTree, query: commitQuery });
   return !everythingCommitted || !commitsKeptElsewhere;
 };
