@@ -22,8 +22,11 @@ const UNPUSHED_COMMIT_QUERY_PAST_TAGS = [
 ];
 const LOCAL_TAG_QUERY = [ANY_WORK_TREE, "for-each-ref", "--format=%(objectname)", "refs/tags"];
 const REMOTE_NAME_QUERY = [ANY_WORK_TREE, "remote"];
-// Each line is "<object>\t<tag>"; --refs leaves out the second line an annotated tag gets for its commit.
-const REMOTE_TAG_QUERY = [ANY_WORK_TREE, "ls-remote", "--tags", "--refs"];
+// Each line is "<object>\t<tag>"; --refs leaves out the second line an annotated tag gets for its commit. The remote's
+// name follows "--", so that git never reads one as an option.
+const REMOTE_TAG_QUERY = [ANY_WORK_TREE, "ls-remote", "--tags", "--refs", "--"];
+// GitHub mostly answers within 3 seconds and has taken 43 on a busy machine. A remote that is slower than this keeps
+// the clone until the next cleanup asks again.
 const REMOTE_ANSWER_TIMEOUT_MILLISECONDS = 30_000;
 // A linked worktree keeps its branches and tags in its main repository, so only commits that none of them holds
 // would go with it.
@@ -139,18 +142,12 @@ const commitsKeptOnRemotes = (repository: string): boolean => {
   return tagObjects.length > 0 && gitFindsNothing({ folder: repository, query: queryPastRemoteTags });
 };
 
+const everythingCommittedIn = (workTree: string): boolean =>
+  gitFindsNothing({ folder: workTree, query: UNCOMMITTED_CHANGE_QUERY, ignoredLine: MISSING_TRACKED_FILE });
+
 const holdsUnsavedWork = (workTree: string): boolean => {
   const [gitFolder] = gitAnswerLines({ folder: workTree, query: GIT_FOLDER_QUERY }) || [];
-  if (!gitFolder) {
-    return true;
-  }
-
-  const everythingCommitted = gitFindsNothing({
-    folder: workTree,
-    query: UNCOMMITTED_CHANGE_QUERY,
-    ignoredLine: MISSING_TRACKED_FILE,
-  });
-  if (!everythingCommitted) {
+  if (!gitFolder || !everythingCommittedIn(workTree)) {
     return true;
   }
 
@@ -168,7 +165,12 @@ const holdsUnsavedWork = (workTree: string): boolean => {
     const submoduleParent = path.join(gitFolder, name);
     return submoduleRepositoriesIn(submoduleParent);
   });
-  return !submoduleRepositories.every(commitsKeptOnRemotes);
+  if (!submoduleRepositories.every(commitsKeptOnRemotes)) {
+    return true;
+  }
+
+  // A remote can take long to answer, and a file written here in that time is work too.
+  return !everythingCommittedIn(workTree);
 };
 
 const isWorkTree = (folder: string): boolean => existsSync(path.join(folder, ".git"));

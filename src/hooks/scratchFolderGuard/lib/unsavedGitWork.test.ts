@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -255,6 +255,31 @@ describe("unsavedWorkTrees", () => {
     rmSync(workspace.upstream, { recursive: true });
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a file that appears in a clone while its remote is asked about tags", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const lateFile = path.join(workspace.clone, "late.ts");
+    // Git runs this in place of the program that answers for a remote on the same machine.
+    const answerAfterNewFile = `touch '${lateFile}'; git upload-pack`;
+    git({ folder: workspace.clone, command: ["config", "remote.origin.uploadpack", answerAfterNewFile] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+    expect(existsSync(lateFile)).toBe(true);
+  });
+
+  it("does not read the name of a remote as an option", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const optionProof = path.join(path.dirname(workspace.upstream), "option-was-read");
+    const remoteNamedLikeOption = `--upload-pack=touch '${optionProof}';`;
+    git({ folder: workspace.clone, command: ["config", `remote.${remoteNamedLikeOption}.url`, workspace.upstream] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+    expect(existsSync(optionProof)).toBe(false);
   });
 
   it("lets go of a clone whose missing submodule has a tag that its remote holds on commits no branch holds", () => {
