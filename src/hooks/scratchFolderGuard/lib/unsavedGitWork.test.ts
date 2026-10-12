@@ -79,6 +79,16 @@ const addLinkedWorkTreeWithSubmodule = (workspace: Workspace): LinkedWorkTree =>
   return { workTree, submodule: path.join(workTree, "vendor", "library") };
 };
 
+// Makes the clone ignore its .worktrees folder and pushes that commit, so the clone's own git status shows nothing
+// of what is put there. Returns the ignored folder.
+const ignoreWorktreesFolder = (workspace: Workspace): string => {
+  writeFileSync(path.join(workspace.clone, ".gitignore"), ".worktrees/\n");
+  git({ folder: workspace.clone, command: ["add", ".gitignore"] });
+  git({ folder: workspace.clone, command: ["commit", "--quiet", "--message", "ignore the worktrees folder"] });
+  git({ folder: workspace.clone, command: ["push", "--quiet", "origin", "HEAD:refs/heads/with-ignore"] });
+  return path.join(workspace.clone, ".worktrees");
+};
+
 afterEach(() => {
   vi.unstubAllEnvs();
   for (const workspace of workspaces.splice(0)) {
@@ -235,6 +245,40 @@ describe("unsavedWorkTrees", () => {
     rmSync(linked.submodule, { recursive: true });
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([linked.workTree]);
+  });
+
+  it("lets go of a clone whose linked worktree in an ignored folder is clean", () => {
+    const workspace = createWorkspace();
+    const nestedWorkTree = path.join(ignoreWorktreesFolder(workspace), "feature");
+    git({ folder: workspace.clone, command: ["worktree", "add", "--quiet", "-b", "feature", nestedWorkTree] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone whose linked worktree in an ignored folder holds a changed file", () => {
+    const workspace = createWorkspace();
+    const nestedWorkTree = path.join(ignoreWorktreesFolder(workspace), "feature");
+    git({ folder: workspace.clone, command: ["worktree", "add", "--quiet", "-b", "feature", nestedWorkTree] });
+    writeFileSync(path.join(nestedWorkTree, "README.md"), "edited\n");
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a clone that holds, in an ignored folder, another clone with a commit on no remote", () => {
+    const workspace = createWorkspace();
+    const nestedClone = path.join(ignoreWorktreesFolder(workspace), "tools", "prototype");
+    mkdirSync(path.dirname(nestedClone), { recursive: true });
+    git({ folder: workspace.clone, command: ["clone", "--quiet", workspace.upstream, nestedClone] });
+    commitFile({ workTree: nestedClone, fileName: "feature.ts" });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("does not look for work trees inside a clone's own .git folder", () => {
+    const workspace = createWorkspace();
+    mkdirSync(path.join(workspace.clone, ".git", "leftover", ".git"), { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
   });
 
   it("asks each work tree's own repository even when git variables point at another one", () => {
