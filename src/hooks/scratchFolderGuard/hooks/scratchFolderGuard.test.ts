@@ -49,6 +49,14 @@ describe("scratchFolderGuard process boundary", () => {
     expect(execution.stdout).toBe("");
   });
 
+  it("stays silent for a commit whose message comes on stdin and only mentions /tmp", () => {
+    const command = "git commit -F - <<'EOF'\nstop writing logs to /tmp and git clone into the scratchpad\nEOF";
+    const execution = runHook(JSON.stringify({ tool_name: "Bash", tool_input: { command }, cwd: "/repo" }));
+
+    expect(execution.status).toBe(0);
+    expect(execution.stdout).toBe("");
+  });
+
   it("denies a shell script fed through a heredoc that writes into /tmp", () => {
     const command = "bash <<'EOF'\necho hi > /tmp/e2e.log\nEOF";
     const execution = runHook(JSON.stringify({ tool_name: "Bash", tool_input: { command }, cwd: "/repo" }));
