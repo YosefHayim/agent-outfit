@@ -1,5 +1,6 @@
-import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +10,7 @@ import { unsavedWorkTrees } from "./unsavedGitWork.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const workspaces: Array<string> = [];
+const passwordRemotes: Array<ChildProcess> = [];
 
 // Inside a git hook these tests inherit GIT_DIR, which would aim every command at the repository being committed.
 const isolatedGitEnvironment = (): NodeJS.ProcessEnv => {
@@ -106,8 +108,24 @@ const fetchEveryTag = (workTree: string) => {
   git({ folder: workTree, command: ["fetch", "--quiet", "--tags", "origin"] });
 };
 
+// Starts a remote that answers every request by asking for a password, and returns its address.
+const startPasswordRemote = async (): Promise<string> => {
+  const askForPassword = `require("node:http")
+    .createServer((request, reply) => reply.writeHead(401, { "WWW-Authenticate": 'Basic realm="scratch"' }).end())
+    .listen(0, "127.0.0.1", function () { console.log(this.address().port); });`;
+  const passwordRemote = spawn(process.execPath, ["--eval", askForPassword], { stdio: ["ignore", "pipe", "inherit"] });
+  passwordRemotes.push(passwordRemote);
+  const [portLine] = await once(passwordRemote.stdout, "data");
+  const port = String(portLine).trim();
+  return `http://127.0.0.1:${port}/upstream.git`;
+};
+
 afterEach(() => {
   vi.unstubAllEnvs();
+  for (const passwordRemote of passwordRemotes.splice(0)) {
+    passwordRemote.kill();
+  }
+
   for (const workspace of workspaces.splice(0)) {
     rmSync(workspace, { recursive: true, force: true });
   }
@@ -280,6 +298,36 @@ describe("unsavedWorkTrees", () => {
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
     expect(existsSync(optionProof)).toBe(false);
+  });
+
+  it("does not run a password helper for a remote that wants a password", async () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const passwordRemote = await startPasswordRemote();
+    git({ folder: workspace.clone, command: ["remote", "set-url", "origin", passwordRemote] });
+    const helperProof = path.join(path.dirname(workspace.upstream), "helper-ran");
+    const passwordHelper = path.join(path.dirname(workspace.upstream), "password-helper.sh");
+    writeFileSync(passwordHelper, `#!/bin/sh\ntouch '${helperProof}'\necho secret\n`, { mode: 0o755 });
+    git({ folder: workspace.clone, command: ["config", "core.askPass", passwordHelper] });
+    vi.stubEnv("SSH_ASKPASS", passwordHelper);
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+    expect(existsSync(helperProof)).toBe(false);
+  });
+
+  it("tells ssh not to ask a password helper either", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const helperRule = path.join(path.dirname(workspace.upstream), "helper-rule");
+    // Stands in for ssh: it writes down the rule it was given and connects to nothing.
+    const sshStandIn = `printenv SSH_ASKPASS_REQUIRE > '${helperRule}'; false`;
+    git({ folder: workspace.clone, command: ["config", "core.sshCommand", sshStandIn] });
+    git({ folder: workspace.clone, command: ["remote", "set-url", "origin", "ssh://example.invalid/upstream.git"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+    expect(readFileSync(helperRule, "utf8")).toBe("never\n");
   });
 
   it("lets go of a clone whose missing submodule has a tag that its remote holds on commits no branch holds", () => {

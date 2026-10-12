@@ -43,11 +43,14 @@ const DETACHED_COMMIT_QUERY = [
 // A clone's git folder is its own .git; a linked worktree's is inside its main repository, e.g. .git/worktrees/feature.
 const GIT_FOLDER_QUERY = ["rev-parse", "--absolute-git-dir"];
 
+// A remote that wants a password has to fail, since nobody is there to type one: git may ask neither on the terminal
+// nor through a helper program, and neither may ssh. An empty GIT_ASKPASS also rules out core.askPass and SSH_ASKPASS.
+const NO_PASSWORD_QUESTIONS = { GIT_TERMINAL_PROMPT: "0", GIT_ASKPASS: "", SSH_ASKPASS_REQUIRE: "never" };
+
 // Git sets GIT_DIR and GIT_INDEX_FILE inside its own hooks; inherited, they would point every call at that repository.
-// A remote that wants a password has to fail: nobody is there to type one.
 const gitEnvironment = (): NodeJS.ProcessEnv => {
   const variables = Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"));
-  return { ...Object.fromEntries(variables), GIT_TERMINAL_PROMPT: "0" };
+  return { ...Object.fromEntries(variables), ...NO_PASSWORD_QUESTIONS };
 };
 
 // " D file": a tracked file that is only missing from the work tree, with nothing staged. A delete that was cut off
