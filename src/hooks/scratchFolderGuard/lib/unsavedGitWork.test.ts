@@ -18,7 +18,9 @@ const isolatedGitEnvironment = (): NodeJS.ProcessEnv => {
 
 const git = (request: { readonly folder: string; readonly command: ReadonlyArray<string> }) => {
   const identity = ["-c", "user.name=Scratch Test", "-c", "user.email=scratch@example.test"];
-  const execution = spawnSync("git", [...identity, "-c", "init.defaultBranch=main", ...request.command], {
+  // Git refuses to clone a submodule from a local folder unless the file protocol is allowed.
+  const settings = ["-c", "init.defaultBranch=main", "-c", "protocol.file.allow=always"];
+  const execution = spawnSync("git", [...identity, ...settings, ...request.command], {
     cwd: request.folder,
     encoding: "utf8",
     env: isolatedGitEnvironment(),
@@ -49,6 +51,18 @@ const createWorkspace = (): Workspace => {
   commitFile({ workTree: upstream, fileName: "README.md" });
   git({ folder: scratchFolder, command: ["clone", "--quiet", upstream, clone] });
   return { upstream, scratchFolder, clone };
+};
+
+// Adds a submodule at vendor/library to the clone and pushes that commit, so the clone itself stays fully pushed.
+const addPushedSubmodule = (workspace: Workspace): string => {
+  const library = path.join(path.dirname(workspace.upstream), "library");
+  mkdirSync(library);
+  git({ folder: library, command: ["init", "--quiet"] });
+  commitFile({ workTree: library, fileName: "library.ts" });
+  git({ folder: workspace.clone, command: ["submodule", "--quiet", "add", library, "vendor/library"] });
+  git({ folder: workspace.clone, command: ["commit", "--quiet", "--message", "add the library"] });
+  git({ folder: workspace.clone, command: ["push", "--quiet", "origin", "HEAD:refs/heads/with-library"] });
+  return path.join(workspace.clone, "vendor", "library");
 };
 
 afterEach(() => {
@@ -101,6 +115,42 @@ describe("unsavedWorkTrees", () => {
   it("finds a clone with a deletion that was staged on purpose", () => {
     const workspace = createWorkspace();
     git({ folder: workspace.clone, command: ["rm", "--quiet", "README.md"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("lets go of a pushed clone whose submodule folder is only missing", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    rmSync(submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone whose missing submodule left a commit on no remote in its repository", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    commitFile({ workTree: submodule, fileName: "feature.ts" });
+    rmSync(submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a pushed clone whose submodule holds a commit that is on no remote", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    commitFile({ workTree: submodule, fileName: "feature.ts" });
+    git({ folder: workspace.clone, command: ["commit", "--quiet", "--all", "--message", "use the new library"] });
+    git({ folder: workspace.clone, command: ["push", "--quiet", "origin", "HEAD:refs/heads/with-library"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a changed file in a submodule that git status is told to ignore", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    git({ folder: workspace.clone, command: ["config", "submodule.vendor/library.ignore", "all"] });
+    writeFileSync(path.join(submodule, "library.ts"), "edited\n");
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
   });
