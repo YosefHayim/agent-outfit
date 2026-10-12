@@ -70,6 +70,16 @@ describe("reading transcript files", () => {
     expect(head.at(0)).toContain('"index":0');
   });
 
+  it("reads a line that runs past the head whole", () => {
+    const longTranscript = path.join(folder, "long-first-line.jsonl");
+    const threadHeader = JSON.stringify({ type: "session_meta", instructions: "x".repeat(200_000), source: "cli" });
+    writeFileSync(longTranscript, `${threadHeader}\n${JSON.stringify({ type: "user", index: 1 })}\n`);
+
+    const head = readTranscriptHead(longTranscript);
+
+    expect(head.at(0)).toBe(threadHeader);
+  });
+
   it("reads only the tail of a long transcript, newest line included", () => {
     const tail = readTranscriptTail(transcript);
     expect(tail.length).toBeLessThan(4_002);

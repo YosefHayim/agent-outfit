@@ -7,6 +7,7 @@ import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
 const TRANSCRIPT_TAIL_BYTES = 256 * 1024;
 // A session's opening lines say where and how it started; Codex's first line alone is over 20 KB.
 const TRANSCRIPT_HEAD_BYTES = 64 * 1024;
+const LINE_FEED = 0x0a;
 
 export type TokenUsage = {
   readonly inputTokens: number;
@@ -87,13 +88,39 @@ export const decodeTranscriptLine = (line: string): TranscriptEntry | undefined 
 
 export const readTranscriptLines = (file: string): ReadonlyArray<string> => readFileSync(file, "utf8").split("\n");
 
-// The last line of the head may be cut short.
+type HeadRead = { readonly descriptor: number; readonly position: number };
+
+const readHeadChunk = (read: HeadRead): Buffer => {
+  const bytes = Buffer.alloc(TRANSCRIPT_HEAD_BYTES);
+  const byteCount = readSync(read.descriptor, bytes, 0, TRANSCRIPT_HEAD_BYTES, read.position);
+  return bytes.subarray(0, byteCount);
+};
+
+const restOfOpenLine = (read: HeadRead): ReadonlyArray<Buffer> => {
+  const chunk = readHeadChunk(read);
+  const lineEnd = chunk.indexOf(LINE_FEED);
+  if (lineEnd !== -1) {
+    return [chunk.subarray(0, lineEnd)];
+  }
+
+  if (chunk.length < TRANSCRIPT_HEAD_BYTES) {
+    return [chunk];
+  }
+
+  const laterChunks = restOfOpenLine({ ...read, position: read.position + chunk.length });
+  return [chunk, ...laterChunks];
+};
+
+// Every line that starts in the head is read whole, however long: a cut line would not parse.
 export const readTranscriptHead = (file: string): ReadonlyArray<string> => {
   const descriptor = openSync(file, "r");
   try {
-    const bytes = Buffer.alloc(TRANSCRIPT_HEAD_BYTES);
-    const byteCount = readSync(descriptor, bytes, 0, TRANSCRIPT_HEAD_BYTES, 0);
-    return bytes.subarray(0, byteCount).toString("utf8").split("\n");
+    const head = readHeadChunk({ descriptor, position: 0 });
+    const openLineRest =
+      head.length < TRANSCRIPT_HEAD_BYTES ? [] : restOfOpenLine({ descriptor, position: head.length });
+    return Buffer.concat([head, ...openLineRest])
+      .toString("utf8")
+      .split("\n");
   } finally {
     closeSync(descriptor);
   }
