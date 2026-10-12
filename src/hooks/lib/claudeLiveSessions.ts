@@ -8,7 +8,7 @@ const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
 
 // A second Claude account keeps its own config root beside ~/.claude, e.g. ~/.claude-work, with its own registry,
 // while sharing the scratch root and often the projects folder.
-const claudeConfigRoots = (homeRoot: string): ReadonlyArray<string> => {
+export const claudeConfigRoots = (homeRoot: string): ReadonlyArray<string> => {
   const accountRoots = readdirSync(homeRoot)
     .filter((name) => name === ".claude" || name.startsWith(".claude-"))
     .map((name) => path.join(homeRoot, name));
