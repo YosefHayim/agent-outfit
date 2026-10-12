@@ -53,9 +53,12 @@ const createWorkspace = (): Workspace => {
   return { upstream, scratchFolder, clone };
 };
 
+// The repository the clone's submodule is cloned from.
+const libraryOf = (workspace: Workspace): string => path.join(path.dirname(workspace.upstream), "library");
+
 // Adds a submodule at vendor/library to the clone and pushes that commit, so the clone itself stays fully pushed.
 const addPushedSubmodule = (workspace: Workspace): string => {
-  const library = path.join(path.dirname(workspace.upstream), "library");
+  const library = libraryOf(workspace);
   mkdirSync(library);
   git({ folder: library, command: ["init", "--quiet"] });
   commitFile({ workTree: library, fileName: "library.ts" });
@@ -87,6 +90,20 @@ const ignoreWorktreesFolder = (workspace: Workspace): string => {
   git({ folder: workspace.clone, command: ["commit", "--quiet", "--message", "ignore the worktrees folder"] });
   git({ folder: workspace.clone, command: ["push", "--quiet", "origin", "HEAD:refs/heads/with-ignore"] });
   return path.join(workspace.clone, ".worktrees");
+};
+
+// Gives a repository a tag on a commit that no branch holds, the way a deleted release branch leaves one.
+const tagCommitOutsideEveryBranch = (repository: string) => {
+  git({ folder: repository, command: ["checkout", "--quiet", "-b", "release"] });
+  commitFile({ workTree: repository, fileName: "release.md" });
+  git({ folder: repository, command: ["tag", "--annotate", "--message", "release", "archive/release"] });
+  git({ folder: repository, command: ["checkout", "--quiet", "main"] });
+  git({ folder: repository, command: ["branch", "--quiet", "-D", "release"] });
+};
+
+// A clone copies every tag of its remote, also one on commits outside every branch; this fetch does the same later.
+const fetchEveryTag = (workTree: string) => {
+  git({ folder: workTree, command: ["fetch", "--quiet", "--tags", "origin"] });
 };
 
 afterEach(() => {
@@ -194,6 +211,63 @@ describe("unsavedWorkTrees", () => {
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
   });
 
+  it("lets go of a pushed clone whose remote is gone, since no tag needs asking about", () => {
+    const workspace = createWorkspace();
+    rmSync(workspace.upstream, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("lets go of a clone whose remote holds a tag on commits that no branch holds", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone with a tag of its own on a commit that no branch holds, beside a tag its remote holds", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    commitFile({ workTree: workspace.clone, fileName: "feature.ts" });
+    git({ folder: workspace.clone, command: ["tag", "backup"] });
+    git({ folder: workspace.clone, command: ["reset", "--quiet", "--hard", "origin/main"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a clone that moved a tag of its remote onto a commit of its own", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    commitFile({ workTree: workspace.clone, fileName: "feature.ts" });
+    git({ folder: workspace.clone, command: ["tag", "--force", "archive/release"] });
+    git({ folder: workspace.clone, command: ["reset", "--quiet", "--hard", "origin/main"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("keeps a clone whose remote can no longer say which tags it holds", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    rmSync(workspace.upstream, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("lets go of a clone whose missing submodule has a tag that its remote holds on commits no branch holds", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    const library = libraryOf(workspace);
+    tagCommitOutsideEveryBranch(library);
+    fetchEveryTag(submodule);
+    rmSync(submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
   it("finds a clone with stashed changes", () => {
     const workspace = createWorkspace();
     writeFileSync(path.join(workspace.clone, "README.md"), "edited\n");
@@ -228,6 +302,16 @@ describe("unsavedWorkTrees", () => {
     commitFile({ workTree: linkedWorkTree, fileName: "feature.ts" });
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([linkedWorkTree]);
+  });
+
+  it("lets go of a linked worktree checked out at a tag, which stays in its main repository", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    const linkedWorkTree = path.join(workspace.scratchFolder, "linked");
+    const checkout = ["worktree", "add", "--quiet", "--detach", linkedWorkTree, "archive/release"];
+    git({ folder: workspace.upstream, command: checkout });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
   });
 
   it("lets go of a linked worktree whose pushed submodule folder is only missing", () => {

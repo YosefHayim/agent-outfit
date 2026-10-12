@@ -5,20 +5,46 @@ import path from "node:path";
 // A repository can tell git status to skip its submodules ("ignore = all" in .gitmodules) or its new files
 // ("status.showUntrackedFiles = no"); the flags ask anyway.
 const UNCOMMITTED_CHANGE_QUERY = ["status", "--porcelain", "--ignore-submodules=none", "--untracked-files=normal"];
-// --all covers every branch, the stash, and the HEAD of each linked worktree.
-const UNPUSHED_COMMIT_QUERY = ["log", "--all", "--not", "--remotes", "--max-count=1", "--format=%H"];
 // A submodule's repository names its work tree, and git refuses to run when that folder is gone; --work-tree makes
-// git stop looking for it.
-const SUBMODULE_UNPUSHED_COMMIT_QUERY = ["--work-tree=.", ...UNPUSHED_COMMIT_QUERY];
-// A linked worktree keeps its branches in its main repository, so only commits that no branch holds would go with it.
-const BRANCHLESS_COMMIT_QUERY = ["log", "HEAD", "--not", "--branches", "--remotes", "--max-count=1", "--format=%H"];
+// git stop looking for it. No question about commits or tags needs a work tree.
+const ANY_WORK_TREE = "--work-tree=.";
+// --all covers every branch, every tag, the stash, and the HEAD of each linked worktree.
+const UNPUSHED_COMMIT_QUERY = [ANY_WORK_TREE, "log", "--all", "--not", "--remotes", "--max-count=1", "--format=%H"];
+const UNPUSHED_COMMIT_QUERY_PAST_TAGS = [
+  ANY_WORK_TREE,
+  "log",
+  "--exclude=refs/tags/*",
+  "--all",
+  "--not",
+  "--remotes",
+  "--max-count=1",
+  "--format=%H",
+];
+const LOCAL_TAG_QUERY = [ANY_WORK_TREE, "for-each-ref", "--format=%(objectname)", "refs/tags"];
+const REMOTE_NAME_QUERY = [ANY_WORK_TREE, "remote"];
+// Each line is "<object>\t<tag>"; --refs leaves out the second line an annotated tag gets for its commit.
+const REMOTE_TAG_QUERY = [ANY_WORK_TREE, "ls-remote", "--tags", "--refs"];
+const REMOTE_ANSWER_TIMEOUT_MILLISECONDS = 30_000;
+// A linked worktree keeps its branches and tags in its main repository, so only commits that none of them holds
+// would go with it.
+const DETACHED_COMMIT_QUERY = [
+  "log",
+  "HEAD",
+  "--not",
+  "--branches",
+  "--tags",
+  "--remotes",
+  "--max-count=1",
+  "--format=%H",
+];
 // A clone's git folder is its own .git; a linked worktree's is inside its main repository, e.g. .git/worktrees/feature.
 const GIT_FOLDER_QUERY = ["rev-parse", "--absolute-git-dir"];
 
 // Git sets GIT_DIR and GIT_INDEX_FILE inside its own hooks; inherited, they would point every call at that repository.
+// A remote that wants a password has to fail: nobody is there to type one.
 const gitEnvironment = (): NodeJS.ProcessEnv => {
   const variables = Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"));
-  return Object.fromEntries(variables);
+  return { ...Object.fromEntries(variables), GIT_TERMINAL_PROMPT: "0" };
 };
 
 // " D file": a tracked file that is only missing from the work tree, with nothing staged. A delete that was cut off
@@ -29,14 +55,16 @@ type GitQuestion = {
   readonly folder: string;
   readonly query: ReadonlyArray<string>;
   readonly ignoredLine?: RegExp;
+  readonly timeoutMilliseconds?: number;
 };
 
-// A git call that fails has no answer, which is not the same as an empty one.
+// A git call that fails or runs out of time has no answer, which is not the same as an empty one.
 const gitAnswerLines = (question: GitQuestion): ReadonlyArray<string> | undefined => {
   // --no-optional-locks keeps this read from blocking an agent that is using the same work tree.
   const git = spawnSync("git", ["--no-optional-locks", "-C", question.folder, ...question.query], {
     encoding: "utf8",
     env: gitEnvironment(),
+    timeout: question.timeoutMilliseconds,
   });
   if (git.status !== 0) {
     return undefined;
@@ -75,26 +103,72 @@ const submoduleRepositoriesIn = (folder: string): ReadonlyArray<string> => {
   return subfoldersOf(folder).flatMap(submoduleRepositoriesIn);
 };
 
+// The tag objects a repository has in common with its remotes: every commit under one of them is kept there.
+const tagObjectsOnRemotes = (repository: string): ReadonlyArray<string> => {
+  const localTagObjects = gitAnswerLines({ folder: repository, query: LOCAL_TAG_QUERY }) || [];
+  if (localTagObjects.length === 0) {
+    return [];
+  }
+
+  const remoteNames = gitAnswerLines({ folder: repository, query: REMOTE_NAME_QUERY }) || [];
+  const remoteTagObjects = remoteNames
+    .flatMap((remoteName) => {
+      const remoteTagQuery = [...REMOTE_TAG_QUERY, remoteName];
+      const timeoutMilliseconds = REMOTE_ANSWER_TIMEOUT_MILLISECONDS;
+      return gitAnswerLines({ folder: repository, query: remoteTagQuery, timeoutMilliseconds }) || [];
+    })
+    .flatMap((remoteTagLine) => remoteTagLine.split("\t").slice(0, 1));
+  const objectsOnRemotes = new Set(remoteTagObjects);
+  return localTagObjects.filter((tagObject) => objectsOnRemotes.has(tagObject));
+};
+
+// A clone copies every tag of its remote, also one on commits that no remote branch holds, e.g. the tag of a deleted
+// release branch. Only the remote can tell such a tag from one made here, so it is asked, and only when a tag is all
+// that still holds a commit.
+const commitsKeptOnRemotes = (repository: string): boolean => {
+  if (gitFindsNothing({ folder: repository, query: UNPUSHED_COMMIT_QUERY })) {
+    return true;
+  }
+
+  if (!gitFindsNothing({ folder: repository, query: UNPUSHED_COMMIT_QUERY_PAST_TAGS })) {
+    return false;
+  }
+
+  const tagObjects = tagObjectsOnRemotes(repository);
+  const queryPastRemoteTags = [...UNPUSHED_COMMIT_QUERY, ...tagObjects];
+  return tagObjects.length > 0 && gitFindsNothing({ folder: repository, query: queryPastRemoteTags });
+};
+
 const holdsUnsavedWork = (workTree: string): boolean => {
   const [gitFolder] = gitAnswerLines({ folder: workTree, query: GIT_FOLDER_QUERY }) || [];
   if (!gitFolder) {
     return true;
   }
 
-  const standaloneClone = statSync(path.join(workTree, ".git")).isDirectory();
-  const commitQuery = standaloneClone ? UNPUSHED_COMMIT_QUERY : BRANCHLESS_COMMIT_QUERY;
   const everythingCommitted = gitFindsNothing({
     folder: workTree,
     query: UNCOMMITTED_CHANGE_QUERY,
     ignoredLine: MISSING_TRACKED_FILE,
   });
-  const commitsKeptElsewhere = gitFindsNothing({ folder: workTree, query: commitQuery });
+  if (!everythingCommitted) {
+    return true;
+  }
+
+  const standaloneClone = statSync(path.join(workTree, ".git")).isDirectory();
+  const commitsKeptElsewhere = standaloneClone
+    ? commitsKeptOnRemotes(workTree)
+    : gitFindsNothing({ folder: workTree, query: DETACHED_COMMIT_QUERY });
+  if (!commitsKeptElsewhere) {
+    return true;
+  }
+
   // A linked worktree keeps its submodules in its own git folder, and a clone holds the git folders of its linked
   // worktrees under .git/worktrees/<name>.
-  const submoduleCommitsKeptElsewhere = ["modules", "worktrees"]
-    .flatMap((name) => submoduleRepositoriesIn(path.join(gitFolder, name)))
-    .every((repository) => gitFindsNothing({ folder: repository, query: SUBMODULE_UNPUSHED_COMMIT_QUERY }));
-  return !everythingCommitted || !commitsKeptElsewhere || !submoduleCommitsKeptElsewhere;
+  const submoduleRepositories = ["modules", "worktrees"].flatMap((name) => {
+    const submoduleParent = path.join(gitFolder, name);
+    return submoduleRepositoriesIn(submoduleParent);
+  });
+  return !submoduleRepositories.every(commitsKeptOnRemotes);
 };
 
 const isWorkTree = (folder: string): boolean => existsSync(path.join(folder, ".git"));
