@@ -2,8 +2,9 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
-// A repository can tell git status to skip its submodules ("ignore = all" in .gitmodules); the flag asks anyway.
-const UNCOMMITTED_CHANGE_QUERY = ["status", "--porcelain", "--ignore-submodules=none"];
+// A repository can tell git status to skip its submodules ("ignore = all" in .gitmodules) or its new files
+// ("status.showUntrackedFiles = no"); the flags ask anyway.
+const UNCOMMITTED_CHANGE_QUERY = ["status", "--porcelain", "--ignore-submodules=none", "--untracked-files=normal"];
 // --all covers every branch, the stash, and the HEAD of each linked worktree.
 const UNPUSHED_COMMIT_QUERY = ["log", "--all", "--not", "--remotes", "--max-count=1", "--format=%H"];
 // A submodule's repository names its work tree, and git refuses to run when that folder is gone; --work-tree makes
@@ -11,6 +12,8 @@ const UNPUSHED_COMMIT_QUERY = ["log", "--all", "--not", "--remotes", "--max-coun
 const SUBMODULE_UNPUSHED_COMMIT_QUERY = ["--work-tree=.", ...UNPUSHED_COMMIT_QUERY];
 // A linked worktree keeps its branches in its main repository, so only commits that no branch holds would go with it.
 const BRANCHLESS_COMMIT_QUERY = ["log", "HEAD", "--not", "--branches", "--remotes", "--max-count=1", "--format=%H"];
+// A clone's git folder is its own .git; a linked worktree's is inside its main repository, e.g. .git/worktrees/feature.
+const GIT_FOLDER_QUERY = ["rev-parse", "--absolute-git-dir"];
 
 // Git sets GIT_DIR and GIT_INDEX_FILE inside its own hooks; inherited, they would point every call at that repository.
 const gitEnvironment = (): NodeJS.ProcessEnv => {
@@ -28,18 +31,28 @@ type GitQuestion = {
   readonly ignoredLine?: RegExp;
 };
 
-// A git call that fails cannot vouch for the work tree, so only a successful empty answer counts as nothing.
-const gitFindsNothing = (question: GitQuestion): boolean => {
+// A git call that fails has no answer, which is not the same as an empty one.
+const gitAnswerLines = (question: GitQuestion): ReadonlyArray<string> | undefined => {
   // --no-optional-locks keeps this read from blocking an agent that is using the same work tree.
   const git = spawnSync("git", ["--no-optional-locks", "-C", question.folder, ...question.query], {
     encoding: "utf8",
     env: gitEnvironment(),
   });
   if (git.status !== 0) {
+    return undefined;
+  }
+
+  return git.stdout.split("\n").filter((line) => line !== "");
+};
+
+// A git call that fails cannot vouch for the work tree, so only a successful empty answer counts as nothing.
+const gitFindsNothing = (question: GitQuestion): boolean => {
+  const answerLines = gitAnswerLines(question);
+  if (!answerLines) {
     return false;
   }
 
-  const countedLines = git.stdout.split("\n").filter((line) => line !== "" && !question.ignoredLine?.test(line));
+  const countedLines = answerLines.filter((line) => !question.ignoredLine?.test(line));
   return countedLines.length === 0;
 };
 
@@ -48,8 +61,8 @@ const subfoldersOf = (folder: string): ReadonlyArray<string> =>
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(folder, entry.name));
 
-// A submodule keeps its repository inside the clone, e.g. .git/modules/vendor/library, and a nested submodule under
-// that repository's own modules folder. The clone's log does not see these commits.
+// A submodule keeps its repository inside its parent's git folder, e.g. .git/modules/vendor/library, and a nested
+// submodule under that repository's own modules folder. The parent's log does not see these commits.
 const submoduleRepositoriesIn = (folder: string): ReadonlyArray<string> => {
   if (!existsSync(folder)) {
     return [];
@@ -63,8 +76,12 @@ const submoduleRepositoriesIn = (folder: string): ReadonlyArray<string> => {
 };
 
 const holdsUnsavedWork = (workTree: string): boolean => {
-  const gitFolder = path.join(workTree, ".git");
-  const standaloneClone = statSync(gitFolder).isDirectory();
+  const [gitFolder] = gitAnswerLines({ folder: workTree, query: GIT_FOLDER_QUERY }) || [];
+  if (!gitFolder) {
+    return true;
+  }
+
+  const standaloneClone = statSync(path.join(workTree, ".git")).isDirectory();
   const commitQuery = standaloneClone ? UNPUSHED_COMMIT_QUERY : BRANCHLESS_COMMIT_QUERY;
   const everythingCommitted = gitFindsNothing({
     folder: workTree,
@@ -72,7 +89,8 @@ const holdsUnsavedWork = (workTree: string): boolean => {
     ignoredLine: MISSING_TRACKED_FILE,
   });
   const commitsKeptElsewhere = gitFindsNothing({ folder: workTree, query: commitQuery });
-  // A linked worktree of the clone keeps its submodules under .git/worktrees/<name>/modules.
+  // A linked worktree keeps its submodules in its own git folder, and a clone holds the git folders of its linked
+  // worktrees under .git/worktrees/<name>.
   const submoduleCommitsKeptElsewhere = ["modules", "worktrees"]
     .flatMap((name) => submoduleRepositoriesIn(path.join(gitFolder, name)))
     .every((repository) => gitFindsNothing({ folder: repository, query: SUBMODULE_UNPUSHED_COMMIT_QUERY }));
