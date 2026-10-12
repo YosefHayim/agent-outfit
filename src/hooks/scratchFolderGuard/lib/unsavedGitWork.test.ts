@@ -1,5 +1,6 @@
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +10,7 @@ import { unsavedWorkTrees } from "./unsavedGitWork.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const workspaces: Array<string> = [];
+const passwordRemotes: Array<ChildProcess> = [];
 
 // Inside a git hook these tests inherit GIT_DIR, which would aim every command at the repository being committed.
 const isolatedGitEnvironment = (): NodeJS.ProcessEnv => {
@@ -53,9 +55,12 @@ const createWorkspace = (): Workspace => {
   return { upstream, scratchFolder, clone };
 };
 
+// The repository the clone's submodule is cloned from.
+const libraryOf = (workspace: Workspace): string => path.join(path.dirname(workspace.upstream), "library");
+
 // Adds a submodule at vendor/library to the clone and pushes that commit, so the clone itself stays fully pushed.
 const addPushedSubmodule = (workspace: Workspace): string => {
-  const library = path.join(path.dirname(workspace.upstream), "library");
+  const library = libraryOf(workspace);
   mkdirSync(library);
   git({ folder: library, command: ["init", "--quiet"] });
   commitFile({ workTree: library, fileName: "library.ts" });
@@ -89,8 +94,38 @@ const ignoreWorktreesFolder = (workspace: Workspace): string => {
   return path.join(workspace.clone, ".worktrees");
 };
 
+// Gives a repository a tag on a commit that no branch holds, the way a deleted release branch leaves one.
+const tagCommitOutsideEveryBranch = (repository: string) => {
+  git({ folder: repository, command: ["checkout", "--quiet", "-b", "release"] });
+  commitFile({ workTree: repository, fileName: "release.md" });
+  git({ folder: repository, command: ["tag", "--annotate", "--message", "release", "archive/release"] });
+  git({ folder: repository, command: ["checkout", "--quiet", "main"] });
+  git({ folder: repository, command: ["branch", "--quiet", "-D", "release"] });
+};
+
+// A clone copies every tag of its remote, also one on commits outside every branch; this fetch does the same later.
+const fetchEveryTag = (workTree: string) => {
+  git({ folder: workTree, command: ["fetch", "--quiet", "--tags", "origin"] });
+};
+
+// Starts a remote that answers every request by asking for a password, and returns its address.
+const startPasswordRemote = async (): Promise<string> => {
+  const askForPassword = `require("node:http")
+    .createServer((request, reply) => reply.writeHead(401, { "WWW-Authenticate": 'Basic realm="scratch"' }).end())
+    .listen(0, "127.0.0.1", function () { console.log(this.address().port); });`;
+  const passwordRemote = spawn(process.execPath, ["--eval", askForPassword], { stdio: ["ignore", "pipe", "inherit"] });
+  passwordRemotes.push(passwordRemote);
+  const [portLine] = await once(passwordRemote.stdout, "data");
+  const port = String(portLine).trim();
+  return `http://127.0.0.1:${port}/upstream.git`;
+};
+
 afterEach(() => {
   vi.unstubAllEnvs();
+  for (const passwordRemote of passwordRemotes.splice(0)) {
+    passwordRemote.kill();
+  }
+
   for (const workspace of workspaces.splice(0)) {
     rmSync(workspace, { recursive: true, force: true });
   }
@@ -194,6 +229,118 @@ describe("unsavedWorkTrees", () => {
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
   });
 
+  it("lets go of a pushed clone whose remote is gone, since no tag needs asking about", () => {
+    const workspace = createWorkspace();
+    rmSync(workspace.upstream, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("lets go of a clone whose remote holds a tag on commits that no branch holds", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
+  it("finds a clone with a tag of its own on a commit that no branch holds, beside a tag its remote holds", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    commitFile({ workTree: workspace.clone, fileName: "feature.ts" });
+    git({ folder: workspace.clone, command: ["tag", "backup"] });
+    git({ folder: workspace.clone, command: ["reset", "--quiet", "--hard", "origin/main"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a clone that moved a tag of its remote onto a commit of its own", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    commitFile({ workTree: workspace.clone, fileName: "feature.ts" });
+    git({ folder: workspace.clone, command: ["tag", "--force", "archive/release"] });
+    git({ folder: workspace.clone, command: ["reset", "--quiet", "--hard", "origin/main"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("keeps a clone whose remote can no longer say which tags it holds", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    rmSync(workspace.upstream, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+  });
+
+  it("finds a file that appears in a clone while its remote is asked about tags", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const lateFile = path.join(workspace.clone, "late.ts");
+    // Git runs this in place of the program that answers for a remote on the same machine.
+    const answerAfterNewFile = `touch '${lateFile}'; git upload-pack`;
+    git({ folder: workspace.clone, command: ["config", "remote.origin.uploadpack", answerAfterNewFile] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+    expect(existsSync(lateFile)).toBe(true);
+  });
+
+  it("does not read the name of a remote as an option", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const optionProof = path.join(path.dirname(workspace.upstream), "option-was-read");
+    const remoteNamedLikeOption = `--upload-pack=touch '${optionProof}';`;
+    git({ folder: workspace.clone, command: ["config", `remote.${remoteNamedLikeOption}.url`, workspace.upstream] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+    expect(existsSync(optionProof)).toBe(false);
+  });
+
+  it("does not run a password helper for a remote that wants a password", async () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const passwordRemote = await startPasswordRemote();
+    git({ folder: workspace.clone, command: ["remote", "set-url", "origin", passwordRemote] });
+    const helperProof = path.join(path.dirname(workspace.upstream), "helper-ran");
+    const passwordHelper = path.join(path.dirname(workspace.upstream), "password-helper.sh");
+    writeFileSync(passwordHelper, `#!/bin/sh\ntouch '${helperProof}'\necho secret\n`, { mode: 0o755 });
+    git({ folder: workspace.clone, command: ["config", "core.askPass", passwordHelper] });
+    vi.stubEnv("SSH_ASKPASS", passwordHelper);
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+    expect(existsSync(helperProof)).toBe(false);
+  });
+
+  it("tells ssh not to ask a password helper either", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    fetchEveryTag(workspace.clone);
+    const helperRule = path.join(path.dirname(workspace.upstream), "helper-rule");
+    // Stands in for ssh: it writes down the rule it was given and connects to nothing.
+    const sshStandIn = `printenv SSH_ASKPASS_REQUIRE > '${helperRule}'; false`;
+    git({ folder: workspace.clone, command: ["config", "core.sshCommand", sshStandIn] });
+    git({ folder: workspace.clone, command: ["remote", "set-url", "origin", "ssh://example.invalid/upstream.git"] });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([workspace.clone]);
+    expect(readFileSync(helperRule, "utf8")).toBe("never\n");
+  });
+
+  it("lets go of a clone whose missing submodule has a tag that its remote holds on commits no branch holds", () => {
+    const workspace = createWorkspace();
+    const submodule = addPushedSubmodule(workspace);
+    const library = libraryOf(workspace);
+    tagCommitOutsideEveryBranch(library);
+    fetchEveryTag(submodule);
+    rmSync(submodule, { recursive: true });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
+  });
+
   it("finds a clone with stashed changes", () => {
     const workspace = createWorkspace();
     writeFileSync(path.join(workspace.clone, "README.md"), "edited\n");
@@ -228,6 +375,16 @@ describe("unsavedWorkTrees", () => {
     commitFile({ workTree: linkedWorkTree, fileName: "feature.ts" });
 
     expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([linkedWorkTree]);
+  });
+
+  it("lets go of a linked worktree checked out at a tag, which stays in its main repository", () => {
+    const workspace = createWorkspace();
+    tagCommitOutsideEveryBranch(workspace.upstream);
+    const linkedWorkTree = path.join(workspace.scratchFolder, "linked");
+    const checkout = ["worktree", "add", "--quiet", "--detach", linkedWorkTree, "archive/release"];
+    git({ folder: workspace.upstream, command: checkout });
+
+    expect(unsavedWorkTrees(workspace.scratchFolder)).toEqual([]);
   });
 
   it("lets go of a linked worktree whose pushed submodule folder is only missing", () => {
