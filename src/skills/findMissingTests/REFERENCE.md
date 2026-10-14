@@ -7,7 +7,7 @@
 | Features | `## Features` in `$RUN_DIR/report.md` |
 | Report | `## Report` in `$RUN_DIR/report.md` |
 
-`RUN_DIR` is `${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/find-missing-tests/<YYYY-MM-DD-HHMM>/`, outside the repo. Start a new folder for each run (snippet in [SKILL.md](SKILL.md)); resume from the path the user gives or the newest folder. Never leave run records in the repo. See [references/agent-artifacts.md](references/agent-artifacts.md).
+`RUN_DIR` is `${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/<repo>/find-missing-tests/<YYYY-MM-DD-HHMM>/`, outside the repo. Start a new folder for each run (snippet in [SKILL.md](SKILL.md)); resume from the path the user gives or the newest folder. Never leave run records in the repo. See [references/agent-artifacts.md](references/agent-artifacts.md).
 
 ## Headless policy
 

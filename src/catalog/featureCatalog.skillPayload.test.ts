@@ -144,7 +144,7 @@ describe("run report folders", () => {
   it("keeps each run in the user state directory with one report.md", () => {
     const text = readFileSync(sharedGuidePath, "utf8");
     expect(text).toMatch(/XDG_STATE_HOME:-\$HOME\/\.local\/state/);
-    expect(text).toMatch(/agent-outfit\/runs\/\$REPO\/\$SKILL/);
+    expect(text).toMatch(/agent-setup\/runs\/\$REPO\/\$SKILL/);
     expect(text).toMatch(/date \+%Y-%m-%d-%H%M/);
     expect(text).toMatch(/report\.md/);
   });

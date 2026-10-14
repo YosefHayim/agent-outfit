@@ -20,7 +20,7 @@ const packageFiles = {
 
 const claudeSettingsPath = ".claude/settings.json";
 const codexHooksPath = ".codex/hooks.json";
-const receiptPath = ".claude/agent-outfit/receipt.json";
+const receiptPath = ".claude/agent-setup/receipt.json";
 
 const userStop = { hooks: [{ type: "command", command: "user-stop" }] };
 const foreignStop = { hooks: [{ type: "command", command: "voxkey-stop" }] };
@@ -32,8 +32,8 @@ const sha256 = (text: string): string => createHash("sha256").update(text).diges
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-hook-settings-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-hook-settings-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-hook-settings-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-hook-settings-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {

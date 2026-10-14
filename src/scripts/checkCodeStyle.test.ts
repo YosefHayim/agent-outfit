@@ -35,7 +35,7 @@ const guideWith = (ruleIds: ReadonlyArray<string>): string =>
     .concat("\n");
 
 const repositoryWith = (files: Readonly<Record<string, string>>): string => {
-  const repositoryRoot = mkdtempSync(join(tmpdir(), "agent-outfit-style-"));
+  const repositoryRoot = mkdtempSync(join(tmpdir(), "agent-setup-style-"));
   repositories.push(repositoryRoot);
   Object.entries({ "CODE-STYLE.md": guideWith(["function.arrow-only"]), ...files }).forEach(([path, source]) => {
     mkdirSync(dirname(join(repositoryRoot, path)), { recursive: true });
@@ -312,7 +312,7 @@ const ACCEPTED: ReadonlyArray<SingleFileCase> = [
   {
     name: "an interface in a declaration file",
     path: "src/types/environment.d.ts",
-    source: "declare global { interface ProcessEnv { AGENT_OUTFIT_REHOME_STATE_DIR?: string } }\nexport {};\n",
+    source: "declare global { interface ProcessEnv { AGENT_SETUP_REHOME_STATE_DIR?: string } }\nexport {};\n",
   },
   { name: "directive-looking string content", source: 'export const copy = "@ts-ignore";\n' },
   {

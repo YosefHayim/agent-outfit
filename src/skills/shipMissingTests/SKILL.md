@@ -34,7 +34,7 @@ Never write run records into the repository: no `docs/` folder, no report at the
 
 | What | Where |
 |------|------|
-| Features + gap report (from find-missing-tests) | `## Features` and `## Report` in `${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/$REPO/find-missing-tests/<newest>/report.md` |
+| Features + gap report (from find-missing-tests) | `## Features` and `## Report` in `${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/$REPO/find-missing-tests/<newest>/report.md` |
 | Campaign board | `## Ship` in this run's `$REPORT` |
 
 1. **New campaign:** start a run folder:
@@ -44,7 +44,7 @@ Never write run records into the repository: no `docs/` folder, no report at the
    COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
    REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
    REPO=$(basename "$REPO_ROOT")
-   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/$REPO/$SKILL"
    RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
    [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
    mkdir -p "$RUN_DIR"
@@ -54,7 +54,7 @@ Never write run records into the repository: no `docs/` folder, no report at the
 2. **Gap report:** the path the user gives, else the newest find-missing-tests run (after the scan, when this campaign runs one):
 
    ```bash
-   GAP_RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/find-missing-tests"
+   GAP_RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/$REPO/find-missing-tests"
    GAP_REPORT="$GAP_RUNS/$(ls -1 "$GAP_RUNS" | tail -n 1)/report.md"
    ```
 

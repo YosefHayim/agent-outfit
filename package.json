@@ -1,10 +1,10 @@
 {
-  "name": "agent-outfit",
+  "name": "agent-setup",
   "version": "0.1.0",
   "description": "TypeScript CLI that installs, updates, diagnoses, configures, and removes a coding-agent setup: skills, guard hooks, agent configuration, workflow templates, and status lines for Claude Code, Codex, Grok, Kimi, Kiro, and more.",
   "type": "module",
   "bin": {
-    "agent-outfit": "dist/src/cli/main.js"
+    "agent-setup": "dist/src/cli/main.js"
   },
   "files": [
     "dist",
@@ -54,13 +54,13 @@
   ],
   "author": "Yosef Hayim Sabag",
   "license": "MIT",
-  "homepage": "https://github.com/YosefHayim/agent-outfit#readme",
+  "homepage": "https://github.com/YosefHayim/agent-setup#readme",
   "bugs": {
-    "url": "https://github.com/YosefHayim/agent-outfit/issues"
+    "url": "https://github.com/YosefHayim/agent-setup/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YosefHayim/agent-outfit.git"
+    "url": "git+https://github.com/YosefHayim/agent-setup.git"
   },
   "engines": {
     "node": ">=22"

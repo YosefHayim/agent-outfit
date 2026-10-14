@@ -33,7 +33,7 @@ const runCli = (args: ReadonlyArray<string>, env: NodeJS.ProcessEnv = {}) =>
 
 // A throwaway directory, used as HOME so the global scope never touches the machine's real install.
 const withFreshDirectory = async (run: (directory: string) => Promise<void>) => {
-  const directory = mkdtempSync(path.join(tmpdir(), "agent-outfit-cli-"));
+  const directory = mkdtempSync(path.join(tmpdir(), "agent-setup-cli-"));
   try {
     await run(directory);
   } finally {
@@ -43,9 +43,9 @@ const withFreshDirectory = async (run: (directory: string) => Promise<void>) => 
 
 describe("isBareArgv", () => {
   it("detects bare invocations that should route to the menu or help", () => {
-    expect(isBareArgv(["node", "agent-outfit"])).toBe(true);
-    expect(isBareArgv(["node", "agent-outfit", "install"])).toBe(false);
-    expect(isBareArgv(["node", "agent-outfit", "--help"])).toBe(false);
+    expect(isBareArgv(["node", "agent-setup"])).toBe(true);
+    expect(isBareArgv(["node", "agent-setup", "install"])).toBe(false);
+    expect(isBareArgv(["node", "agent-setup", "--help"])).toBe(false);
   });
 });
 
@@ -53,7 +53,7 @@ describe("CLI help", () => {
   it.each([
     {
       args: ["--help"],
-      shows: ["agent-outfit", "install", "catalog", "workflow scaffold"],
+      shows: ["agent-setup", "install", "catalog", "workflow scaffold"],
       hides: ["voice", "openrouter", "--wizard", "--log-level", "--completions"],
     },
     { args: ["config", "--help"], shows: ["Set one managed setting"], hides: ["pick-refine"] },
@@ -80,7 +80,7 @@ describe("CLI help", () => {
       const execution = await runCli([]);
 
       expect(execution.exitCode).toBe(0);
-      expect(execution.stdout).toContain("agent-outfit");
+      expect(execution.stdout).toContain("agent-setup");
     },
     CLI_TEST_TIMEOUT,
   );
@@ -124,7 +124,7 @@ describe("config reset", () => {
     "replaces a config.json that no longer decodes without reading it first",
     () =>
       withFreshDirectory(async (homeRoot) => {
-        const configPath = path.join(homeRoot, ".claude/agent-outfit/config.json");
+        const configPath = path.join(homeRoot, ".claude/agent-setup/config.json");
         mkdirSync(path.dirname(configPath), { recursive: true });
         writeFileSync(configPath, '{ "unknownSetting": true,\n');
         const refusedSet = await runCli(["config", "set", "debug-logs", "true"], { HOME: homeRoot });

@@ -35,7 +35,7 @@ const codexThreadIsInteractive = (rolloutFile: unknown): boolean => {
 // A headless run prints its last message as its answer, so a cleanup turn would replace what its caller reads.
 // A session that does not say a person is at it is therefore never asked.
 const sessionIsAttended = (hookInput: Record<string, unknown>): boolean => {
-  const agentId = process.env.AGENT_OUTFIT_AGENT_ID;
+  const agentId = process.env.AGENT_SETUP_AGENT_ID;
   if (agentId === "claude-code") {
     return process.env.CLAUDE_CODE_SESSION_ATTENDED === "1";
   }
@@ -68,7 +68,7 @@ const runAskScratchCleanup = (): never => {
     return allowAndExit();
   }
 
-  if (process.env.AGENT_OUTFIT_AGENT_ID === "claude-code") {
+  if (process.env.AGENT_SETUP_AGENT_ID === "claude-code") {
     // Claude Code reports `decision: "block"` as a hook error; additionalContext continues the turn without one.
     return printDecisionAndExit({
       hookSpecificOutput: { hookEventName: "Stop", additionalContext: decision.question },

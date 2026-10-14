@@ -1,4 +1,4 @@
-/** `agent-outfit doctor` — read-only health check for global and project scopes. */
+/** `agent-setup doctor` — read-only health check for global and project scopes. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";

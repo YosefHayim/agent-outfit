@@ -15,7 +15,7 @@ dist/
 # testing
 coverage/
 
-# local install output (agent-outfit install --scope project run in this repo)
+# local install output (agent-setup install --scope project run in this repo)
 .agents/
 .claude/
 .cursor/

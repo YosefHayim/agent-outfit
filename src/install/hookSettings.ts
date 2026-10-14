@@ -1,4 +1,4 @@
-/** Agent hook settings (settings.json and native equivalents): plan the agent-outfit hook entries, and restore them on removal. */
+/** Agent hook settings (settings.json and native equivalents): plan the agent-setup hook entries, and restore them on removal. */
 
 import type { Path } from "@effect/platform";
 import { Either, Schema, ParseResult as SchemaParseIssue } from "effect";
@@ -80,7 +80,7 @@ const changedEntriesError = (input: { filePath: string; pointer: string }) =>
 const hashGroups = (groups: ReadonlyArray<unknown>): ReadonlyArray<string> =>
   groups.map((group) => hashJsonValue(group));
 
-// Receipts written before entry ownership hashed a whole event array: the user's groups, then agent-outfit's.
+// Receipts written before entry ownership hashed a whole event array: the user's groups, then agent-setup's.
 // That installed array is still the start of the current one when other tools only appended entries since.
 const migrateLegacyEvent = (input: {
   filePath: string;
@@ -170,7 +170,7 @@ const ownedEntriesPresent = (input: { event: OwnedHookEvent; document: SettingsD
   return input.event.entries.every((hash) => countOf(currentHashes, hash) >= countOf(input.event.entries, hash));
 };
 
-// Only agent-outfit's own entries are checked, so entries other tools add to the same event never count as drift.
+// Only agent-setup's own entries are checked, so entries other tools add to the same event never count as drift.
 const validateOwnedEntries = (input: {
   filePath: string;
   ownership: HookEntriesOwnership | undefined;
@@ -221,7 +221,7 @@ const managedHookGroupSchema = Schema.Struct({
       }),
     }),
   ).annotations({
-    description: "Single agent-outfit-authored command leaf for this registration.",
+    description: "Single agent-setup-authored command leaf for this registration.",
   }),
 });
 
@@ -245,7 +245,7 @@ const ownedHookEvent = (plan: HookEventPlan): ReadonlyArray<OwnedHookEvent> => {
     : [{ pointer: `/hooks/${plan.event}`, previouslyPresent: eventPreviouslyPresent(plan), entries }];
 };
 
-// Removes agent-outfit's stale entries and appends its new ones; every other entry in the array keeps its bytes.
+// Removes agent-setup's stale entries and appends its new ones; every other entry in the array keeps its bytes.
 const editHookEvent = (input: { source: string; plan: HookEventPlan }): Either.Either<string, InstallError> => {
   const { event, current, owned, desired } = input.plan;
   const path = ["hooks", event];
@@ -299,7 +299,7 @@ type HookSettingsEdit = {
   readonly createdContainers: ReadonlyArray<string>;
 };
 
-// A hooks object agent-outfit created goes again once it is empty; a user's own empty hooks object stays.
+// A hooks object agent-setup created goes again once it is empty; a user's own empty hooks object stays.
 const removeEmptyCreatedHooks = (input: {
   source: string;
   ownsHooksContainer: boolean;
@@ -335,7 +335,7 @@ const editHookSettings = (input: {
     return Either.left(ownedEntries.left);
   }
 
-  // Events agent-outfit no longer wants are edited first, newest first, then every desired event.
+  // Events agent-setup no longer wants are edited first, newest first, then every desired event.
   const ownedEvents = input.previous === undefined ? [] : input.previous.events;
   const previousEvents = ownedEvents.flatMap((owned) => {
     const event = hookEventFromPointer(owned.pointer);
@@ -370,7 +370,7 @@ const editHookSettings = (input: {
   }));
 };
 
-// A file agent-outfit created and left empty is removed; anything else keeps its remaining user bytes.
+// A file agent-setup created and left empty is removed; anything else keeps its remaining user bytes.
 const restoreOrRemove = (input: {
   file: OwnedFile;
   source: string;
@@ -418,7 +418,7 @@ export const desiredHookGroups = (input: {
         registrationEntrypoint(feature.runtime, registration),
       );
       const runtime = `node "${input.path.join(input.root, entrypoint)}"`;
-      const command = registration.readsAgentId ? `AGENT_OUTFIT_AGENT_ID=${input.agent.id} ${runtime}` : runtime;
+      const command = registration.readsAgentId ? `AGENT_SETUP_AGENT_ID=${input.agent.id} ${runtime}` : runtime;
       const group = managedHookGroupSchema.make({
         ...(registration.matcher._tag === "pattern" ? { matcher: registration.matcher.value } : {}),
         hooks: [{ type: "command", command }],

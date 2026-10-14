@@ -37,7 +37,7 @@ class UninstallError extends Schema.TaggedError<UninstallError>()("UninstallErro
   }),
 }) {
   get message(): string {
-    return `Cannot uninstall agent-outfit: ${this.issue}`;
+    return `Cannot uninstall agent-setup: ${this.issue}`;
   }
 }
 

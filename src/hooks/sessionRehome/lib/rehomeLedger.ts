@@ -49,7 +49,7 @@ const LEDGER_DECISIONS: ReadonlyArray<LedgerDecision> = [
 ];
 
 const stateFolder = (): string =>
-  process.env.AGENT_OUTFIT_REHOME_STATE_DIR || path.join(installRoot, "state", "session-rehome");
+  process.env.AGENT_SETUP_REHOME_STATE_DIR || path.join(installRoot, "state", "session-rehome");
 
 const ledgerFile = (): string => path.join(stateFolder(), "ledger.jsonl");
 

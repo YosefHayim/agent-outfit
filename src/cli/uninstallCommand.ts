@@ -1,4 +1,4 @@
-/** `agent-outfit uninstall` — remove only files authorized by the receipt. */
+/** `agent-setup uninstall` — remove only files authorized by the receipt. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -26,7 +26,7 @@ export const uninstallCommand = Command.make(
       if (args.format === "text") yield* TerminalUI.intro("uninstall");
       const confirmed = yield* confirmDestructive({
         yes: args.yes,
-        question: `Uninstall agent-outfit from ${args.scope} scope?`,
+        question: `Uninstall agent-setup from ${args.scope} scope?`,
         missingYesIssue: "Non-interactive uninstall requires --yes.",
       });
       if (!confirmed) {

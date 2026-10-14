@@ -50,7 +50,7 @@ The watcher only presses keys — **you** make each compact safe and productive:
   watcher compacts. No fresh handoff → it waits and never compacts (by design).
 - When the task is **genuinely, fully complete** — nothing left to do — create the
   done-marker the watcher halts on (the context-guard message tells you the exact path,
-  `~/.claude/agent-outfit/state/autorun/<session-id>.done`) **instead of** another handoff, then
+  `~/.claude/agent-setup/state/autorun/<session-id>.done`) **instead of** another handoff, then
   stop. Do **not** invent busy-work to keep the loop alive.
 
 ## Notes
@@ -58,7 +58,7 @@ The watcher only presses keys — **you** make each compact safe and productive:
 - **Requires macOS + Ghostty.** The watcher types only into THIS session's Ghostty window
   (located by title, idle state only), only when Ghostty is frontmost and the turn is
   idle; a global keystroke mutex serializes injection; a hard cycle cap applies
-  regardless of N; global kill switch `touch ~/.claude/agent-outfit/state/context-guard-off`.
+  regardless of N; global kill switch `touch ~/.claude/agent-setup/state/context-guard-off`.
 - `/autorun stop` is a **pause** (re-armable); `/autorun exit` shuts the watcher down for
   this session — re-enabling then needs a fresh `/autorun`, which starts it again.
-- Tune the warn %, budget, and hard cap with `agent-outfit config`.
+- Tune the warn %, budget, and hard cap with `agent-setup config`.

@@ -273,7 +273,7 @@ const preserveJsonRestoration = (previous: JsonValuesOwnership, desired: JsonVal
   }),
 });
 
-// Whether each hook event array existed before agent-outfit first owned it, from either settings receipt format.
+// Whether each hook event array existed before agent-setup first owned it, from either settings receipt format.
 const priorEventPresence = (previous: JsonPointerOwnership): ReadonlyMap<string, boolean> =>
   new Map(
     previous._tag === "jsonValues"

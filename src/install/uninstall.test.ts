@@ -21,8 +21,8 @@ const packageFiles = {
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-uninstall-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-uninstall-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-uninstall-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-uninstall-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {
@@ -64,17 +64,17 @@ layer(NodeContext.layer)("uninstall", (it) => {
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, readText, exists } = yield* workspace;
       const originals = {
-        ".claude/agent-outfit/config.json": `${JSON.stringify(defaultConfig, null, 2)}\n`,
+        ".claude/agent-setup/config.json": `${JSON.stringify(defaultConfig, null, 2)}\n`,
         ".claude/settings.json": '{\r\n\t"theme":"dark",\r\n\t"hooks": { }\r\n}\r\n',
         "AGENTS.md": "User instructions.\n",
         ".aider.conf.yml": "model: sonnet\n",
         ".continue/config.json": '{\r\n\t"models": []\r\n}\r\n',
       };
       const installerCreatedFiles = [
-        ".claude/agent-outfit/receipt.json",
+        ".claude/agent-setup/receipt.json",
         ...Object.keys(packageFiles)
           .filter((packagePath) => packagePath.startsWith("hooks/"))
-          .map((packagePath) => `.claude/agent-outfit/${packagePath}`),
+          .map((packagePath) => `.claude/agent-setup/${packagePath}`),
         ".claude/skills/autorun/SKILL.md",
         ".claude/skills/autorun/agents/openai.yaml",
         ".agents/skills/autorun/agents/openai.yaml",
@@ -129,13 +129,13 @@ layer(NodeContext.layer)("uninstall", (it) => {
   it.scoped("still removes installer-created files when their bytes drifted after install", () =>
     Effect.gen(function* () {
       const { root, preparedRoot, writeFiles, exists } = yield* workspace;
-      const hookFile = ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js";
+      const hookFile = ".claude/agent-setup/hooks/contextGuard/hooks/startAutorunWatcher.js";
       yield* install(installRequest({ root, preparedRoot }));
       yield* writeFiles(root, { [hookFile]: "user changed this\n" });
 
       expect(yield* uninstall(uninstallRequest(root))).toEqual(uninstalled);
       expect(yield* exists(hookFile)).toBe(false);
-      expect(yield* exists(".claude/agent-outfit/receipt.json")).toBe(false);
+      expect(yield* exists(".claude/agent-setup/receipt.json")).toBe(false);
     }),
   );
 

@@ -302,14 +302,14 @@ const ownedHookEventSchema = Schema.Struct({
     }),
   ),
   previouslyPresent: Schema.Boolean.annotations({
-    description: "Whether the event array existed before agent-outfit first added an entry to it.",
+    description: "Whether the event array existed before agent-setup first added an entry to it.",
   }),
   entries: Schema.Array(sha256Schema).pipe(
     Schema.minItems(1, {
       message: () => "Hook event ownership must record at least one entry.",
     }),
     Schema.annotations({
-      description: "Hash of each agent-outfit hook entry in the event array; other entries belong to the user.",
+      description: "Hash of each agent-setup hook entry in the event array; other entries belong to the user.",
     }),
   ),
 });

@@ -28,10 +28,10 @@ const makeWorkspace = (files: { readonly config?: boolean; readonly receipt?: st
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-doctor-root-" });
-    const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-doctor-prepared-" });
-    const configPath = path.join(root, ".claude/agent-outfit/config.json");
-    const receiptPath = path.join(root, ".claude/agent-outfit/receipt.json");
+    const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-doctor-root-" });
+    const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-doctor-prepared-" });
+    const configPath = path.join(root, ".claude/agent-setup/config.json");
+    const receiptPath = path.join(root, ".claude/agent-setup/receipt.json");
     if (files.config || files.receipt !== undefined) {
       yield* fileSystem.makeDirectory(path.dirname(configPath), { recursive: true });
     }
@@ -91,8 +91,8 @@ layer(NodeContext.layer)("doctor", (it) => {
                 ownership: {
                   _tag: "managedBlock",
                   filePreviouslyPresent: false,
-                  startMarker: "<!-- agent-outfit start -->",
-                  endMarker: "<!-- agent-outfit end -->",
+                  startMarker: "<!-- agent-setup start -->",
+                  endMarker: "<!-- agent-setup end -->",
                   installedBodyHash: "a".repeat(64),
                 },
               },
@@ -158,7 +158,7 @@ layer(NodeContext.layer)("doctor", (it) => {
         ]);
         expect([...(yield* fileSystem.readFile(workspace.configPath))]).toEqual([...configBefore]);
         expect([...(yield* fileSystem.readFile(workspace.receiptPath))]).toEqual([...receiptBefore]);
-        expect(yield* fileSystem.exists(path.join(workspace.root, ".claude/agent-outfit/recovery.json"))).toBe(false);
+        expect(yield* fileSystem.exists(path.join(workspace.root, ".claude/agent-setup/recovery.json"))).toBe(false);
       }),
   );
 
@@ -209,7 +209,7 @@ layer(NodeContext.layer)("doctor", (it) => {
         config: true,
         receipt: { version: "1.0.0", scope: "project", features: ["context-guard", "autorun"], ownedFiles: [] },
       });
-      const autorunStateDir = path.join(workspace.root, ".claude/agent-outfit/state/autorun");
+      const autorunStateDir = path.join(workspace.root, ".claude/agent-setup/state/autorun");
       yield* fileSystem.makeDirectory(autorunStateDir, { recursive: true });
       // This process's pid passes the live check without spawning a fake watcher.
       yield* fileSystem.writeFileString(path.join(autorunStateDir, "sess-doctor-watcher.pid"), `${process.pid}\n`);

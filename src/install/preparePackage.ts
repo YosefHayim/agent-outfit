@@ -15,7 +15,7 @@ class PreparePackageError extends Schema.TaggedError<PreparePackageError>()("Pre
   }),
 }) {
   get message(): string {
-    return `Cannot prepare agent-outfit package: ${this.issue}`;
+    return `Cannot prepare agent-setup package: ${this.issue}`;
   }
 }
 

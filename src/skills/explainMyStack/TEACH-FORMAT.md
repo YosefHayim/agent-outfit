@@ -66,9 +66,9 @@ Rules for glossary entries:
 
 | Term kind | Snippet style | Example |
 |---|---|---|
-| a tool you run | a terminal command | `$ npx agent-outfit install` |
+| a tool you run | a terminal command | `$ npx agent-setup install` |
 | a language feature | a tiny code line + result | `const n = "x"; // -> "x"` |
-| a data format | the shape itself | `{ "name": "outfit" }` |
+| a data format | the shape itself | `{ "name": "setup" }` |
 | a mechanism / engine | an ASCII "how it works" flow | `"1+1" ─▶ V8 ─▶ machine code ─▶ 2` |
 | runtime vs compile behavior | line-by-line with a comment marking *when* | `print(1/0) # error only HERE, at runtime` |
 | config-driven thing (a hook…) | the real config JSON | `{ "hooks": { "PostToolUse": [ … ] } }` |
@@ -83,7 +83,7 @@ This is the canonical output for one decision. New decisions mirror its structur
 ### Decision block
 
 ```markdown
-### Why TypeScript for the agent-outfit CLI — not bash, Go, or Python
+### Why TypeScript for the agent-setup CLI — not bash, Go, or Python
 
 **The deciding constraint.** Claude Code runs our hooks as Node, so hook code *must* be JavaScript
 regardless. The only open question is the language for the rest of the CLI.
@@ -108,19 +108,19 @@ no Node host · Python → real data/ML (that's the `ib-bot` project).
 
 ```markdown
 - **terminal** — the text window where you type commands to your computer (Terminal, Ghostty…).
-  `$ agent-outfit install`
+  `$ agent-setup install`
 - **CLI (command-line interface)** — a tool you run by typing commands in a terminal.
-  `$ agent-outfit install image-to-code`
+  `$ agent-setup install image-to-code`
 - **shell command** — one instruction typed in a terminal.
   `$ git status`
 - **JavaScript (JS)** — the programming language of the web; also runs on servers via Node.
-  `const name = "outfit"; console.log(name); // -> outfit`
+  `const name = "setup"; console.log(name); // -> setup`
 - **JSON** — a plain-text format for structured data: keys and values.
-  `{ "name": "outfit", "features": ["image-to-code"] }`
+  `{ "name": "setup", "features": ["image-to-code"] }`
 - **structured data** — data in a defined shape (objects, lists), not free-form text.
-  `{ name: "outfit", features: [ "a", "b" ] }   // vs "outfit,a,b"`
+  `{ name: "setup", features: [ "a", "b" ] }   // vs "setup,a,b"`
 - **executable / binary** — a single file the computer runs directly, no extra tools.
-  `$ ./agent-outfit install`
+  `$ ./agent-setup install`
 - **Node (Node.js)** — the program that runs JavaScript outside a browser (laptop or server).
   [official: https://nodejs.org] `$ node app.js`
 - **JS engine** — the part inside Node (or a browser) that reads and executes JavaScript.
@@ -130,9 +130,9 @@ no Node host · Python → real data/ML (that's the `ib-bot` project).
 - **npm** — Node's package manager: installs and publishes JS libraries.
   [official: https://docs.npmjs.com] `$ npm install commander`
 - **npm package** — a bundle of JS code published to npm that others can install.
-  `{ "name": "agent-outfit", "bin": { "agent-outfit": "dist/cli.js" } }`
+  `{ "name": "agent-setup", "bin": { "agent-setup": "dist/cli.js" } }`
 - **npx** — "run a command from a local or remote npm package": fetch + run in one step.
-  [official: https://docs.npmjs.com/cli/v11/commands/npx/] `$ npx agent-outfit install`
+  [official: https://docs.npmjs.com/cli/v11/commands/npx/] `$ npx agent-setup install`
 - **runtime** — the engine a program needs *present* to run (Node for JS, the interpreter for
   Python). "Runtime install" = install that engine first:
   `$ node app.js   # works    |    $ python app.py   # fails first without a Python runtime`
@@ -140,7 +140,7 @@ no Node host · Python → real data/ML (that's the `ib-bot` project).
   JS/TS run on Node (usually already there).
   `print("a")   # runs now` / `print(1/0)   # error only surfaces HERE, at runtime`
 - **compiles to one binary (Go)** — Go turns source into a single self-contained executable that
-  runs with no runtime installed. `$ go build -o agent-outfit && ./agent-outfit`
+  runs with no runtime installed. `$ go build -o agent-setup && ./agent-setup`
 - **pip** — Python's package installer (npm, but for Python). `$ pip install requests`
 - **brew (Homebrew)** — the common macOS installer for programs. `$ brew install python`
 - **hook** — "user-defined shell commands … that execute automatically at specific points in Claude
@@ -152,9 +152,9 @@ no Node host · Python → real data/ML (that's the `ib-bot` project).
   structured data. `cat urls.txt | grep https | sort -u > clean.txt`
 - **substrate fit** — match the language to the ground your code already runs on, before debating
   syntax or speed. `host=Node ─▶ TS ✓ (same ground)   host=Node ─▶ Go ✗ (adapter needed)`
-- **Node-hosted installer** — an install tool (like agent-outfit) that itself runs on Node and ships
+- **Node-hosted installer** — an install tool (like agent-setup) that itself runs on Node and ships
   through npm; a non-Node language is weaker for it because you'd bolt a second engine onto a
-  Node-shaped ecosystem. `$ npx agent-outfit install   # runs on Node, no extra engine`
+  Node-shaped ecosystem. `$ npx agent-setup install   # runs on Node, no extra engine`
 ```
 
 > **Dedup in action:** the *next* decision (say "why Biome not ESLint+Prettier") re-uses `Node`,
