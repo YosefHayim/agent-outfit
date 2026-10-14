@@ -449,7 +449,7 @@ const removeEmptyDirectory = (directory: string) =>
         module: "FileSystem",
         method: "rmdir",
         pathOrDescriptor: directory,
-        description: "Could not remove an empty transaction-created directory.",
+        description: "Could not remove an empty directory.",
         cause,
       }),
   });
@@ -460,6 +460,23 @@ const removeCreatedDirectories = (transaction: Transaction) =>
     const deepestFirst = [...new Set(directories)].sort((left, right) => right.length - left.length);
 
     yield* Effect.forEach(deepestFirst, removeEmptyDirectory, { discard: true });
+  });
+
+// Folders that held only removed files are left empty, so remove them too. One that still holds
+// anything, or cannot be removed, stays and does not fail the finished transaction.
+const removeEmptiedDirectories = (preparedPlan: PreparedPlan) =>
+  Effect.gen(function* () {
+    const removedPaths = [...preparedPlan.files, preparedPlan.receipt]
+      .filter((target) => target.operation._tag === "remove")
+      .map((target) => target.targetPath);
+    const parents = yield* Effect.forEach(removedPaths, (targetPath) =>
+      parentDirectories(preparedPlan.root, targetPath),
+    );
+    const deepestFirst = [...new Set(parents.flat())].sort((left, right) => right.length - left.length);
+
+    yield* Effect.forEach(deepestFirst, (directory) => Effect.ignore(removeEmptyDirectory(directory)), {
+      discard: true,
+    });
   });
 
 // Unlinks the marker only after proving it is still the one this transaction published.
@@ -569,5 +586,6 @@ export const applyPlan = (plan: Plan) =>
       }
 
       yield* releaseMarker(transaction);
+      yield* removeEmptiedDirectories(preparedPlan);
     }),
   );
