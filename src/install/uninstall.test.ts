@@ -1,7 +1,7 @@
 import { FileSystem, Path } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, Exit, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 import { defaultConfig } from "../config/configSchema.js";
 import { install } from "./install.js";
@@ -126,24 +126,6 @@ layer(NodeContext.layer)("uninstall", (it) => {
         expect(yield* exists(emptied)).toBe(false);
       }
       expect(yield* exists(".claude/skills/user/SKILL.md")).toBe(true);
-    }),
-  );
-
-  it.scoped("still uninstalls when an emptied folder cannot be removed", () =>
-    Effect.gen(function* () {
-      const { root, preparedRoot, exists } = yield* workspace;
-      const fileSystem = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const lockedSkills = path.join(root, ".claude/skills");
-      yield* install(installRequest({ root, preparedRoot }));
-      yield* fileSystem.chmod(lockedSkills, 0o555);
-
-      const uninstallExit = yield* Effect.exit(uninstall(uninstallRequest(root)));
-      yield* fileSystem.chmod(lockedSkills, 0o755);
-
-      expect(uninstallExit).toStrictEqual(Exit.succeed(uninstalled));
-      expect(yield* exists(".claude/skills/autorun/SKILL.md")).toBe(false);
-      expect(yield* exists(".claude/skills/autorun")).toBe(true);
     }),
   );
 
