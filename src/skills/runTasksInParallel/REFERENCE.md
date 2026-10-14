@@ -34,7 +34,7 @@
 
 ## Artifact paths
 
-One folder per run, outside the repo: `${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/run-tasks-in-parallel/<YYYY-MM-DD-HHMM>/`. Start it with the snippet in SKILL.md (execute → Parse tasks, step 5). Parallel SDLC runs and multi-agent hosts never share one board.
+One folder per run, outside the repo: `${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/<repo>/run-tasks-in-parallel/<YYYY-MM-DD-HHMM>/`. Start it with the snippet in SKILL.md (execute → Parse tasks, step 5). Parallel SDLC runs and multi-agent hosts never share one board.
 
 | What | Where |
 |------|-------|

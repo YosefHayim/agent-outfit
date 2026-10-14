@@ -1,4 +1,4 @@
-/** `agent-outfit duplicates [workspace]` — duplicate-code gate for local work and CI. */
+/** `agent-setup duplicates [workspace]` — duplicate-code gate for local work and CI. */
 
 import { Command, Options } from "@effect/cli";
 import { Path } from "@effect/platform";

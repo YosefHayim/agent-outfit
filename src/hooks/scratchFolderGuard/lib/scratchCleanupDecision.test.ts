@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { decideScratchCleanup, type StopCheck } from "./scratchCleanupDecision.js";
 
 const scratchpad = "/Users/me/.claude/tmp/claude-501/-Users-me-repo/5cc2fa97-8a4b-4379-b0f0-4141d18275da/scratchpad";
-const cleanupCommand = 'node "/Users/me/.claude/agent-outfit/clearScratch.js" 5cc2fa97-8a4b-4379-b0f0-4141d18275da';
+const cleanupCommand = 'node "/Users/me/.claude/agent-setup/clearScratch.js" 5cc2fa97-8a4b-4379-b0f0-4141d18275da';
 const finishedTurn: StopCheck = {
   alreadyContinuing: false,
   workPending: false,

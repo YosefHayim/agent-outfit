@@ -60,7 +60,7 @@ class UpdateError extends Schema.TaggedError<UpdateError>()("UpdateError", {
   }),
 }) {
   get message(): string {
-    return `Cannot update agent-outfit: ${this.issue}`;
+    return `Cannot update agent-setup: ${this.issue}`;
   }
 }
 

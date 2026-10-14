@@ -1,4 +1,4 @@
-/** `agent-outfit update [feature-id...]` — refresh every installed feature and keep the receipt selection. */
+/** `agent-setup update [feature-id...]` — refresh every installed feature and keep the receipt selection. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";

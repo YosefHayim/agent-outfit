@@ -87,7 +87,7 @@ Natural technical nouns (“prompt” in a prompt-queue product) can legitimatel
 ### Fully automatable today
 
 - Limit checks, superlative ban, rough density, list-spam patterns → `validateListingCopy.mjs`
-- Site performance → PSI API / Lighthouse (see agent-outfit `website-speed-ci`)
+- Site performance → PSI API / Lighthouse (see agent-setup `website-speed-ci`)
 - Post-publish site queries → Search Console API (property must be verified)
 
 ### Semi-automated (agent + browser)

@@ -41,14 +41,14 @@ type TerminalText = { readonly text: string; readonly submit: boolean };
 
 type WatchTick = { readonly exit: boolean; readonly warnEnteredAt: number | null };
 
-// Settings are read on every use, so `agent-outfit config set` reaches a running watcher.
+// Settings are read on every use, so `agent-setup config set` reaches a running watcher.
 const checkEveryMs = (): number => readConfig().autorunCheckEverySeconds * 1000;
 
 const idleAfterMs = (): number => readConfig().autorunIdleAfterSeconds * 1000;
 
-// AGENT_OUTFIT_AUTORUN_DRY_RUN logs keystrokes instead of sending them, for safe manual verification.
+// AGENT_SETUP_AUTORUN_DRY_RUN logs keystrokes instead of sending them, for safe manual verification.
 const isDryRun = (): boolean => {
-  const dryRunSetting = (process.env.AGENT_OUTFIT_AUTORUN_DRY_RUN || "").trim().toLowerCase();
+  const dryRunSetting = (process.env.AGENT_SETUP_AUTORUN_DRY_RUN || "").trim().toLowerCase();
   return dryRunSetting === "1" || dryRunSetting === "true" || dryRunSetting === "yes";
 };
 
@@ -179,7 +179,7 @@ end tell`;
 const typeText = (request: TerminalText): boolean => {
   if (isDryRun()) {
     console.error(
-      `[agent-outfit dry-run] would keystroke ${JSON.stringify(request.text)}${request.submit ? " + Return" : ""}`,
+      `[agent-setup dry-run] would keystroke ${JSON.stringify(request.text)}${request.submit ? " + Return" : ""}`,
     );
     return true;
   }

@@ -50,7 +50,7 @@ const runHook = (request: {
       CLAUDE_CONFIG_DIR: path.join(request.homeRoot, ".claude"),
       CLAUDE_CODE_TMPDIR: path.join(request.homeRoot, "claude-scratch"),
       CODEX_HOME: path.join(request.homeRoot, ".codex"),
-      AGENT_OUTFIT_AGENT_ID: request.agentId,
+      AGENT_SETUP_AGENT_ID: request.agentId,
       CLAUDE_CODE_SESSION_ATTENDED: request.attendedFlag,
     },
   });

@@ -45,7 +45,7 @@ Never write run records into the repository: no `docs/` folder, no report at the
    COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
    REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
    REPO=$(basename "$REPO_ROOT")
-   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/$REPO/$SKILL"
    RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
    [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
    mkdir -p "$RUN_DIR"

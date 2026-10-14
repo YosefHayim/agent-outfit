@@ -624,7 +624,7 @@ def write_report_md(
 def default_out_dir() -> Path:
     state_home = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
     stamp = datetime.now().strftime("%Y-%m-%d-%H%M")
-    run_dir = Path(state_home) / "agent-outfit" / "runs" / "global" / "find-repeated-prompts" / stamp
+    run_dir = Path(state_home) / "agent-setup" / "runs" / "global" / "find-repeated-prompts" / stamp
     if run_dir.exists():
         run_dir = run_dir.with_name(f"{stamp}-{os.getpid()}")
     return run_dir
@@ -641,7 +641,7 @@ def main() -> int:
         "--out",
         default="",
         help="Output directory (default: a new run folder under "
-        "$XDG_STATE_HOME/agent-outfit/runs/global/find-repeated-prompts/)",
+        "$XDG_STATE_HOME/agent-setup/runs/global/find-repeated-prompts/)",
     )
     parser.add_argument("--shards", type=int, default=20, help="Shard count for agent fan-out")
     args = parser.parse_args()

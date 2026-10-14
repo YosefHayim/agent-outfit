@@ -35,8 +35,8 @@ const sessionRehomeRuntime = {
 const workspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-install-root-" });
-  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-install-prepared-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-install-root-" });
+  const preparedRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-install-prepared-" });
   const writeFiles = (base: string, files: Readonly<Record<string, string>>) =>
     Effect.forEach(Object.entries(files), ([relativePath, contents]) =>
       Effect.gen(function* () {
@@ -50,7 +50,7 @@ const workspace = Effect.gen(function* () {
 
   const exists = (relativePath: string) => fileSystem.exists(path.join(root, relativePath));
 
-  const readReceipt = Effect.map(readText(".claude/agent-outfit/receipt.json"), (text) => JSON.parse(text));
+  const readReceipt = Effect.map(readText(".claude/agent-setup/receipt.json"), (text) => JSON.parse(text));
 
   return { fileSystem, path, root, preparedRoot, writeFiles, readText, exists, readReceipt };
 });
@@ -92,8 +92,8 @@ layer(NodeContext.layer)("install", (it) => {
         agents: ["claude-code"],
       });
       expect(installation.platformRequirements).toEqual([{ featureId: "context-guard", platform: "any" }]);
-      expect(yield* readText(".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js")).toBe("export {};\n");
-      expect(JSON.parse(yield* readText(".claude/agent-outfit/config.json"))).toEqual(defaultConfig);
+      expect(yield* readText(".claude/agent-setup/hooks/contextGuard/hooks/contextGuard.js")).toBe("export {};\n");
+      expect(JSON.parse(yield* readText(".claude/agent-setup/config.json"))).toEqual(defaultConfig);
 
       const settings = yield* readText(".claude/settings.json");
       expect(settings).toContain('"theme": "dark"');
@@ -103,12 +103,12 @@ layer(NodeContext.layer)("install", (it) => {
       const receipt = yield* readReceipt;
       expect(receipt.features).toEqual(["context-guard"]);
       expect(receipt.ownedFiles.map((file: { path: string }) => file.path)).toEqual([
-        ".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js",
-        ".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js",
-        ".claude/agent-outfit/hooks/contextGuard/hooks/recordIdleCompactEvent.js",
-        ".claude/agent-outfit/hooks/contextGuard/hooks/startAutorunWatcher.js",
-        ".claude/agent-outfit/hooks/contextGuard/watchers/idleCompactWatcher.js",
-        ".claude/agent-outfit/config.json",
+        ".claude/agent-setup/hooks/contextGuard/command/autorunControl.js",
+        ".claude/agent-setup/hooks/contextGuard/hooks/contextGuard.js",
+        ".claude/agent-setup/hooks/contextGuard/hooks/recordIdleCompactEvent.js",
+        ".claude/agent-setup/hooks/contextGuard/hooks/startAutorunWatcher.js",
+        ".claude/agent-setup/hooks/contextGuard/watchers/idleCompactWatcher.js",
+        ".claude/agent-setup/config.json",
         ".claude/settings.json",
       ]);
     }),
@@ -127,7 +127,7 @@ layer(NodeContext.layer)("install", (it) => {
 
       expect(installation.features).toEqual(["context-guard", "session-rehome"]);
       expect((yield* readReceipt).features).toEqual(["context-guard", "session-rehome"]);
-      expect(yield* exists(".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js")).toBe(true);
+      expect(yield* exists(".claude/agent-setup/hooks/contextGuard/hooks/contextGuard.js")).toBe(true);
       const commands = hookCommands(yield* readText(".claude/settings.json"));
       expect(commands.some((command) => command.includes("contextGuard/hooks/contextGuard.js"))).toBe(true);
       expect(commands.some((command) => command.includes("sessionRehome/hooks/rehomeEndedSession.js"))).toBe(true);
@@ -157,13 +157,13 @@ layer(NodeContext.layer)("install", (it) => {
       expect(commands.filter((command) => command.includes("recordIdleCompactEvent.js"))).not.toEqual([]);
       for (const command of commands) {
         const expectedPrefix = command.includes("recordIdleCompactEvent.js")
-          ? 'AGENT_OUTFIT_AGENT_ID=codex node "'
+          ? 'AGENT_SETUP_AGENT_ID=codex node "'
           : 'node "';
         expect(command.startsWith(expectedPrefix)).toBe(true);
       }
 
-      const grok = yield* readText(".grok/hooks/agent-outfit.json");
-      expect(grok).toContain("AGENT_OUTFIT_AGENT_ID=grok");
+      const grok = yield* readText(".grok/hooks/agent-setup.json");
+      expect(grok).toContain("AGENT_SETUP_AGENT_ID=grok");
       expect(grok).toContain("recordIdleCompactEvent.js");
       expect(yield* exists(".claude/settings.json")).toBe(false);
     }),
@@ -183,9 +183,9 @@ layer(NodeContext.layer)("install", (it) => {
         agents: { _tag: "selected", ids: ["claude-code", "codex", "grok"] },
       });
 
-      expect(yield* readText(".claude/settings.json")).toContain("AGENT_OUTFIT_AGENT_ID=claude-code node ");
-      expect(yield* readText(".codex/hooks.json")).toContain("AGENT_OUTFIT_AGENT_ID=codex node ");
-      expect(yield* readText(".grok/hooks/agent-outfit.json")).toContain("AGENT_OUTFIT_AGENT_ID=grok node ");
+      expect(yield* readText(".claude/settings.json")).toContain("AGENT_SETUP_AGENT_ID=claude-code node ");
+      expect(yield* readText(".codex/hooks.json")).toContain("AGENT_SETUP_AGENT_ID=codex node ");
+      expect(yield* readText(".grok/hooks/agent-setup.json")).toContain("AGENT_SETUP_AGENT_ID=grok node ");
     }),
   );
 
@@ -196,11 +196,11 @@ layer(NodeContext.layer)("install", (it) => {
       yield* writeFiles(preparedRoot, contextGuardRuntime);
 
       yield* install(request);
-      const before = yield* readText(".claude/agent-outfit/receipt.json");
+      const before = yield* readText(".claude/agent-setup/receipt.json");
       const installation = yield* install(request);
 
       expect(installation._tag).toBe("unchanged");
-      expect(yield* readText(".claude/agent-outfit/receipt.json")).toBe(before);
+      expect(yield* readText(".claude/agent-setup/receipt.json")).toBe(before);
     }),
   );
 
@@ -271,11 +271,11 @@ layer(NodeContext.layer)("install", (it) => {
       expect(yield* readText(".agents/skills/autorun/SKILL.md")).toContain("Run");
       expect(yield* exists(".codex/skills/autorun/SKILL.md")).toBe(false);
       expect(yield* readText(".cursor/rules/autorun.mdc")).toContain(
-        ".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js",
+        ".claude/agent-setup/hooks/contextGuard/command/autorunControl.js",
       );
 
       const instructions = yield* readText("AGENTS.md");
-      expect(instructions.match(/<!-- agent-outfit:skills start -->/g)).toHaveLength(1);
+      expect(instructions.match(/<!-- agent-setup:skills start -->/g)).toHaveLength(1);
       expect(instructions).toContain("## autorun");
       expect(yield* readText(".aider.conf.yml")).toContain("AGENTS.md");
       expect(JSON.parse(yield* readText(".continue/config.json")).rules).toEqual(["AGENTS.md"]);
@@ -300,9 +300,9 @@ layer(NodeContext.layer)("install", (it) => {
         agents: { _tag: "selected", ids: ["cursor"] },
       });
 
-      expect(yield* readText(".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js")).toBe("export {};\n");
+      expect(yield* readText(".claude/agent-setup/hooks/contextGuard/command/autorunControl.js")).toBe("export {};\n");
       expect(yield* readText(".cursor/rules/autorun.mdc")).toContain(
-        ".claude/agent-outfit/hooks/contextGuard/command/autorunControl.js",
+        ".claude/agent-setup/hooks/contextGuard/command/autorunControl.js",
       );
     }),
   );
@@ -321,18 +321,18 @@ layer(NodeContext.layer)("install", (it) => {
       );
 
       expect(exit._tag).toBe("Failure");
-      expect(yield* exists(".claude/agent-outfit/receipt.json")).toBe(false);
-      expect(yield* exists(".claude/agent-outfit/config.json")).toBe(false);
+      expect(yield* exists(".claude/agent-setup/receipt.json")).toBe(false);
+      expect(yield* exists(".claude/agent-setup/config.json")).toBe(false);
     }),
   );
 
   it.scoped("copies a validated global config once into a first project installation", () =>
     Effect.gen(function* () {
       const { fileSystem, root: homeRoot, preparedRoot, writeFiles } = yield* workspace;
-      const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-install-project-" });
+      const projectRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-install-project-" });
       const globalConfig = { ...defaultConfig, duplicateCodeSkipFolders: ["vendor"] };
       const writeGlobalConfig = (config: object) =>
-        writeFiles(homeRoot, { ".claude/agent-outfit/config.json": `${JSON.stringify(config, null, 2)}\n` });
+        writeFiles(homeRoot, { ".claude/agent-setup/config.json": `${JSON.stringify(config, null, 2)}\n` });
       const request = {
         ...installRequest({ root: projectRoot, preparedRoot }),
         host: { homeRoot },
@@ -345,7 +345,7 @@ layer(NodeContext.layer)("install", (it) => {
       yield* writeGlobalConfig({ ...globalConfig, duplicateCodeSkipFolders: ["generated"] });
       yield* install(request);
 
-      expect(JSON.parse(yield* fileSystem.readFileString(`${projectRoot}/.claude/agent-outfit/config.json`))).toEqual(
+      expect(JSON.parse(yield* fileSystem.readFileString(`${projectRoot}/.claude/agent-setup/config.json`))).toEqual(
         globalConfig,
       );
     }),
@@ -371,8 +371,8 @@ layer(NodeContext.layer)("install", (it) => {
   it.scoped("removes installer-created whole files even when they drifted or vanished", () =>
     Effect.gen(function* () {
       const { root, writeFiles } = yield* workspace;
-      const driftedPath = ".claude/agent-outfit/hooks/contextGuard/hooks/contextGuard.js";
-      const exactPath = ".claude/agent-outfit/hooks/contextGuard/lib/hookConfig.js";
+      const driftedPath = ".claude/agent-setup/hooks/contextGuard/hooks/contextGuard.js";
+      const exactPath = ".claude/agent-setup/hooks/contextGuard/lib/hookConfig.js";
       yield* writeFiles(root, { [driftedPath]: "drifted after install\n", [exactPath]: "exact\n" });
       const wholeFile = (filePath: string, hash: string) => ({
         owner: { _tag: "application" as const },
@@ -385,7 +385,7 @@ layer(NodeContext.layer)("install", (it) => {
         root,
         files: [
           wholeFile(driftedPath, sha256("old\n")),
-          wholeFile(".claude/agent-outfit/hooks/contextGuard/lib/stateFiles.js", sha256("old\n")),
+          wholeFile(".claude/agent-setup/hooks/contextGuard/lib/stateFiles.js", sha256("old\n")),
           wholeFile(exactPath, sha256("exact\n")),
         ],
       });

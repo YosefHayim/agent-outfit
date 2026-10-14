@@ -170,8 +170,8 @@ const decodeCache = (candidate: unknown): Cache | undefined => {
 // node_modules/.cache is a conventional, already-ignored spot; repos without node_modules use the OS temp folder.
 const cacheFile = (repoRoot: string): string => {
   const cacheFolder = existsSync(path.join(repoRoot, "node_modules"))
-    ? path.join(repoRoot, "node_modules", ".cache", "agent-outfit")
-    : path.join(tmpdir(), "agent-outfit-duplicate-index");
+    ? path.join(repoRoot, "node_modules", ".cache", "agent-setup")
+    : path.join(tmpdir(), "agent-setup-duplicate-index");
   const repoId = createHash("sha1").update(repoRoot).digest("hex").slice(0, 12);
   return path.join(cacheFolder, `duplicateIndex-${repoId}.json`);
 };

@@ -20,8 +20,8 @@ const inspectedReceiptBytes = new TextEncoder().encode("receipt inspected during
 const changedReceiptBytes = new TextEncoder().encode("receipt changed after planning");
 const applicationOwner = { _tag: "application" };
 const expectedMissing: ExpectedCurrent = { _tag: "missing" };
-const receiptFile = ".agent-outfit/receipt.json";
-const recoveryFile = ".agent-outfit/recovery.json";
+const receiptFile = ".agent-setup/receipt.json";
+const recoveryFile = ".agent-setup/recovery.json";
 const receiptTarget = { path: receiptFile, kind: { _tag: "receipt" }, owner: applicationOwner };
 
 const portablePath = (filePath: string): string => filePath.replaceAll("\\", "/");
@@ -91,7 +91,7 @@ const receiptRemovalPlan = (root: string, expectedCurrent: ExpectedCurrent): Pla
 const makeWorkspace = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-apply-" });
+  const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-apply-" });
   const at = (relative: string) => path.join(root, relative);
 
   return {
@@ -118,7 +118,7 @@ const makeWorkspace = Effect.gen(function* () {
         { discard: true },
       ),
     transactionDirectories: Effect.map(fileSystem.readDirectory(root), (entries) =>
-      entries.filter((entry) => entry.startsWith(".agent-outfit-transaction-")),
+      entries.filter((entry) => entry.startsWith(".agent-setup-transaction-")),
     ),
     publishedReceipt: Effect.flatMap(fileSystem.readFileString(at(receiptFile)), decodeReceiptJson),
     recoveryRecord: Effect.flatMap(fileSystem.readFileString(at(recoveryFile)), decodeRecoveryRecordJson),
@@ -159,7 +159,7 @@ const failWith = (method: string, pathOrDescriptor: string) =>
 
 const named = (filePath: string, name: string) => portablePath(filePath).endsWith(`/${name}`);
 
-// Transaction files live at <root>/.agent-outfit-transaction-<id>/<prepared|snapshots>/<name>.
+// Transaction files live at <root>/.agent-setup-transaction-<id>/<prepared|snapshots>/<name>.
 const rootOfTransactionFile = (path: Path.Path, filePath: string) => path.dirname(path.dirname(path.dirname(filePath)));
 
 type Race = (context: {
@@ -345,7 +345,7 @@ layer(NodeContext.layer)("applyPlan", (it) => {
   it.scoped("rejects a symlinked parent before creating transaction state", () =>
     Effect.gen(function* () {
       const workspace = yield* makeWorkspace;
-      const outside = yield* workspace.fileSystem.makeTempDirectoryScoped({ prefix: "agent-outfit-apply-outside-" });
+      const outside = yield* workspace.fileSystem.makeTempDirectoryScoped({ prefix: "agent-setup-apply-outside-" });
       yield* workspace.fileSystem.symlink(outside, workspace.at("link"));
 
       yield* expectFailure(applyPlan(writePlan(workspace.root, { files: missingFiles(["link/escaped.json"]) })));
@@ -536,7 +536,7 @@ describe("applyPlan under injected filesystem faults", () => {
     Effect.gen(function* () {
       const workspace = yield* makeWorkspace;
       const outside = `${workspace.root}-recovery-outside`;
-      yield* workspace.fileSystem.makeDirectory(workspace.at(".agent-outfit"));
+      yield* workspace.fileSystem.makeDirectory(workspace.at(".agent-setup"));
       yield* workspace.fileSystem.makeDirectory(outside);
       yield* Effect.addFinalizer(() => workspace.fileSystem.remove(outside, { recursive: true, force: true }));
 
@@ -549,8 +549,8 @@ describe("applyPlan under injected filesystem faults", () => {
       Effect.provide(
         afterReceiptPrepared(({ root, fileSystem, path }) =>
           Effect.zipRight(
-            fileSystem.rename(path.join(root, ".agent-outfit"), path.join(root, ".agent-outfit-before-swap")),
-            fileSystem.symlink(`${root}-recovery-outside`, path.join(root, ".agent-outfit")),
+            fileSystem.rename(path.join(root, ".agent-setup"), path.join(root, ".agent-setup-before-swap")),
+            fileSystem.symlink(`${root}-recovery-outside`, path.join(root, ".agent-setup")),
           ),
         ),
       ),
@@ -613,7 +613,7 @@ describe("applyPlan under injected filesystem faults", () => {
       yield* Effect.gen(function* () {
         const workspace = yield* makeWorkspace;
         const plan = writePlan(workspace.root, { files: { "settings.json": expectedFile(originalBytes) } });
-        yield* workspace.fileSystem.makeDirectory(workspace.at(".agent-outfit"));
+        yield* workspace.fileSystem.makeDirectory(workspace.at(".agent-setup"));
         yield* workspace.seed({ "settings.json": originalBytes });
 
         const firstWriter = yield* Effect.fork(Effect.exit(applyPlan(plan)));
@@ -794,7 +794,7 @@ describe("applyPlan under injected filesystem faults", () => {
       Effect.provide(
         patchedPlatform((fileSystem) => ({
           remove: (filePath, options) =>
-            portablePath(filePath).includes("/.agent-outfit-transaction-") && options?.recursive === true
+            portablePath(filePath).includes("/.agent-setup-transaction-") && options?.recursive === true
               ? failWith("remove", filePath)
               : fileSystem.remove(filePath, options),
         })),

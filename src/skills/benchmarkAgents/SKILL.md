@@ -66,7 +66,7 @@ Prefer repo-owned scripts under `scripts/dev/` or `scripts/bench/` (gitignored p
    COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
    REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
    REPO=$(basename "$REPO_ROOT")
-   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+   RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/$REPO/$SKILL"
    RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
    [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
    mkdir -p "$RUN_DIR"
@@ -108,7 +108,7 @@ A suite shows a change on fixed tasks. To confirm it on real work, compare Claud
 
 ```bash
 SCRIPT="<this skill's folder>/scripts/sessionTokenUsage.py"
-RUN_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/global/benchmark-agents/$(date +%Y-%m-%d-%H%M)"
+RUN_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/global/benchmark-agents/$(date +%Y-%m-%d-%H%M)"
 mkdir -p "$RUN_DIR"
 python3 "$SCRIPT" --since <start> --until <change date> --out "$RUN_DIR/usage.json"
 # a week or more after the change, set a new RUN_DIR the same way, then:

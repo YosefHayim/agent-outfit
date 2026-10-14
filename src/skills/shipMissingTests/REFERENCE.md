@@ -21,7 +21,7 @@ Typical MYPR-style handoff:
 
 ```text
 state dir has:
-  ${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/find-missing-tests/<newest>/report.md   # ## Features + ## Report
+  ${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/<repo>/find-missing-tests/<newest>/report.md   # ## Features + ## Report
 repo has:
   branch test/find-missing-tests-p0-units  (optional mono fill)
 ```

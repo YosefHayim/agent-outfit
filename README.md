@@ -1,10 +1,10 @@
-# agent-outfit
+# agent-setup
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/YosefHayim/agent-outfit/main/public/hero.png" alt="agent-outfit - install owned agent skills, hooks, and templates into Claude Code projects" width="640" />
+  <img src="https://raw.githubusercontent.com/YosefHayim/agent-setup/main/public/hero.png" alt="agent-setup - install owned agent skills, hooks, and templates into Claude Code projects" width="640" />
 </p>
 
-`agent-outfit` is a one-command installer for Yosef's reusable [Claude Code](https://code.claude.com/docs/en/overview) skills, hooks, and repo templates. It is a [TypeScript](https://www.typescriptlang.org/) CLI for [Node.js](https://nodejs.org/en), built with [pnpm](https://pnpm.io/), [Biome](https://biomejs.dev/), and [Vitest](https://vitest.dev/).
+`agent-setup` is a one-command installer for Yosef's reusable [Claude Code](https://code.claude.com/docs/en/overview) skills, hooks, and repo templates. It is a [TypeScript](https://www.typescriptlang.org/) CLI for [Node.js](https://nodejs.org/en), built with [pnpm](https://pnpm.io/), [Biome](https://biomejs.dev/), and [Vitest](https://vitest.dev/).
 
 It installs into global `~/.claude` or project-local `.claude/`, keeps Schema-validated managed configuration, edits agent settings surgically, and removes only the files its receipt owns. The shipped skills target Claude Code first, while the docs and some skills also account for [Cursor](https://cursor.com/docs), [OpenAI Codex](https://developers.openai.com/codex), [Kiro](https://kiro.dev/docs/steering/), [Gemini CLI](https://geminicli.com/docs/cli/gemini-md/), and [Roo Code](https://docs.roocode.com/features/custom-instructions/).
 
@@ -13,7 +13,7 @@ It installs into global `~/.claude` or project-local `.claude/`, keeps Schema-va
 Install the safe default scratch folder guard globally:
 
 ```bash
-npx agent-outfit install
+npx agent-setup install
 ```
 
 Then restart Claude Code so hooks and skills load in the next session.
@@ -21,7 +21,7 @@ Then restart Claude Code so hooks and skills load in the next session.
 For a repo-local install that can be committed with the project:
 
 ```bash
-npx agent-outfit install --scope project
+npx agent-setup install --scope project
 ```
 
 ## Usage
@@ -29,56 +29,56 @@ npx agent-outfit install --scope project
 Print command help, or open the interactive TUI (same options as CLI args; shows an ordered plan and asks for approval before applying):
 
 ```bash
-npx agent-outfit
-npx agent-outfit menu
+npx agent-setup
+npx agent-setup menu
 ```
 
 Add a specific skill or hook set. `install` only adds: features that are already installed stay installed:
 
 ```bash
-npx agent-outfit install write-readme update-agent-docs
-npx agent-outfit install duplicate-code-guard
-npx agent-outfit install image-to-code
+npx agent-setup install write-readme update-agent-docs
+npx agent-setup install duplicate-code-guard
+npx agent-setup install image-to-code
 ```
 
 Keep an existing install and refresh its copied skills and hooks. Named IDs must already be installed; every installed feature is refreshed and none is removed:
 
 ```bash
-agent-outfit update
-agent-outfit update context-guard
+agent-setup update
+agent-setup update context-guard
 ```
 
-To drop some features, open `agent-outfit menu`, pick Update, then Choose features: it starts from the installed set, and the features you untick are removed.
+To drop some features, open `agent-setup menu`, pick Update, then Choose features: it starts from the installed set, and the features you untick are removed.
 
 Remove only the hooks, skill files, and settings entries the receipt owns:
 
 ```bash
-agent-outfit uninstall
-agent-outfit uninstall --scope project
+agent-setup uninstall
+agent-setup uninstall --scope project
 ```
 
 Inspect host support and installed state without changing files:
 
 ```bash
-agent-outfit doctor
+agent-setup doctor
 ```
 
 Inspect or change the managed configuration one setting at a time:
 
 ```bash
-agent-outfit config show
-agent-outfit config set context-warn-percent 15
-agent-outfit config set context-block-percent 22
-agent-outfit config set idle-compact-after 1m
+agent-setup config show
+agent-setup config set context-warn-percent 15
+agent-setup config set context-block-percent 22
+agent-setup config set idle-compact-after 1m
 ```
 
-Every setting and `AGENT_OUTFIT_*` environment variable is listed under [Settings](#settings).
+Every setting and `AGENT_SETUP_*` environment variable is listed under [Settings](#settings).
 
 Scaffold the copyable workflow set or scan a workspace for duplicates:
 
 ```bash
-agent-outfit workflow scaffold .
-agent-outfit duplicates . --staged
+agent-setup workflow scaffold .
+agent-setup duplicates . --staged
 ```
 
 ### Idle compact
@@ -86,7 +86,7 @@ agent-outfit duplicates . --staged
 Idle compact is off by default (`idle-compact-after off`). On macOS with Ghostty 1.3+, verified native
 hooks for Claude Code, Codex, and Grok bind each session to its exact terminal.
 Override one launched agent without changing persistent config, for example
-`AGENT_OUTFIT_IDLE_COMPACT_AFTER=30s codex` or `AGENT_OUTFIT_IDLE_COMPACT_AFTER=off grok`.
+`AGENT_SETUP_IDLE_COMPACT_AFTER=30s codex` or `AGENT_SETUP_IDLE_COMPACT_AFTER=off grok`.
 
 ### Status lines
 
@@ -106,7 +106,7 @@ Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each i
 | --- | --- | --- |
 | **context-guard** | Guard long sessions near their context cap and optionally compact idle Claude Code, Codex, or Grok sessions in their exact Ghostty terminal. | 🟢 any OS |
 | **autorun** | Let the agent keep working alone. When the context is almost full and a fresh handoff note exists, it runs /compact and continues the task. macOS + Ghostty only (it types into your terminal). The hook code lives in context-guard. | 🔴 macOS + Ghostty |
-| **duplicate-code-guard** | Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `agent-outfit config set duplicate-code-mode warn`). Agents without edit hooks can run `agent-outfit duplicates` as a pre-commit or CI check. | 🟢 any OS |
+| **duplicate-code-guard** | Block a Write/Edit that pastes a function body or interface/type shape already defined elsewhere in the repo — DRY enforced at the moment of the write. Uses the repo's own TypeScript; blocks by default (tune with `agent-setup config set duplicate-code-mode warn`). Agents without edit hooks can run `agent-setup duplicates` as a pre-commit or CI check. | 🟢 any OS |
 | **scratch-folder-guard** | Block every agent write into system temporary folders (/tmp, /private/tmp, /var/tmp, /dev/shm, $TMPDIR) — files, edits, shell redirects, copies, and mktemp — so logs and scratch files stay in a gitignored repo folder. When a turn ends with files left in the session's scratch folder, asks the agent to delete them once the user's tasks are finished, and deletes each ended Claude Code session's own scratch folder. | 🟢 any OS |
 | **session-rehome** | Move each ended Claude Code session and Codex thread into the repo it was about, so `/resume` and `codex resume` in that repo list it. Sessions started in ~/Desktop/Code, ~, /tmp, or a deleted worktree move when one repo clearly dominates their work; resuming a moved session from its old folder says where it went. | 🟢 any OS |
 | **image-to-code** | Turn an image (PNG, screenshot, design) into code that looks the same — SVG, HTML/CSS, or animation — checked with pixel diffs. | 🟢 any OS |
@@ -159,20 +159,20 @@ Status-line presets for Claude Code and Codex live in `src/statuslines/`. Each i
 ## Recommended community skills
 
 <!-- AUTO:SKILLS:START -->
-These skills ship with agent-outfit for convenience — installable the same way (`npx agent-outfit install <id>`) — but they are **authored by others**, not by agent-outfit. Full credit and upstream sources:
+These skills ship with agent-setup for convenience — installable the same way (`npx agent-setup install <id>`) — but they are **authored by others**, not by agent-setup. Full credit and upstream sources:
 
 | Skill | What it does | By |
 | --- | --- | --- |
 | **make-code-readable** | Use when you want code that is easier to read — clearer names, order, files, and functions. It shows before and after, and changes code only after you approve. Say "make this readable", "rename for clarity", or "clean this up". To remove extra layers, use simplify-code. For a whole repo, use restructure-repo. | [Mike Cann](https://github.com/mikecann/agent-skills) (upstream: `deslop`) |
 | **question-my-plan** | Use when you want the agent to ask you hard questions about your plan until you both understand it the same way. When the repo has PROJECT.md, CONTEXT.md, or LANGUAGE.md, or you ask for it, it also checks the plan against them and updates them as you decide. Say "grill me", "question my plan", or "grill me with docs". | [Matt Pocock](https://github.com/mattpocock/skills) (upstream: `grill-me`, `grill-with-docs`) |
 
-> `code-style` is an agent-outfit-original skill that builds on Matt Pocock's grilling pattern — it stays in the owned catalog above.
+> `code-style` is an agent-setup-original skill that builds on Matt Pocock's grilling pattern — it stays in the owned catalog above.
 <!-- AUTO:SKILLS:END -->
 
 ## Settings
 
 <!-- AUTO:SETTINGS:START -->
-agent-outfit keeps one `config.json` in its install root: `~/.claude/agent-outfit/config.json` for a global install, `.claude/agent-outfit/config.json` for a project install. Change a setting with `agent-outfit config set <setting> <value>`, show it with `agent-outfit config show`, and reset it with `agent-outfit config reset`. A file with an unknown key does not load; fix it or run `agent-outfit config reset`.
+agent-setup keeps one `config.json` in its install root: `~/.claude/agent-setup/config.json` for a global install, `.claude/agent-setup/config.json` for a project install. Change a setting with `agent-setup config set <setting> <value>`, show it with `agent-setup config show`, and reset it with `agent-setup config reset`. A file with an unknown key does not load; fix it or run `agent-setup config reset`.
 
 | Setting | config.json key | Default | What it does |
 | --- | --- | --- | --- |
@@ -182,11 +182,11 @@ agent-outfit keeps one `config.json` in its install root: `~/.claude/agent-outfi
 | `autorun-max-cycles` | `autorunMaxCycles` | `50` | Hard limit on compact cycles for one autorun, whatever count is given. |
 | `autorun-check-every-seconds` | `autorunCheckEverySeconds` | `5` | Seconds between the autorun watcher's checks. |
 | `autorun-idle-after-seconds` | `autorunIdleAfterSeconds` | `8` | Seconds without transcript activity before autorun treats the turn as idle. |
-| `idle-compact-after` | `idleCompactAfter` | `"off"` | How long an agent session sits idle before agent-outfit submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h. |
+| `idle-compact-after` | `idleCompactAfter` | `"off"` | How long an agent session sits idle before agent-setup submits a waiting draft or runs /compact: off, or a time like 30s, 2m, 1h. |
 | `duplicate-code-mode` | `duplicateCodeMode` | `"block"` | What the duplicate-code guard does with a copied function or type shape: block the edit, warn, or off. |
 | `duplicate-code-skip-folders` | `duplicateCodeSkipFolders` | `[]` | Folder names the duplicate-code guard skips, on top of its built-in skips such as node_modules. |
 | `session-rehome-roots` | `sessionRehomeRoots` | `["Desktop/Code","Code","Projects","dev","src","repos"]` | Folders (home-relative or absolute) whose git repos session-rehome may move Claude Code and Codex sessions into. Repos are found one and two levels deep. |
-| `debug-logs` | `debugLogs` | `false` | Print agent-outfit hook errors to stderr. |
+| `debug-logs` | `debugLogs` | `false` | Print agent-setup hook errors to stderr. |
 
 Lists (`duplicate-code-skip-folders`) take comma-separated values on the command line.
 
@@ -194,17 +194,17 @@ Lists (`duplicate-code-skip-folders`) take comma-separated values on the command
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `AGENT_OUTFIT_AGENT_ID` | set by agent-outfit in hook commands | Which agent ran a hook (claude-code, codex, grok). Install writes AGENT_OUTFIT_AGENT_ID=<agent> in front of the hook commands that read it: idle compact, session rehome, and the scratch cleanup question. |
-| `AGENT_OUTFIT_IDLE_COMPACT_AFTER` | unset (idleCompactAfter in config.json applies) | Overrides idleCompactAfter for one agent session: off, or a time like 30s. Set it when starting the agent, e.g. `AGENT_OUTFIT_IDLE_COMPACT_AFTER=30s codex`. |
-| `AGENT_OUTFIT_AUTORUN_DRY_RUN` | off | When 1, true, or yes, the autorun watcher logs the keystrokes it would type instead of typing them (safe manual testing). |
-| `AGENT_OUTFIT_REHOME_STATE_DIR` | ~/.claude/agent-outfit/state/session-rehome | Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder. |
+| `AGENT_SETUP_AGENT_ID` | set by agent-setup in hook commands | Which agent ran a hook (claude-code, codex, grok). Install writes AGENT_SETUP_AGENT_ID=<agent> in front of the hook commands that read it: idle compact, session rehome, and the scratch cleanup question. |
+| `AGENT_SETUP_IDLE_COMPACT_AFTER` | unset (idleCompactAfter in config.json applies) | Overrides idleCompactAfter for one agent session: off, or a time like 30s. Set it when starting the agent, e.g. `AGENT_SETUP_IDLE_COMPACT_AFTER=30s codex`. |
+| `AGENT_SETUP_AUTORUN_DRY_RUN` | off | When 1, true, or yes, the autorun watcher logs the keystrokes it would type instead of typing them (safe manual testing). |
+| `AGENT_SETUP_REHOME_STATE_DIR` | ~/.claude/agent-setup/state/session-rehome | Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder. |
 <!-- AUTO:SETTINGS:END -->
 
 ## Scope
 
-This repository is the source of truth for agent-outfit-owned skills and hooks. It is not a general agent marketplace, does not install arbitrary third-party skill folders, and does not own runtime behavior for every agent listed above. When a platform cannot enforce a hook before an edit, agent-outfit documents the limit and provides the closest check it can support.
+This repository is the source of truth for agent-setup-owned skills and hooks. It is not a general agent marketplace, does not install arbitrary third-party skill folders, and does not own runtime behavior for every agent listed above. When a platform cannot enforce a hook before an edit, agent-setup documents the limit and provides the closest check it can support.
 
-The hook code is intentionally small: compiled JavaScript, Node built-ins, and agent-outfit's own shared hook library. The CLI can use dependencies; hook files should stay zero-dependency.
+The hook code is intentionally small: compiled JavaScript, Node built-ins, and agent-setup's own shared hook library. The CLI can use dependencies; hook files should stay zero-dependency.
 
 ## Repo docs
 

@@ -97,7 +97,7 @@ Each taste variant **must** change **at least 2** of these four axes vs live, wi
 Each run gets one folder outside the repo, so parallel campaigns do not overwrite. Never write run files into the repo. STATE, MATRIX, AUDIT and TASTE below are `##` sections of one `report.md`:
 
 ```text
-${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/improve-ux/
+${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/<repo>/improve-ux/
   <YYYY-MM-DD-HHMM>/   # one folder per run, local time
     report.md          # ## State, ## Matrix (flows / lanes), ## Audit (scores + evidence), ## Taste (variants + chosen direction)
     planpage-*.json
@@ -110,7 +110,7 @@ SKILL="improve-ux"
 COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
 REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
 REPO=$(basename "$REPO_ROOT")
-RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/$REPO/$SKILL"
 RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
 [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
 mkdir -p "$RUN_DIR"

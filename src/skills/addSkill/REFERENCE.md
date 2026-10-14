@@ -61,7 +61,7 @@ Both need a `name` equal to the catalog id (lowercase letters, digits, hyphens; 
 
 ## Registration checklist
 
-All paths are in the agent-outfit repo. Put the new skill next to related skills and use the same position in every list.
+All paths are in the agent-setup repo. Put the new skill next to related skills and use the same position in every list.
 
 1. **Skill files** — `src/skills/<sourceDirectory>/SKILL.md`, plus every extra file the proposal named. Mirror `src/skills/githubRepoAbout/` for a one-file skill.
 2. **Catalog** — one entry in `src/catalog/featureCatalog.ts`:
@@ -86,11 +86,11 @@ All paths are in the agent-outfit repo. Put the new skill next to related skills
 
 ## Install
 
-`install <id>` adds the feature and keeps everything already installed. Run from the agent-outfit repo after `pnpm verify` (it builds `dist/`, which the hooks install from):
+`install <id>` adds the feature and keeps everything already installed. Run from the agent-setup repo after `pnpm verify` (it builds `dist/`, which the hooks install from):
 
 ```bash
 pnpm cli install <id>
 ls ~/.claude/skills/<id>/SKILL.md
 ```
 
-For a project install, run the same command from the target repo: replace `pnpm cli` with `node <agent-outfit repo>/dist/src/cli/main.js` (the project is the current folder), add `--scope project`, and check `.claude/skills/<id>/SKILL.md`.
+For a project install, run the same command from the target repo: replace `pnpm cli` with `node <agent-setup repo>/dist/src/cli/main.js` (the project is the current folder), add `--scope project`, and check `.claude/skills/<id>/SKILL.md`.

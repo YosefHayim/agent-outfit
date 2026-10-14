@@ -67,7 +67,7 @@ Use this as a quick lookup. Prefer **one primary** skill.
 
 ## Agent artifact paths (anti-slop)
 
-Run records are **not** product SSOT. Each run gets one new folder outside every repo, **`${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/<repo>/<skill>/<YYYY-MM-DD-HHMM>/`**, with one `report.md` that holds the run as `##` sections. Separate files only for assets that are not Markdown. Resume uses the run folder the user gives, else the newest one; there is no pointer file. Parallel lanes share the orchestrator's `RUN_DIR`. Never write run records to:
+Run records are **not** product SSOT. Each run gets one new folder outside every repo, **`${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/<repo>/<skill>/<YYYY-MM-DD-HHMM>/`**, with one `report.md` that holds the run as `##` sections. Separate files only for assets that are not Markdown. Resume uses the run folder the user gives, else the newest one; there is no pointer file. Parallel lanes share the orchestrator's `RUN_DIR`. Never write run records to:
 
 - the repository root (reports, audits, campaign boards)
 - a `docs/` folder or a gitignored folder in the repository

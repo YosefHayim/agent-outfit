@@ -1,4 +1,4 @@
-/** `agent-outfit workflow scaffold` — copy CI and publish workflow templates. */
+/** `agent-setup workflow scaffold` — copy CI and publish workflow templates. */
 
 import { Command, Options } from "@effect/cli";
 import { Path } from "@effect/platform";
@@ -30,7 +30,7 @@ export const showCopiedWorkflows = (copiedWorkflows: {
 
 const overwriteOption = Options.boolean("overwrite").pipe(
   Options.withDefault(false),
-  Options.withDescription("Overwrite existing workflow files (resync from agent-outfit)"),
+  Options.withDescription("Overwrite existing workflow files (resync from agent-setup)"),
 );
 
 const scaffoldCommand = Command.make(

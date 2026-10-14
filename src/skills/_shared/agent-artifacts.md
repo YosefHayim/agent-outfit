@@ -5,7 +5,7 @@ Skills never write their own run records into a repository: no `docs/` folder, n
 ## Where
 
 ```text
-${XDG_STATE_HOME:-~/.local/state}/agent-outfit/runs/
+${XDG_STATE_HOME:-~/.local/state}/agent-setup/runs/
   <repo>/                      # main repository folder name, the same for every worktree; "global" for runs not tied to one repo
     <skill>/                   # e.g. run-tasks-in-parallel, improve-ux
       2026-10-04-1430/         # one folder per run, local time YYYY-MM-DD-HHMM
@@ -20,7 +20,7 @@ SKILL="run-tasks-in-parallel"
 COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
 REPO_ROOT=$(dirname "$COMMON_GIT_DIR")
 REPO=$(basename "$REPO_ROOT")
-RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-outfit/runs/$REPO/$SKILL"
+RUNS="${XDG_STATE_HOME:-$HOME/.local/state}/agent-setup/runs/$REPO/$SKILL"
 RUN_DIR="$RUNS/$(date +%Y-%m-%d-%H%M)"
 [ -e "$RUN_DIR" ] && RUN_DIR="$RUN_DIR-$$"
 mkdir -p "$RUN_DIR"

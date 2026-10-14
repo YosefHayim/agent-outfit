@@ -93,7 +93,7 @@ const runWatcher = (request: { readonly workspace: Workspace; readonly args: Rea
       HOME: request.workspace.homeRoot,
       CLAUDE_CONFIG_DIR: path.join(request.workspace.homeRoot, ".claude"),
       CODEX_HOME: path.join(request.workspace.homeRoot, ".codex"),
-      AGENT_OUTFIT_REHOME_STATE_DIR: request.workspace.stateFolder,
+      AGENT_SETUP_REHOME_STATE_DIR: request.workspace.stateFolder,
     },
   });
 
@@ -290,8 +290,8 @@ describe("rehome watcher with Claude Code sessions", () => {
         ...process.env,
         HOME: workspace.homeRoot,
         CLAUDE_CONFIG_DIR: path.join(workspace.homeRoot, ".claude"),
-        AGENT_OUTFIT_AGENT_ID: "claude-code",
-        AGENT_OUTFIT_REHOME_STATE_DIR: workspace.stateFolder,
+        AGENT_SETUP_AGENT_ID: "claude-code",
+        AGENT_SETUP_REHOME_STATE_DIR: workspace.stateFolder,
       },
     });
     for (let attempt = 0; attempt < 40 && !existsSync(movedTranscript); attempt += 1) {
@@ -307,7 +307,7 @@ describe("rehome watcher with Claude Code sessions", () => {
       cwd: packageRoot,
       input: "{",
       encoding: "utf8",
-      env: { ...process.env, AGENT_OUTFIT_AGENT_ID: "claude-code" },
+      env: { ...process.env, AGENT_SETUP_AGENT_ID: "claude-code" },
     });
 
     expect(hook.status).toBe(0);

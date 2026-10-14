@@ -22,7 +22,7 @@ const sessionIdFrom = (candidate: unknown): string => {
 };
 
 const handOverEndedSession = (): void => {
-  const agent = rehomeAgentFrom(process.env.AGENT_OUTFIT_AGENT_ID);
+  const agent = rehomeAgentFrom(process.env.AGENT_SETUP_AGENT_ID);
   const sessionId = sessionIdFrom(JSON.parse(readFileSync(0, "utf8")));
   if (!agent || !sessionId) {
     return;

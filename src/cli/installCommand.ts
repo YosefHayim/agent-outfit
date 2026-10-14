@@ -1,4 +1,4 @@
-/** `agent-outfit install [feature-id...]` — add features to the installed selection. */
+/** `agent-setup install [feature-id...]` — add features to the installed selection. */
 
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
@@ -26,7 +26,7 @@ export const showInstallation = (installation: {
 export const installCommand = Command.make(
   "install",
   {
-    featureIds: featureIdsArgument("Feature IDs from `agent-outfit catalog` to add; omitted adds catalog defaults"),
+    featureIds: featureIdsArgument("Feature IDs from `agent-setup catalog` to add; omitted adds catalog defaults"),
     scope: scopeOption,
     format: formatOption,
   },

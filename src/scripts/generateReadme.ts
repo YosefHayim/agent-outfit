@@ -75,7 +75,7 @@ const featuresTable = (): string =>
 
 const communitySection = (descriptions: ReadonlyMap<string, string>): string =>
   [
-    "These skills ship with agent-outfit for convenience — installable the same way (`npx agent-outfit install <id>`) — but they are **authored by others**, not by agent-outfit. Full credit and upstream sources:",
+    "These skills ship with agent-setup for convenience — installable the same way (`npx agent-setup install <id>`) — but they are **authored by others**, not by agent-setup. Full credit and upstream sources:",
     "",
     "| Skill | What it does | By |",
     "| --- | --- | --- |",
@@ -87,14 +87,14 @@ const communitySection = (descriptions: ReadonlyMap<string, string>): string =>
         : [];
     }),
     "",
-    "> `code-style` is an agent-outfit-original skill that builds on Matt Pocock's grilling pattern — it stays in the owned catalog above.",
+    "> `code-style` is an agent-setup-original skill that builds on Matt Pocock's grilling pattern — it stays in the owned catalog above.",
   ].join("\n");
 
 const defaultText = (value: unknown): string => (value === undefined ? "absent" : `\`${JSON.stringify(value)}\``);
 
 const settingsSection = (): string =>
   [
-    "agent-outfit keeps one `config.json` in its install root: `~/.claude/agent-outfit/config.json` for a global install, `.claude/agent-outfit/config.json` for a project install. Change a setting with `agent-outfit config set <setting> <value>`, show it with `agent-outfit config show`, and reset it with `agent-outfit config reset`. A file with an unknown key does not load; fix it or run `agent-outfit config reset`.",
+    "agent-setup keeps one `config.json` in its install root: `~/.claude/agent-setup/config.json` for a global install, `.claude/agent-setup/config.json` for a project install. Change a setting with `agent-setup config set <setting> <value>`, show it with `agent-setup config show`, and reset it with `agent-setup config reset`. A file with an unknown key does not load; fix it or run `agent-setup config reset`.",
     "",
     "| Setting | config.json key | Default | What it does |",
     "| --- | --- | --- | --- |",

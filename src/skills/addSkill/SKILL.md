@@ -1,6 +1,6 @@
 ---
 name: add-skill
-description: Use when you want a new skill and can describe it. It asks you questions until the skill is clear, shows what it will do and its steps for you to approve, then adds it to agent-outfit, runs the checks, and installs it. Say "add a skill", "new skill", or "make a skill that…". To fix a skill, use improve-skill. To reuse what we just did, use save-as-skill.
+description: Use when you want a new skill and can describe it. It asks you questions until the skill is clear, shows what it will do and its steps for you to approve, then adds it to agent-setup, runs the checks, and installs it. Say "add a skill", "new skill", or "make a skill that…". To fix a skill, use improve-skill. To reuse what we just did, use save-as-skill.
 type: flow
 ---
 
@@ -21,11 +21,11 @@ Turn a description into a working, installed skill. The user describes it; you a
 
 ### 1. Capture
 
-Quote the user's description word for word. In the agent-outfit repo (`src/catalog/featureCatalog.ts` exists) follow every step; anywhere else follow [Outside agent-outfit](#outside-agent-outfit).
+Quote the user's description word for word. In the agent-setup repo (`src/catalog/featureCatalog.ts` exists) follow every step; anywhere else follow [Outside agent-setup](#outside-agent-setup).
 
 ### 2. Check for overlap
 
-Read the frontmatter `description` of every skill (`src/skills/*/SKILL.md` in agent-outfit; elsewhere, the skills under `~/.claude/skills/` and the project's `.claude/skills/`).
+Read the frontmatter `description` of every skill (`src/skills/*/SKILL.md` in agent-setup; elsewhere, the skills under `~/.claude/skills/` and the project's `.claude/skills/`).
 
 - One skill already covers most of the request → name it and what is missing, recommend `improve-skill`, and stop unless the user still wants a new skill.
 - Two skills each cover a part → name both and the gap; the new skill covers only the gap and hands off to them.
@@ -63,7 +63,7 @@ First test 3–5 of the user's own phrases against the new description and its c
 
 Then install with the command in [REFERENCE.md → Install](REFERENCE.md#install) and confirm the installed `SKILL.md` exists: `~/.claude/skills/<id>/` for a global install, `.claude/skills/<id>/` for a project install. Tell the user to start a new session so the agent loads it.
 
-### Outside agent-outfit
+### Outside agent-setup
 
 Run steps 1–5 the same way; in the step 4 card also ask where it lives: `.claude/skills/<id>/` (this project) or `~/.claude/skills/<id>/` (every project). On a yes, write `SKILL.md` and any extra files there, and skip the catalog, tests, README, and install.
 
@@ -77,6 +77,6 @@ Report:
 - each tried phrase → which skill it loads;
 - one sentence the user can say to try the skill now.
 
-In agent-outfit, also report the branch, the two test commands and `pnpm verify` with results, and the install path. The skill is done when the checks pass and the installed `SKILL.md` exists.
+In agent-setup, also report the branch, the two test commands and `pnpm verify` with results, and the install path. The skill is done when the checks pass and the installed `SKILL.md` exists.
 
-Outside agent-outfit, report the chosen location. The skill is done when its `SKILL.md` exists there.
+Outside agent-setup, report the chosen location. The skill is done when its `SKILL.md` exists there.

@@ -112,9 +112,9 @@ npm install -g .
 # published package
 npm install -g <name>@latest
 
-# agent-outfit skills/features
-agent-outfit install   # preserve existing features; add if needed
-agent-outfit doctor
+# agent-setup skills/features
+agent-setup install   # preserve existing features; add if needed
+agent-setup doctor
 
 # prove
 <binary> --version
