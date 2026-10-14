@@ -114,6 +114,21 @@ layer(NodeContext.layer)("uninstall", (it) => {
     }),
   );
 
+  it.scoped("removes the folders its removed files leave empty and keeps folders still in use", () =>
+    Effect.gen(function* () {
+      const { root, preparedRoot, writeFiles, exists } = yield* workspace;
+      yield* install(installRequest({ root, preparedRoot }));
+      yield* writeFiles(root, { ".claude/skills/user/SKILL.md": "User-owned skill.\n" });
+
+      yield* uninstall(uninstallRequest(root));
+
+      for (const emptied of [".claude/agent-setup", ".claude/skills/autorun", ".agents", ".cursor"]) {
+        expect(yield* exists(emptied)).toBe(false);
+      }
+      expect(yield* exists(".claude/skills/user/SKILL.md")).toBe(true);
+    }),
+  );
+
   it.scoped("returns absent without mutating files when no receipt exists", () =>
     Effect.gen(function* () {
       const { root, writeFiles, readText } = yield* workspace;
