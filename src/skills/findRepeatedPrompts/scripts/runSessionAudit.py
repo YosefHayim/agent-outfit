@@ -107,8 +107,12 @@ INTENT_TO_SKILL: dict[str, list[str]] = {
     "free_ports": ["free-ports"],
     "clone_all_repos": ["clone-all-repos"],
     "manage_cloudflare": ["manage-cloudflare", "deploy-and-check"],
-    "agent_voice": [],
     "check_website_quality": ["check-website-quality", "website-speed-ci"],
+}
+
+# Jobs another app owns: counted, but never recommended as a new agent-setup skill
+OWNED_ELSEWHERE: dict[str, str] = {
+    "agent_voice": "Voice lives in the agent-voice app, not in an agent-setup skill",
 }
 
 
@@ -489,6 +493,8 @@ def intent_buckets(unique: list[dict]) -> list[dict]:
         skills = INTENT_TO_SKILL.get(name, [])
         if name == "unclassified":
             rec, why = "leave", "Mixed one-offs; no stable job encoded yet"
+        elif name in OWNED_ELSEWHERE:
+            rec, why = "leave", OWNED_ELSEWHERE[name]
         elif not skills:
             rec = "create" if len(sessions) >= 5 else "leave"
             why = (
