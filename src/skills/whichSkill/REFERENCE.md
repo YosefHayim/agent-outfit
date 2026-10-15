@@ -191,4 +191,4 @@ which-skill: here is my raw ask — <paste> — primary skill + paste-ready refi
 | Separate “routing chat” then restart | Interrupt / context switch | **Avoid** |
 | Manual Cmd+C / Cmd+V as the product | Clunky | Only internal to `type_text` |
 
-Existing pieces live in **voxkey**, a separate app: its dictation pastes into the caret, and its prompt refinement can run on the final transcript before typing the refined prompt into the caret (mode A). See the voxkey docs for its settings.
+Existing pieces live in **agent-voice**, a separate app: its dictation pastes into the caret, and its prompt refinement can run on the final transcript before typing the refined prompt into the caret (mode A). See the agent-voice docs for its settings.

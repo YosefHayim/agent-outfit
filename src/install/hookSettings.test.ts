@@ -23,7 +23,7 @@ const codexHooksPath = ".codex/hooks.json";
 const receiptPath = ".claude/agent-setup/receipt.json";
 
 const userStop = { hooks: [{ type: "command", command: "user-stop" }] };
-const foreignStop = { hooks: [{ type: "command", command: "voxkey-stop" }] };
+const foreignStop = { hooks: [{ type: "command", command: "agent-voice-stop" }] };
 
 const jsonText = (value: object) => `${JSON.stringify(value, null, 2)}\n`;
 
@@ -47,7 +47,7 @@ const workspace = Effect.gen(function* () {
 
   const readJson = (relativePath: string) => Effect.map(readText(relativePath), (text) => JSON.parse(text));
 
-  // Another tool, such as voxkey, appends its own Stop entry and rewrites the file in its own format.
+  // Another tool, such as agent-voice, appends its own Stop entry and rewrites the file in its own format.
   const appendForeignStop = (relativePath: string) =>
     Effect.gen(function* () {
       const settings = yield* readJson(relativePath);
@@ -126,7 +126,7 @@ layer(NodeContext.layer)("hook settings", (it) => {
 
       for (const hookFile of [claudeSettingsPath, codexHooksPath]) {
         const settings = yield* readText(hookFile);
-        expect(settings).toContain("voxkey-stop");
+        expect(settings).toContain("agent-voice-stop");
         expect(settings).toContain("recordIdleCompactEvent.js");
       }
 

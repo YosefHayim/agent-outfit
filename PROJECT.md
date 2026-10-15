@@ -40,7 +40,7 @@ cannot block the editor because its own execution failed.
 ## Non-goals
 
 - Hosting or discovering third-party extensions.
-- Voice and free provider routing: they live in voxkey and free-model-router.
+- Voice and free provider routing: they live in agent-voice and free-model-router.
 - Preserving old command forms by default before version 1.0.
 - Adding runtime package dependencies to installed TypeScript hooks.
 - Guessing unsupported agent lifecycle integrations.

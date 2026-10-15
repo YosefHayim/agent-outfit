@@ -171,7 +171,7 @@ _Avoid_: "agent digest" when implying it is non-authoritative.
 Single source of truth; the full managed-configuration contract lives in `src/config/configSchema.ts`, every environment variable in `src/config/environmentVariables.ts`, while `src/hooks/lib/hookConfig.ts` holds only the dependency-free hook projection.
 _Avoid_: "source of truth" (acceptable, but the acronym is established).
 
-**voxkey / free-model-router**
+**agent-voice / free-model-router**
 Separate apps that own voice and free provider routing. agent-setup does not ship, call, or configure them.
 _Avoid_: describing their internals here.
 

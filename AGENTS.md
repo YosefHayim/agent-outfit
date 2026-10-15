@@ -10,7 +10,7 @@ Entrypoint for coding agents and maintainers. Claude Code, Codex, Cursor, Kiro, 
 npx agent-setup install image-to-code
 ```
 
-Voice lives in **voxkey** and free provider routing in **free-model-router**, each in its own repository. Do not add either back here.
+Voice lives in **agent-voice** and free provider routing in **free-model-router**, each in its own repository. Do not add either back here.
 
 ## Source-of-truth map
 
