@@ -6,7 +6,7 @@ Orientation: what this is, its moving parts, and how they fit. For the words, se
 
 ## What this is
 
-`agent-setup` is a personal toolbelt, not a platform: a TypeScript/Node CLI that installs, updates, and surgically uninstalls a curated set of coding-agent guardrails, skills, and copyable CI/publish workflow templates. Installed TypeScript hooks are separate dependency-free Node code. Voice (dictation, read-aloud, prompt refinement) is a separate app, voxkey, and free provider routing is another, free-model-router.
+`agent-setup` is a personal toolbelt, not a platform: a TypeScript/Node CLI that installs, updates, and surgically uninstalls a curated set of coding-agent guardrails, skills, and copyable CI/publish workflow templates. Installed TypeScript hooks are separate dependency-free Node code. Voice (dictation, read-aloud, prompt refinement) is a separate app, agent-voice, and free provider routing is another, free-model-router.
 
 ## Actors
 

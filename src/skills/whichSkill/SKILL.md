@@ -26,11 +26,11 @@ The user should **not** feel interrupted mid-session by a long “routing meetin
 
 **Right:** refine → **input** (mode A) or refine → **same turn execute** (mode B). Clipboard is only an implementation detail inside STT paste (macOS already pastes via clipboard + ⌘V into the caret—user does not manage that).
 
-### Relation to voxkey
+### Relation to agent-voice
 
-Dictation, prompt refinement, and read-aloud live in **voxkey**, a separate app. When voxkey refines a final transcript, it can type the refined prompt into the focused input (mode A). User proceeds with Enter. Session never “switches characters.”
+Dictation, prompt refinement, and read-aloud live in **agent-voice**, a separate app. When agent-voice refines a final transcript, it can type the refined prompt into the focused input (mode A). User proceeds with Enter. Session never “switches characters.”
 
-The wiring lives in voxkey; this skill defines **what** the refined string must contain. Do not invent a parallel product.
+The wiring lives in agent-voice; this skill defines **what** the refined string must contain. Do not invent a parallel product.
 
 ## Safety
 
