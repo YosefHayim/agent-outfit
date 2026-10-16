@@ -46,4 +46,10 @@ export const environmentVariables = Schema.decodeUnknownSync(Schema.Array(enviro
     purpose:
       "Folder for session-rehome's ledger of moved, kept, and deleted sessions, its watcher lock, and its sweep stamp. Tests point it at a temporary folder.",
   },
+  {
+    name: "AGENT_SETUP_DISK_CLEANUP_STATE_DIR",
+    defaultValue: "~/.claude/agent-setup/state/disk-cleanup",
+    purpose:
+      "Folder for disk-cleanup's watcher lock and the stamp that limits the cache cleanup to once a day. Tests point it at a temporary folder.",
+  },
 ]);

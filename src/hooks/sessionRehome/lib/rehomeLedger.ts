@@ -1,22 +1,12 @@
 // The ledger remembers every decision, so a sweep never re-reads a settled session and SessionStart can say where
 // a resumed session went. One JSON record per line; the newest record for a session wins.
 
-import {
-  closeSync,
-  existsSync,
-  mkdirSync,
-  openSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  utimesSync,
-  writeSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { installRoot } from "../../lib/hookConfig.js";
-import { isProcessAlive } from "../../lib/processAlive.js";
-import { appendJsonLine, decodeJsonLine } from "./jsonLines.js";
+import { claimIntervalSlot } from "../../lib/intervalStamp.js";
+import { appendJsonLine, decodeJsonLine } from "../../lib/jsonLines.js";
 
 export type RehomeAgent = "claude-code" | "codex";
 
@@ -114,43 +104,7 @@ export const recordLedgerEntry = (entry: LedgerEntry): void => {
 const sweepStampFile = (): string => path.join(stateFolder(), "last-sweep");
 
 // SessionStart fires on every launch; a full sweep reads every transcript, so it runs at most this often.
-export const claimSweepSlot = (minimumSeconds: number): boolean => {
-  const stamp = sweepStampFile();
-  if (existsSync(stamp) && Date.now() - statSync(stamp).mtimeMs < minimumSeconds * 1_000) {
-    return false;
-  }
+export const claimSweepSlot = (minimumSeconds: number): boolean =>
+  claimIntervalSlot({ stampFile: sweepStampFile(), minimumSeconds });
 
-  mkdirSync(stateFolder(), { recursive: true });
-  closeSync(openSync(stamp, "a"));
-  const now = new Date();
-  utimesSync(stamp, now, now);
-  return true;
-};
-
-const lockFile = (): string => path.join(stateFolder(), "watcher.lock");
-
-// One watcher moves files at a time; a lock left by a dead watcher is taken over.
-export const acquireWatcherLock = (): boolean => {
-  mkdirSync(stateFolder(), { recursive: true });
-  const holder = existsSync(lockFile()) ? Number(readFileSync(lockFile(), "utf8").trim()) : 0;
-  if (holder !== process.pid && isProcessAlive(holder)) {
-    return false;
-  }
-
-  rmSync(lockFile(), { force: true });
-  try {
-    const descriptor = openSync(lockFile(), "wx");
-    writeSync(descriptor, String(process.pid));
-    closeSync(descriptor);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-export const releaseWatcherLock = (): void => {
-  const holder = existsSync(lockFile()) ? Number(readFileSync(lockFile(), "utf8").trim()) : 0;
-  if (holder === process.pid) {
-    rmSync(lockFile(), { force: true });
-  }
-};
+export const rehomeLockFile = (): string => path.join(stateFolder(), "watcher.lock");

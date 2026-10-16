@@ -16,6 +16,7 @@ type HookConfig = {
   readonly duplicateCodeMode: "block" | "warn" | "off";
   readonly duplicateCodeSkipFolders: ReadonlyArray<string>;
   readonly sessionRehomeRoots: ReadonlyArray<string>;
+  readonly diskCleanupRoots: ReadonlyArray<string>;
   readonly debugLogs: boolean;
 };
 
@@ -27,6 +28,8 @@ type NumberSetting =
   | "autorunCheckEverySeconds"
   | "autorunIdleAfterSeconds";
 
+const CODE_ROOT_FOLDERS = ["Desktop/Code", "Code", "Projects", "dev", "src", "repos"];
+
 const DEFAULTS: HookConfig = {
   contextWarnPercent: 18,
   contextBlockPercent: 20,
@@ -37,7 +40,8 @@ const DEFAULTS: HookConfig = {
   idleCompactAfter: "off",
   duplicateCodeMode: "block",
   duplicateCodeSkipFolders: [],
-  sessionRehomeRoots: ["Desktop/Code", "Code", "Projects", "dev", "src", "repos"],
+  sessionRehomeRoots: CODE_ROOT_FOLDERS,
+  diskCleanupRoots: CODE_ROOT_FOLDERS,
   debugLogs: false,
 };
 
@@ -57,13 +61,22 @@ const numberSetting = (candidate: object, key: NumberSetting): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : DEFAULTS[key];
 };
 
+// A blank root would resolve to the home folder itself and scan every folder in it.
+const rootFoldersSetting = (candidate: object, key: "sessionRehomeRoots" | "diskCleanupRoots") => {
+  const rootFolders = propertyOf(candidate, key);
+  if (!Array.isArray(rootFolders)) {
+    return DEFAULTS[key];
+  }
+
+  return rootFolders.filter((folder): folder is string => typeof folder === "string" && folder.trim() !== "");
+};
+
 // A missing or malformed field keeps the application default.
 export const decodeHookConfig = (candidate: unknown): HookConfig => {
   if (typeof candidate !== "object" || candidate === null) return DEFAULTS;
   const idleCompactAfter = propertyOf(candidate, "idleCompactAfter");
   const duplicateCodeMode = propertyOf(candidate, "duplicateCodeMode");
   const skipFolders = propertyOf(candidate, "duplicateCodeSkipFolders");
-  const rehomeRoots = propertyOf(candidate, "sessionRehomeRoots");
   const debugLogs = propertyOf(candidate, "debugLogs");
   return {
     contextWarnPercent: numberSetting(candidate, "contextWarnPercent"),
@@ -80,10 +93,8 @@ export const decodeHookConfig = (candidate: unknown): HookConfig => {
     duplicateCodeSkipFolders: Array.isArray(skipFolders)
       ? skipFolders.filter((folder): folder is string => typeof folder === "string")
       : DEFAULTS.duplicateCodeSkipFolders,
-    sessionRehomeRoots: Array.isArray(rehomeRoots)
-      ? // A blank root would resolve to the home folder itself and scan every folder in it.
-        rehomeRoots.filter((folder): folder is string => typeof folder === "string" && folder.trim() !== "")
-      : DEFAULTS.sessionRehomeRoots,
+    sessionRehomeRoots: rootFoldersSetting(candidate, "sessionRehomeRoots"),
+    diskCleanupRoots: rootFoldersSetting(candidate, "diskCleanupRoots"),
     debugLogs: typeof debugLogs === "boolean" ? debugLogs : DEFAULTS.debugLogs,
   };
 };

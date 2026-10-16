@@ -5,9 +5,9 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-
+import { codexHome } from "../../lib/codexHome.js";
+import { appendJsonLine, decodeJsonLine, isRecord } from "../../lib/jsonLines.js";
 import { readTranscriptTail } from "../../lib/transcriptReader.js";
-import { appendJsonLine, decodeJsonLine, isRecord } from "./jsonLines.js";
 
 export type CodexThread = {
   readonly threadId: string;
@@ -27,8 +27,6 @@ type ThreadRow = {
 const STATE_DATABASE_PATTERN = /^state_(\d+)\.sqlite$/u;
 const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gu;
 const BUSY_TIMEOUT_MILLISECONDS = 5_000;
-
-const codexHome = (homeRoot: string): string => process.env.CODEX_HOME || path.join(homeRoot, ".codex");
 
 const stateDatabaseFile = (homeRoot: string): string | undefined => {
   const home = codexHome(homeRoot);

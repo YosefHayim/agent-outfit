@@ -1,41 +1,26 @@
 #!/usr/bin/env node
-// SessionEnd hook: hands the ended Claude Code session or Codex thread to a detached rehome watcher and exits at once,
-// because both agents give SessionEnd hooks only a second or two. Fails open.
+// SessionEnd hook: hands the ended Claude Code session or Codex thread to a detached rehome watcher and exits at once.
+// Fails open.
 
-import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
+import { startDetachedWatcher } from "../../lib/detachedWatcher.js";
+import { sessionIdFrom } from "../../lib/sessionIds.js";
 import { rehomeAgentFrom } from "../lib/rehomeLedger.js";
-
-// Claude Code session IDs are UUIDv4 and Codex thread IDs UUIDv7 — never "../x" or "*".
-const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
-
-const sessionIdFrom = (candidate: unknown): string => {
-  if (typeof candidate !== "object" || candidate === null) {
-    return "";
-  }
-
-  const sessionId = Object.getOwnPropertyDescriptor(candidate, "session_id")?.value;
-  return typeof sessionId === "string" && SESSION_ID_PATTERN.test(sessionId) ? sessionId : "";
-};
 
 const handOverEndedSession = (): void => {
   const agent = rehomeAgentFrom(process.env.AGENT_SETUP_AGENT_ID);
-  const sessionId = sessionIdFrom(JSON.parse(readFileSync(0, "utf8")));
+  const hookInput: unknown = JSON.parse(readFileSync(0, "utf8"));
+  const sessionId = sessionIdFrom(hookInput);
   if (!agent || !sessionId) {
     return;
   }
 
-  // The watcher has this file's extension: .js when installed, .ts under tsx in tests, where execArgv carries the
-  // tsx loader.
-  const hookFile = fileURLToPath(import.meta.url);
-  const watcherFile = path.join(path.dirname(hookFile), "..", "watchers", `rehomeWatcher${path.extname(hookFile)}`);
-  spawn(process.execPath, [...process.execArgv, watcherFile, "--agent", agent, "--session", sessionId, "--wait"], {
-    detached: true,
-    stdio: "ignore",
-  }).unref();
+  startDetachedWatcher({
+    hookUrl: import.meta.url,
+    watcherName: "rehomeWatcher",
+    watcherArguments: ["--agent", agent, "--session", sessionId, "--wait"],
+  });
 };
 
 try {

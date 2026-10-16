@@ -1,6 +1,6 @@
 // Pure policy: which repo a session belongs to, given how often each repo appeared in its work.
 
-import type { SessionEvidence } from "./sessionEvidence.js";
+import type { SessionEvidence } from "../../lib/sessionEvidence.js";
 
 export type RepoScore = {
   readonly repoName: string;

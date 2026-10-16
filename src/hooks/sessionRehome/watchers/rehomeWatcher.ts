@@ -10,10 +10,11 @@ import os from "node:os";
 import { parseArgs } from "node:util";
 
 import { readConfig } from "../../lib/hookConfig.js";
+import { acquireWatcherLock, releaseWatcherLock } from "../../lib/watcherLock.js";
 import { claudeSessionIsLive, findClaudeSession } from "../lib/claudeSessions.js";
 import { codexThreadIsLive, listCodexThreads } from "../lib/codexThreads.js";
 import { discoverRepos } from "../lib/localRepos.js";
-import { acquireWatcherLock, type RehomeAgent, releaseWatcherLock } from "../lib/rehomeLedger.js";
+import { type RehomeAgent, rehomeLockFile } from "../lib/rehomeLedger.js";
 import { runSweep, type SessionPlan } from "../lib/sessionSweep.js";
 
 type WatcherOptions = {
@@ -118,7 +119,7 @@ const sessionStillLive = async (request: { readonly homeRoot: string; readonly o
 const waitUntilReady = async (request: { readonly homeRoot: string; readonly options: WatcherOptions }) => {
   const deadline = Date.now() + WAIT_LIMIT_MILLISECONDS;
   while (Date.now() < deadline) {
-    if (!(await sessionStillLive(request)) && acquireWatcherLock()) {
+    if (!(await sessionStillLive(request)) && acquireWatcherLock(rehomeLockFile())) {
       return true;
     }
     await pause(WAIT_POLL_MILLISECONDS);
@@ -156,7 +157,7 @@ const runWatcher = async (): Promise<void> => {
   }
 
   const homeRoot = process.env.HOME || os.homedir();
-  const ready = options.wait ? await waitUntilReady({ homeRoot, options }) : acquireWatcherLock();
+  const ready = options.wait ? await waitUntilReady({ homeRoot, options }) : acquireWatcherLock(rehomeLockFile());
   if (!ready) {
     return;
   }
@@ -180,7 +181,7 @@ const runWatcher = async (): Promise<void> => {
     });
     printPlans({ plans, json: options.json });
   } finally {
-    releaseWatcherLock();
+    releaseWatcherLock(rehomeLockFile());
   }
 };
 

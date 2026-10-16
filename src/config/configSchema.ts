@@ -20,6 +20,8 @@ const numberSetting = (setting: {
 const trimmed = <Value, Encoded extends string>(schema: Schema.Schema<Value, Encoded>) =>
   Schema.Trim.pipe(Schema.compose(schema));
 
+const CODE_ROOT_FOLDERS = ["Desktop/Code", "Code", "Projects", "dev", "src", "repos"];
+
 // Every setting carries its CLI label (title) and meaning (description) on its property signature,
 // so the CLI, the menu, and the README settings table all read one declaration.
 export const configSchema = Schema.Struct({
@@ -79,17 +81,15 @@ export const configSchema = Schema.Struct({
     title: "duplicate code skip folders",
     description: "Folder names the duplicate-code guard skips, on top of its built-in skips such as node_modules.",
   }),
-  sessionRehomeRoots: withDefault(Schema.Array(Schema.NonEmptyTrimmedString), [
-    "Desktop/Code",
-    "Code",
-    "Projects",
-    "dev",
-    "src",
-    "repos",
-  ]).annotations({
+  sessionRehomeRoots: withDefault(Schema.Array(Schema.NonEmptyTrimmedString), CODE_ROOT_FOLDERS).annotations({
     title: "session rehome roots",
     description:
       "Folders (home-relative or absolute) whose git repos session-rehome may move Claude Code and Codex sessions into. Repos are found one and two levels deep.",
+  }),
+  diskCleanupRoots: withDefault(Schema.Array(Schema.NonEmptyTrimmedString), CODE_ROOT_FOLDERS).annotations({
+    title: "disk cleanup roots",
+    description:
+      "Folders (home-relative or absolute) whose git repos disk-cleanup checks for finished worktrees to push and remove. Repos are found one and two levels deep.",
   }),
   debugLogs: withDefault(Schema.Boolean, false).annotations({
     title: "debug logs",

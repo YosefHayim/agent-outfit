@@ -1,6 +1,7 @@
-import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
+
+import { gitAnswerLines, gitFindsNothing } from "../../lib/gitAnswers.js";
 
 // A repository can tell git status to skip its submodules ("ignore = all" in .gitmodules) or its new files
 // ("status.showUntrackedFiles = no"); the flags ask anyway.
@@ -43,52 +44,9 @@ const DETACHED_COMMIT_QUERY = [
 // A clone's git folder is its own .git; a linked worktree's is inside its main repository, e.g. .git/worktrees/feature.
 const GIT_FOLDER_QUERY = ["rev-parse", "--absolute-git-dir"];
 
-// A remote that wants a password has to fail, since nobody is there to type one: git may ask neither on the terminal
-// nor through a helper program, and neither may ssh. An empty GIT_ASKPASS also rules out core.askPass and SSH_ASKPASS.
-const NO_PASSWORD_QUESTIONS = { GIT_TERMINAL_PROMPT: "0", GIT_ASKPASS: "", SSH_ASKPASS_REQUIRE: "never" };
-
-// Git sets GIT_DIR and GIT_INDEX_FILE inside its own hooks; inherited, they would point every call at that repository.
-const gitEnvironment = (): NodeJS.ProcessEnv => {
-  const variables = Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"));
-  return { ...Object.fromEntries(variables), ...NO_PASSWORD_QUESTIONS };
-};
-
 // " D file": a tracked file that is only missing from the work tree, with nothing staged. A delete that was cut off
 // halfway leaves a clone full of these, and no content is lost with them: git already has every such file.
 const MISSING_TRACKED_FILE = /^ D /u;
-
-type GitQuestion = {
-  readonly folder: string;
-  readonly query: ReadonlyArray<string>;
-  readonly ignoredLine?: RegExp;
-  readonly timeoutMilliseconds?: number;
-};
-
-// A git call that fails or runs out of time has no answer, which is not the same as an empty one.
-const gitAnswerLines = (question: GitQuestion): ReadonlyArray<string> | undefined => {
-  // --no-optional-locks keeps this read from blocking an agent that is using the same work tree.
-  const git = spawnSync("git", ["--no-optional-locks", "-C", question.folder, ...question.query], {
-    encoding: "utf8",
-    env: gitEnvironment(),
-    timeout: question.timeoutMilliseconds,
-  });
-  if (git.status !== 0) {
-    return undefined;
-  }
-
-  return git.stdout.split("\n").filter((line) => line !== "");
-};
-
-// A git call that fails cannot vouch for the work tree, so only a successful empty answer counts as nothing.
-const gitFindsNothing = (question: GitQuestion): boolean => {
-  const answerLines = gitAnswerLines(question);
-  if (!answerLines) {
-    return false;
-  }
-
-  const countedLines = answerLines.filter((line) => !question.ignoredLine?.test(line));
-  return countedLines.length === 0;
-};
 
 const subfoldersOf = (folder: string): ReadonlyArray<string> =>
   readdirSync(folder, { withFileTypes: true })

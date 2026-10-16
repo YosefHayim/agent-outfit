@@ -34,6 +34,7 @@ describe("configSchema", () => {
       duplicateCodeMode: "block",
       duplicateCodeSkipFolders: [],
       sessionRehomeRoots: ["Desktop/Code", "Code", "Projects", "dev", "src", "repos"],
+      diskCleanupRoots: ["Desktop/Code", "Code", "Projects", "dev", "src", "repos"],
       debugLogs: false,
     });
     expect(defaultConfig).toEqual(decodeConfig({}));
@@ -180,6 +181,6 @@ describe("configJsonSchema", () => {
     const json = Schema.encodeSync(configJsonSchema)(defaultConfig);
 
     expect(JSON.parse(json)).toEqual(defaultConfig);
-    expect(Object.keys(JSON.parse(json))).toHaveLength(11);
+    expect(Object.keys(JSON.parse(json))).toHaveLength(12);
   });
 });
