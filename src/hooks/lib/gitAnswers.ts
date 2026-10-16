@@ -4,9 +4,28 @@ import { spawnSync } from "node:child_process";
 // nor through a helper program, and neither may ssh. An empty GIT_ASKPASS also rules out core.askPass and SSH_ASKPASS.
 const NO_PASSWORD_QUESTIONS = { GIT_TERMINAL_PROMPT: "0", GIT_ASKPASS: "", SSH_ASKPASS_REQUIRE: "never" };
 
-// Git sets GIT_DIR and GIT_INDEX_FILE inside its own hooks; inherited, they would point every call at that repository.
+// The variables `git rev-parse --local-env-vars` lists. Git sets some of them inside its own hooks, and inherited they
+// would point every call at that repository; the rest, such as GIT_SSH_COMMAND, are the person's own setup.
+const REPOSITORY_VARIABLES = new Set([
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_CONFIG",
+  "GIT_CONFIG_PARAMETERS",
+  "GIT_CONFIG_COUNT",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_IMPLICIT_WORK_TREE",
+  "GIT_GRAFT_FILE",
+  "GIT_INDEX_FILE",
+  "GIT_NO_REPLACE_OBJECTS",
+  "GIT_REPLACE_REF_BASE",
+  "GIT_PREFIX",
+  "GIT_SHALLOW_FILE",
+  "GIT_COMMON_DIR",
+]);
+
 const gitEnvironment = (): NodeJS.ProcessEnv => {
-  const variables = Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"));
+  const variables = Object.entries(process.env).filter(([name]) => !REPOSITORY_VARIABLES.has(name));
   return { ...Object.fromEntries(variables), ...NO_PASSWORD_QUESTIONS };
 };
 

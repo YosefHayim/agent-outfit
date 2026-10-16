@@ -1,4 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
 import {
   chmodSync,
   existsSync,
@@ -74,7 +75,7 @@ const writePruneToolStubs = (request: { readonly homeRoot: string; readonly dock
 const createCodeHome = (options: { readonly dockerRunning: boolean } = { dockerRunning: true }): CodeHome => {
   const homeRoot = mkdtempSync(path.join(packageRoot, "scratch-disk-cleanup-"));
   workspaces.push(homeRoot);
-  // The watcher drops inherited GIT_* variables, so its commits take their author from the home's git config.
+  // The watcher's own commits take their author from the home's git config.
   writeFileSync(path.join(homeRoot, ".gitconfig"), "[user]\n\tname = Cleanup Test\n\temail = cleanup@example.test\n");
   const remote = path.join(homeRoot, "remotes", "app.git");
   const repo = path.join(homeRoot, "Desktop", "Code", "app");
@@ -83,6 +84,8 @@ const createCodeHome = (options: { readonly dockerRunning: boolean } = { dockerR
   git({ folder: homeRoot, command: ["clone", "--quiet", remote, repo] });
   commitFile({ workTree: repo, fileName: "README.md" });
   git({ folder: repo, command: ["push", "--quiet", "origin", "main"] });
+  // A clone of a repository that already has commits learns the remote's default branch the same way.
+  git({ folder: repo, command: ["remote", "set-head", "origin", "main"] });
   const toolCallsFile = writePruneToolStubs({ homeRoot, dockerRunning: options.dockerRunning });
   return { homeRoot, remote, repo, toolCallsFile };
 };
@@ -172,6 +175,9 @@ describe("cleanupWatcher worktrees", { timeout: 30_000 }, () => {
     writeFileSync(path.join(onMain, "README.md"), "changed on main\n");
     const withKey = addBranchWorktree({ home, branch: "with-key" });
     writeFileSync(path.join(withKey, "signing.pem"), "private key\n");
+    const committedKey = addBranchWorktree({ home, branch: "committed-key" });
+    commitFile({ workTree: committedKey, fileName: "server.key" });
+    commitFile({ workTree: committedKey, fileName: "routes.ts" });
     const locked = addBranchWorktree({ home, branch: "locked" });
     commitFile({ workTree: locked, fileName: "locked.ts" });
     git({ folder: home.repo, command: ["worktree", "lock", locked] });
@@ -181,14 +187,29 @@ describe("cleanupWatcher worktrees", { timeout: 30_000 }, () => {
     expect(reportLineFor({ report: run.stdout, target: detached })).toMatch(/^kept +detached-work +\//);
     expect(reportLineFor({ report: run.stdout, target: onMain })).toMatch(/^kept +default-branch-work +\//);
     expect(reportLineFor({ report: run.stdout, target: withKey })).toMatch(/^kept +risky-files +\//);
+    expect(reportLineFor({ report: run.stdout, target: committedKey })).toMatch(/^kept +risky-files +\//);
     expect(reportLineFor({ report: run.stdout, target: locked })).toMatch(/^kept +locked +\//);
-    expect([detached, onMain, withKey, locked].every((folder) => existsSync(folder))).toBe(true);
+    expect([detached, onMain, withKey, committedKey, locked].every((folder) => existsSync(folder))).toBe(true);
+    expect(remoteBranches(home)).toBe("main");
+  });
+
+  it("keeps a worktree with work to push while the remote's default branch is unknown", () => {
+    const home = createCodeHome();
+    git({ folder: home.repo, command: ["remote", "set-head", "origin", "--delete"] });
+    const develop = addBranchWorktree({ home, branch: "develop" });
+    commitFile({ workTree: develop, fileName: "release.ts" });
+    const merged = addBranchWorktree({ home, branch: "merged" });
+
+    const run = cleanUpAfterSession(home);
+
+    expect(reportLineFor({ report: run.stdout, target: develop })).toMatch(/^kept +unknown-default-branch +\//);
+    expect(reportLineFor({ report: run.stdout, target: merged })).toMatch(/^removed +nothing to push +\//);
     expect(remoteBranches(home)).toBe("main");
   });
 
   it("keeps an ignored secret file the main worktree lacks, and drops one it holds too", () => {
     const home = createCodeHome();
-    writeFileSync(path.join(home.repo, ".gitignore"), "*.pem\n");
+    writeFileSync(path.join(home.repo, ".gitignore"), "*.pem\nbuild/\nnode_modules/\n");
     git({ folder: home.repo, command: ["add", ".gitignore"] });
     git({ folder: home.repo, command: ["commit", "--quiet", "--message", "ignore keys"] });
     git({ folder: home.repo, command: ["push", "--quiet", "origin", "main"] });
@@ -197,10 +218,17 @@ describe("cleanupWatcher worktrees", { timeout: 30_000 }, () => {
     writeFileSync(path.join(ownKey, "own.pem"), "only here\n");
     const sharedKey = addBranchWorktree({ home, branch: "shared-key" });
     writeFileSync(path.join(sharedKey, "shared.pem"), "same key\n");
+    const packageKey = path.join(sharedKey, "node_modules", "tls-lib", "test", "fixture.pem");
+    mkdirSync(path.dirname(packageKey), { recursive: true });
+    writeFileSync(packageKey, "test key\n");
+    const buildKey = addBranchWorktree({ home, branch: "build-key" });
+    mkdirSync(path.join(buildKey, "build"));
+    writeFileSync(path.join(buildKey, "build", "signing.p12"), "only in the build folder\n");
 
     const run = cleanUpAfterSession(home);
 
     expect(reportLineFor({ report: run.stdout, target: ownKey })).toMatch(/^kept +risky-files +\//);
+    expect(reportLineFor({ report: run.stdout, target: buildKey })).toMatch(/^kept +risky-files +\//);
     expect(reportLineFor({ report: run.stdout, target: sharedKey })).toMatch(/^removed +nothing to push +\//);
     expect(readFileSync(path.join(ownKey, "own.pem"), "utf8")).toBe("only here\n");
   });
@@ -229,6 +257,30 @@ describe("cleanupWatcher worktrees", { timeout: 30_000 }, () => {
     expect(reportLineFor({ report: run.stdout, target: busy })).toMatch(/^kept +in-use +\//);
     expect(reportLineFor({ report: run.stdout, target: finished })).toMatch(/^removed +nothing to push +\//);
     expect(existsSync(busy)).toBe(true);
+  });
+
+  it("keeps a worktree a process holds a file in, or names on its command line, from another folder", async () => {
+    const home = createCodeHome();
+    const opened = addBranchWorktree({ home, branch: "opened" });
+    const named = addBranchWorktree({ home, branch: "named" });
+    const holdOpenFile =
+      "require('node:fs').openSync(process.env.HELD_FILE, 'r'); console.log('ready'); setInterval(() => {}, 1000);";
+    const fileHolder = spawn(process.execPath, ["-e", holdOpenFile], {
+      cwd: home.homeRoot,
+      env: { ...process.env, HELD_FILE: path.join(opened, "README.md") },
+    });
+    const folderNamer = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)", named], { cwd: home.homeRoot });
+    try {
+      await once(fileHolder.stdout, "data");
+
+      const run = cleanUpAfterSession(home);
+
+      expect(reportLineFor({ report: run.stdout, target: opened })).toMatch(/^kept +in-use +\//);
+      expect(reportLineFor({ report: run.stdout, target: named })).toMatch(/^kept +in-use +\//);
+    } finally {
+      fileHolder.kill();
+      folderNamer.kill();
+    }
   });
 
   it("drops git's record of a worktree whose folder is already gone", () => {
@@ -261,14 +313,15 @@ describe("cleanupWatcher caches", { timeout: 30_000 }, () => {
   const createBuildFolder = (request: {
     readonly home: CodeHome;
     readonly name: string;
-    readonly workspace: string;
+    readonly plistEntries: string;
   }) => {
     const buildFolder = path.join(request.home.homeRoot, "Library", "Developer", "Xcode", "DerivedData", request.name);
-    const workspaceEntry = `<key>WorkspacePath</key>\n<string>${request.workspace}</string>`;
     mkdirSync(buildFolder, { recursive: true });
-    writeFileSync(path.join(buildFolder, "info.plist"), `<plist><dict>${workspaceEntry}</dict></plist>`);
+    writeFileSync(path.join(buildFolder, "info.plist"), `<plist><dict>${request.plistEntries}</dict></plist>`);
     return buildFolder;
   };
+
+  const workspaceEntry = (workspace: string) => `<key>WorkspacePath</key>\n<string>${workspace}</string>`;
 
   const createCodexReleases = (home: CodeHome) => {
     const packageFolder = path.join(home.homeRoot, ".codex", "packages", "standalone");
@@ -291,8 +344,17 @@ describe("cleanupWatcher caches", { timeout: 30_000 }, () => {
 
   it("deletes unused build folders, old Codex versions, and stale npx packages, then runs each tool's prune", () => {
     const home = createCodeHome();
-    const goneProject = createBuildFolder({ home, name: "Gone-abc", workspace: "/nowhere/Gone.xcworkspace" });
-    const liveProject = createBuildFolder({ home, name: "App-def", workspace: home.repo });
+    const goneWorkspace = workspaceEntry("/nowhere/Gone.xcworkspace");
+    const goneProject = createBuildFolder({ home, name: "Gone-abc", plistEntries: goneWorkspace });
+    const liveProject = createBuildFolder({ home, name: "App-def", plistEntries: workspaceEntry(home.repo) });
+    const escapedFolder = path.join(home.homeRoot, "Tom & Jerry");
+    mkdirSync(escapedFolder);
+    const escapedWorkspace = workspaceEntry(escapedFolder.replace("&", "&amp;"));
+    const escapedProject = createBuildFolder({ home, name: "TomJerry-ghi", plistEntries: escapedWorkspace });
+    const unnamedProject = createBuildFolder({ home, name: "Unnamed-jkl", plistEntries: "" });
+    // A folder where info.plist belongs cannot be read even by root, which ignores file modes.
+    const unreadableProject = path.join(home.homeRoot, "Library", "Developer", "Xcode", "DerivedData", "Odd-mno");
+    mkdirSync(path.join(unreadableProject, "info.plist"), { recursive: true });
     const releases = createCodexReleases(home);
     const staleNpx = createNpxEntry({ home, name: "stale", touched: MONTH_AGO });
     const freshNpx = createNpxEntry({ home, name: "fresh", touched: new Date() });
@@ -303,7 +365,15 @@ describe("cleanupWatcher caches", { timeout: 30_000 }, () => {
       expect(reportLineFor({ report: run.stdout, target: deleted })).toMatch(/^deleted +stale cache +\//);
       expect(existsSync(deleted)).toBe(false);
     }
-    expect([liveProject, releases.currentRelease, freshNpx].every((entry) => existsSync(entry))).toBe(true);
+    const keptEntries = [
+      liveProject,
+      escapedProject,
+      unnamedProject,
+      unreadableProject,
+      releases.currentRelease,
+      freshNpx,
+    ];
+    expect(keptEntries.every((entry) => existsSync(entry))).toBe(true);
     expect(toolCalls(home)).toContain("xcrun simctl delete unavailable\n");
     expect(toolCalls(home)).toContain("pnpm store prune\n");
     expect(toolCalls(home)).toContain("uv cache prune\n");
@@ -313,7 +383,8 @@ describe("cleanupWatcher caches", { timeout: 30_000 }, () => {
   it("runs the cache cleanup at most once a day", () => {
     const home = createCodeHome();
     cleanUpAfterSession(home);
-    const goneProject = createBuildFolder({ home, name: "Gone-abc", workspace: "/nowhere/Gone.xcworkspace" });
+    const goneWorkspace = workspaceEntry("/nowhere/Gone.xcworkspace");
+    const goneProject = createBuildFolder({ home, name: "Gone-abc", plistEntries: goneWorkspace });
     rmSync(home.toolCallsFile);
 
     const run = cleanUpAfterSession(home);

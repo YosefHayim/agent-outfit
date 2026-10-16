@@ -68,10 +68,10 @@ describe("hook config resolution", () => {
     expect(config.debugLogs).toBe(defaultConfig.debugLogs);
   });
 
-  it("drops blank root folders, which would scan the whole home folder", () => {
+  it("trims root folders and drops blank ones, which would scan the whole home folder", () => {
     const config = decodeHookConfig({
       sessionRehomeRoots: ["", "  ", "Desktop/Code", 7],
-      diskCleanupRoots: [" ", "Projects"],
+      diskCleanupRoots: [" ", " Projects "],
     });
     expect(config.sessionRehomeRoots).toEqual(["Desktop/Code"]);
     expect(config.diskCleanupRoots).toEqual(["Projects"]);

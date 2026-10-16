@@ -1,7 +1,7 @@
 import { createPathMatcher } from "../../lib/pathMatcher.js";
 import { readClaudeEvidence, readCodexEvidence, type SessionEvidence } from "../../lib/sessionEvidence.js";
 import { liveSessions } from "./liveSessions.js";
-import { isInsideFolder, runningProcesses } from "./runningProcesses.js";
+import { isInsideFolder, isUsedByRunningProcess, runningProcesses } from "./runningProcesses.js";
 
 type EvidenceReader = (request: Parameters<typeof readClaudeEvidence>[0]) => SessionEvidence;
 
@@ -32,8 +32,8 @@ const foldersWorkedIn = (request: {
   }
 };
 
-// A worktree is in use while a process works in it, an unfinished background job runs there, or a live session's
-// commands, edits, and working folders name it.
+// A worktree is in use while a process holds a file in it or names it on its command line, an unfinished background
+// job runs there, or a live session's commands, edits, and working folders name it.
 export const worktreesInUse = (request: {
   readonly homeRoot: string;
   readonly worktreeFolders: ReadonlyArray<string>;
@@ -45,7 +45,8 @@ export const worktreesInUse = (request: {
   }
 
   const live = liveSessions(request);
-  const usedFolders = [...processes.workingFolders, ...live.jobFolders];
+  const processFolders = request.worktreeFolders.filter((folder) => isUsedByRunningProcess({ folder, processes }));
+  const jobFolders = foldersHoldingAny({ worktreeFolders: request.worktreeFolders, usedFolders: live.jobFolders });
   const claudeTranscripts = live.claudeTranscripts.map((transcriptFile) => ({
     transcriptFile,
     readEvidence: readClaudeEvidence,
@@ -57,5 +58,5 @@ export const worktreesInUse = (request: {
   const sessionFolders = [...claudeTranscripts, ...codexRollouts].flatMap((transcript) =>
     foldersWorkedIn({ ...transcript, worktreeFolders: request.worktreeFolders, homeRoot: request.homeRoot }),
   );
-  return new Set([...foldersHoldingAny({ worktreeFolders: request.worktreeFolders, usedFolders }), ...sessionFolders]);
+  return new Set([...processFolders, ...jobFolders, ...sessionFolders]);
 };

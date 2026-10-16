@@ -5,6 +5,8 @@ export type WorktreeFacts = {
   readonly readable: boolean;
   readonly detached: boolean;
   readonly onDefaultBranch: boolean;
+  /** The remote said which branch is its default, so a push can tell a feature branch from it. */
+  readonly knowsDefaultBranch: boolean;
   readonly hasChanges: boolean;
   readonly hasUnpushedCommits: boolean;
   /** A secret-looking or very large file that must not be pushed, or an ignored secret found nowhere else. */
@@ -19,7 +21,8 @@ export type KeepReason =
   | "detached-work"
   | "default-branch-work"
   | "risky-files"
-  | "no-remote";
+  | "no-remote"
+  | "unknown-default-branch";
 
 export type WorktreeCleanupDecision =
   | { readonly _tag: "keep"; readonly reason: KeepReason }
@@ -57,6 +60,10 @@ export const decideWorktreeCleanup = (facts: WorktreeFacts): WorktreeCleanupDeci
 
   if (hasWork && !facts.remote) {
     return keep("no-remote");
+  }
+
+  if (hasWork && !facts.knowsDefaultBranch) {
+    return keep("unknown-default-branch");
   }
 
   return { _tag: "remove", saveChanges: facts.hasChanges, push: hasWork };

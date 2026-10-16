@@ -42,6 +42,7 @@ const createFeatureWorktree = () => {
   git({ folder: homeRoot, command: ["clone", "--quiet", remote, repo] });
   git({ folder: repo, command: ["commit", "--quiet", "--allow-empty", "--message", "start"] });
   git({ folder: repo, command: ["push", "--quiet", "origin", "main"] });
+  git({ folder: repo, command: ["remote", "set-head", "origin", "main"] });
   git({ folder: repo, command: ["worktree", "add", "--quiet", "-b", "feature", feature] });
   git({ folder: feature, command: ["commit", "--quiet", "--allow-empty", "--message", "feature work"] });
   return { homeRoot, remote, feature };
@@ -99,14 +100,16 @@ describe("cleanUpEndedSession process boundary", { timeout: 30_000 }, () => {
     expect(git({ folder: remote, command: ["log", "--format=%s", "feature"] })).toContain("feature work");
   });
 
-  it("starts no watcher for a session ID that is not a UUID", async () => {
-    const { homeRoot, feature } = createFeatureWorktree();
+  it("still cleans up after a session whose ID is not a UUID, as Grok's are, without naming it", async () => {
+    const { homeRoot, remote, feature } = createFeatureWorktree();
 
-    const execution = runHook({ homeRoot, hookInput: JSON.stringify({ session_id: ".." }) });
-    await new Promise((resolve) => setTimeout(resolve, 3_000));
+    const execution = runHook({ homeRoot, hookInput: JSON.stringify({ session_id: "../grok-session" }) });
+    await waitUntilGone(feature);
+    await waitUntilGone(path.join(homeRoot, "disk-cleanup-state", "watcher.lock"));
 
     expect(execution.status).toBe(0);
-    expect(existsSync(feature)).toBe(true);
+    expect(existsSync(feature)).toBe(false);
+    expect(git({ folder: remote, command: ["log", "--format=%s", "feature"] })).toContain("feature work");
   });
 
   it("exits cleanly on input that is not JSON", () => {

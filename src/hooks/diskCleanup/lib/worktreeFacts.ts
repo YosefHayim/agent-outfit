@@ -1,43 +1,63 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { gitAnswerLines } from "../../lib/gitAnswers.js";
+import { escapeForPattern } from "../../lib/patternEscape.js";
 import type { LinkedWorktree } from "./linkedWorktrees.js";
 import type { WorktreeFacts } from "./worktreeCleanupDecision.js";
 
+// Environment files, keys, certificates, and SSH identities, e.g. server.pem, signing.p12, id_ed25519.
+const SECRET_FILE_GLOBS = [
+  ".env",
+  ".env.*",
+  "*.pem",
+  "*.key",
+  "*.p12",
+  "*.pfx",
+  "*.keystore",
+  "*.jks",
+  "id_rsa*",
+  "id_ed25519*",
+  "id_ecdsa*",
+  "id_dsa*",
+];
+const SHAREABLE_ENV_FILE = /^\.env\.(?:example|sample|template)$/u;
 const CHANGE_QUERY = ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"];
-const IGNORED_FILE_QUERY = [
+// Without --directory git also lists the files inside ignored folders, e.g. .vercel/.env.development.local, and the
+// pathspecs keep that list to secret-looking names.
+const IGNORED_SECRET_QUERY = [
   "ls-files",
   "--others",
   "--ignored",
   "--exclude-standard",
-  "--directory",
-  "--no-empty-directory",
+  "--",
+  ...SECRET_FILE_GLOBS.map((glob) => `:(glob)**/${glob}`),
 ];
-const BRANCH_UNPUSHED_QUERY = ["log", "HEAD", "--not", "--remotes", "--max-count=1", "--format=%H"];
+// Installed packages ship test keys of their own, e.g. node_modules/some-lib/test/server.pem.
+const DEPENDENCY_FOLDERS = new Set(["node_modules", ".venv", "Pods"]);
+const BRANCH_UNPUSHED_RANGE = ["HEAD", "--not", "--remotes"];
 // A detached HEAD's commits are only at risk when no branch, tag, or remote holds them.
-const DETACHED_UNPUSHED_QUERY = [
-  "log",
-  "HEAD",
-  "--not",
-  "--branches",
-  "--tags",
-  "--remotes",
-  "--max-count=1",
-  "--format=%H",
-];
+const DETACHED_UNPUSHED_RANGE = ["HEAD", "--not", "--branches", "--tags", "--remotes"];
+const LATEST_COMMIT_FORMAT = ["--max-count=1", "--format=%H"];
+// Every file an unpushed commit adds or changes; a deleted one has nothing left to push.
+const COMMITTED_FILE_FORMAT = ["--format=", "--name-only", "--diff-filter=d"];
 const REMOTE_LIST_QUERY = ["remote"];
-const UNTRACKED_LINE_START = "?? ";
-// Environment files, keys, certificates, and SSH identities, e.g. server.pem, signing.p12, id_ed25519.
-const SECRET_FILE_NAME =
-  /^(?:\.env(?:\..+)?|.+\.(?:pem|key|p12|pfx|keystore|jks)|id_(?:rsa|ed25519|ecdsa|dsa)(?:\..+)?)$/u;
-const SHAREABLE_ENV_FILE = /^\.env\.(?:example|sample|template)$/u;
 // GitHub refuses files over 100 MB; one this big in a worktree is a build or a download, not work.
 const LARGE_FILE_BYTES = 50 * 1024 * 1024;
+// They count as the default branch even when the remote never said which one it is.
+const ALWAYS_DEFAULT_BRANCHES = ["main", "master"];
+
+const globPattern = (glob: string): RegExp => {
+  const literalParts = glob.split("*").map(escapeForPattern);
+  return new RegExp(`^${literalParts.join(".*")}$`, "u");
+};
+
+const SECRET_FILE_PATTERNS = SECRET_FILE_GLOBS.map(globPattern);
 
 const isSecretFile = (relativePath: string): boolean => {
   const fileName = path.basename(relativePath);
-  return SECRET_FILE_NAME.test(fileName) && !SHAREABLE_ENV_FILE.test(fileName);
+  const looksSecret = SECRET_FILE_PATTERNS.some((pattern) => pattern.test(fileName));
+  return looksSecret && !SHAREABLE_ENV_FILE.test(fileName);
 };
 
 const fileBytes = (file: string): number => {
@@ -48,28 +68,34 @@ const fileBytes = (file: string): number => {
   }
 };
 
-// A pushed secret cannot be taken back, and a file git status had to quote has a name too odd to check.
-const isRiskyUntrackedFile = (request: { readonly folder: string; readonly relativePath: string }): boolean => {
+// A pushed secret cannot be taken back, and a file git had to quote has a name too odd to check.
+const isRiskyToPush = (request: { readonly folder: string; readonly relativePath: string }): boolean => {
   const isQuoted = request.relativePath.startsWith('"');
   const isLarge = fileBytes(path.join(request.folder, request.relativePath)) > LARGE_FILE_BYTES;
   return isQuoted || isLarge || isSecretFile(request.relativePath);
 };
 
+// Porcelain lines read "XY path", or "XY old -> new" for a rename; a deleted file has nothing left to push.
+const changedPaths = (changeLines: ReadonlyArray<string>): ReadonlyArray<string> =>
+  changeLines.filter((line) => !line.slice(0, 2).includes("D")).map((line) => line.slice(3).split(" -> ").at(-1) || "");
+
+const isInsideDependencies = (relativePath: string): boolean =>
+  relativePath.split("/").some((folderName) => DEPENDENCY_FOLDERS.has(folderName));
+
 // Removing a worktree deletes its ignored files, so an ignored secret file is only safe to lose when the main
-// worktree holds the same file.
+// worktree holds the same file. One that cannot be read cannot be compared.
 const isUniqueIgnoredSecret = (request: { readonly worktree: LinkedWorktree; readonly relativePath: string }) => {
-  if (request.relativePath.endsWith("/") || !isSecretFile(request.relativePath)) {
+  if (!isSecretFile(request.relativePath) || isInsideDependencies(request.relativePath)) {
     return false;
   }
 
-  const mainCopy = path.join(request.worktree.mainFolder, request.relativePath);
-  if (!existsSync(mainCopy)) {
+  try {
+    const worktreeContent = readFileSync(path.join(request.worktree.folder, request.relativePath));
+    const mainContent = readFileSync(path.join(request.worktree.mainFolder, request.relativePath));
+    return !worktreeContent.equals(mainContent);
+  } catch {
     return true;
   }
-
-  const worktreeContent = readFileSync(path.join(request.worktree.folder, request.relativePath));
-  const mainContent = readFileSync(mainCopy);
-  return !worktreeContent.equals(mainContent);
 };
 
 const remoteFor = (worktree: LinkedWorktree): string => {
@@ -80,40 +106,53 @@ const remoteFor = (worktree: LinkedWorktree): string => {
   return trackedRemote || remotes.find((remote) => remote === "origin") || remotes[0] || "";
 };
 
-// e.g. "origin/main" from refs/remotes/origin/HEAD; main and master count even when the remote never said.
-const defaultBranchesFor = (request: { readonly folder: string; readonly remote: string }) => {
+// e.g. "main" from refs/remotes/origin/HEAD, or "" when the remote never said.
+const remoteDefaultBranch = (request: { readonly folder: string; readonly remote: string }): string => {
+  if (!request.remote) {
+    return "";
+  }
+
   const remoteHeadQuery = ["symbolic-ref", "--short", `refs/remotes/${request.remote}/HEAD`];
-  const remoteHeadLines = request.remote ? gitAnswerLines({ folder: request.folder, query: remoteHeadQuery }) : [];
-  const remoteDefaults = (remoteHeadLines || []).map((line) => line.slice(request.remote.length + 1));
-  return ["main", "master", ...remoteDefaults];
+  const remoteHeadLines = gitAnswerLines({ folder: request.folder, query: remoteHeadQuery }) || [];
+  const remoteHead = remoteHeadLines[0] || "";
+  return remoteHead.slice(request.remote.length + 1);
 };
 
 export const readWorktreeFacts = (request: { readonly worktree: LinkedWorktree; readonly inUse: boolean }) => {
   const { worktree } = request;
   const detached = worktree.branch === "";
+  const unpushedRange = detached ? DETACHED_UNPUSHED_RANGE : BRANCH_UNPUSHED_RANGE;
   const changeLines = gitAnswerLines({ folder: worktree.folder, query: CHANGE_QUERY });
-  const ignoredPaths = gitAnswerLines({ folder: worktree.folder, query: IGNORED_FILE_QUERY });
-  const unpushedQuery = detached ? DETACHED_UNPUSHED_QUERY : BRANCH_UNPUSHED_QUERY;
-  const unpushedCommits = gitAnswerLines({ folder: worktree.folder, query: unpushedQuery });
-  const untrackedPaths = (changeLines || [])
-    .filter((line) => line.startsWith(UNTRACKED_LINE_START))
-    .map((line) => line.slice(UNTRACKED_LINE_START.length));
-  const hasRiskyUntrackedFile = untrackedPaths.some((relativePath) =>
-    isRiskyUntrackedFile({ folder: worktree.folder, relativePath }),
+  const ignoredSecrets = gitAnswerLines({ folder: worktree.folder, query: IGNORED_SECRET_QUERY });
+  const unpushedCommits = gitAnswerLines({
+    folder: worktree.folder,
+    query: ["log", ...unpushedRange, ...LATEST_COMMIT_FORMAT],
+  });
+  const committedFiles = gitAnswerLines({
+    folder: worktree.folder,
+    query: ["log", ...unpushedRange, ...COMMITTED_FILE_FORMAT],
+  });
+  const pathsToPush = [...changedPaths(changeLines || []), ...(committedFiles || [])];
+  const hasRiskyFileToPush = pathsToPush.some((relativePath) =>
+    isRiskyToPush({ folder: worktree.folder, relativePath }),
   );
-  const hasUniqueIgnoredSecret = (ignoredPaths || []).some((relativePath) =>
+  const hasUniqueIgnoredSecret = (ignoredSecrets || []).some((relativePath) =>
     isUniqueIgnoredSecret({ worktree, relativePath }),
   );
   const remote = remoteFor(worktree);
+  const remoteDefault = remoteDefaultBranch({ folder: worktree.folder, remote });
+  const defaultBranches = [...ALWAYS_DEFAULT_BRANCHES, remoteDefault].filter(Boolean);
+  const gitAnswers = [changeLines, ignoredSecrets, unpushedCommits, committedFiles];
   const facts: WorktreeFacts = {
     inUse: request.inUse,
     locked: worktree.locked,
-    readable: changeLines !== undefined && ignoredPaths !== undefined && unpushedCommits !== undefined,
+    readable: gitAnswers.every((answer) => answer !== undefined),
     detached,
-    onDefaultBranch: defaultBranchesFor({ folder: worktree.folder, remote }).includes(worktree.branch),
+    onDefaultBranch: defaultBranches.includes(worktree.branch),
+    knowsDefaultBranch: remoteDefault !== "",
     hasChanges: (changeLines || []).length > 0,
     hasUnpushedCommits: (unpushedCommits || []).length > 0,
-    hasRiskyFiles: hasRiskyUntrackedFile || hasUniqueIgnoredSecret,
+    hasRiskyFiles: hasRiskyFileToPush || hasUniqueIgnoredSecret,
     remote,
   };
   return facts;

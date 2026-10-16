@@ -1,10 +1,10 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 import { claudeConfigRoots, liveClaudeSessionIds } from "../../lib/claudeLiveSessions.js";
 import { codexHome } from "../../lib/codexHome.js";
 import { isRecord } from "../../lib/jsonLines.js";
-import { openFileNames } from "./runningProcesses.js";
+import { listOpenPaths } from "./runningProcesses.js";
 
 export type LiveSessions = {
   readonly sessionIds: ReadonlySet<string>;
@@ -72,10 +72,19 @@ const claudeTranscriptsOf = (request: { readonly homeRoot: string; readonly sess
   );
 };
 
-// A Codex writer holds an flock on thread-writer-locks/<id>.lock for as long as it can append; without lsof every
-// lock counts as held.
+// lsof names each open file by its real path, whatever symlink led to it.
+const realFolder = (folder: string): string => {
+  try {
+    return realpathSync(folder);
+  } catch {
+    return folder;
+  }
+};
+
+// A Codex writer holds an flock on thread-writer-locks/<id>.lock for as long as it can append; without a list of open
+// files every lock counts as held.
 const heldCodexLockIds = (homeRoot: string): ReadonlyArray<string> => {
-  const lockFolder = path.join(codexHome(homeRoot), "thread-writer-locks");
+  const lockFolder = realFolder(path.join(codexHome(homeRoot), "thread-writer-locks"));
   const lockFiles = childNames(lockFolder)
     .filter((name) => name.endsWith(".lock"))
     .map((name) => path.join(lockFolder, name));
@@ -83,8 +92,8 @@ const heldCodexLockIds = (homeRoot: string): ReadonlyArray<string> => {
     return [];
   }
 
-  const openLockFiles = openFileNames(["--", ...lockFiles]);
-  const heldLockFiles = lockFiles.filter((lockFile) => !openLockFiles || openLockFiles.includes(lockFile));
+  const openPaths = listOpenPaths();
+  const heldLockFiles = lockFiles.filter((lockFile) => !openPaths || openPaths.includes(lockFile));
   return heldLockFiles.map((lockFile) => path.basename(lockFile, ".lock"));
 };
 

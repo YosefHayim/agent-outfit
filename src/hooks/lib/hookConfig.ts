@@ -61,14 +61,18 @@ const numberSetting = (candidate: object, key: NumberSetting): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : DEFAULTS[key];
 };
 
-// A blank root would resolve to the home folder itself and scan every folder in it.
+// A hand-edited " Projects " means Projects, and a blank root would resolve to the home folder itself and scan every
+// folder in it.
 const rootFoldersSetting = (candidate: object, key: "sessionRehomeRoots" | "diskCleanupRoots") => {
   const rootFolders = propertyOf(candidate, key);
   if (!Array.isArray(rootFolders)) {
     return DEFAULTS[key];
   }
 
-  return rootFolders.filter((folder): folder is string => typeof folder === "string" && folder.trim() !== "");
+  return rootFolders
+    .filter((folder): folder is string => typeof folder === "string")
+    .map((folder) => folder.trim())
+    .filter((folder) => folder !== "");
 };
 
 // A missing or malformed field keeps the application default.

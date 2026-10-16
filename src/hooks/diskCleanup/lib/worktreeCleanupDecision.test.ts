@@ -8,6 +8,7 @@ const finishedFeature: WorktreeFacts = {
   readable: true,
   detached: false,
   onDefaultBranch: false,
+  knowsDefaultBranch: true,
   hasChanges: false,
   hasUnpushedCommits: false,
   hasRiskyFiles: false,
@@ -40,6 +41,7 @@ describe("decideWorktreeCleanup", () => {
     [{ onDefaultBranch: true, hasChanges: true }, "default-branch-work"],
     [{ hasRiskyFiles: true }, "risky-files"],
     [{ hasChanges: true, remote: "" }, "no-remote"],
+    [{ hasUnpushedCommits: true, knowsDefaultBranch: false }, "unknown-default-branch"],
   ] as const)("keeps a worktree with %o as %s", (factChanges, reason) => {
     expect(decideWorktreeCleanup({ ...finishedFeature, ...factChanges })).toEqual({ _tag: "keep", reason });
   });
@@ -48,5 +50,6 @@ describe("decideWorktreeCleanup", () => {
     expect(decideWorktreeCleanup({ ...finishedFeature, detached: true })._tag).toBe("remove");
     expect(decideWorktreeCleanup({ ...finishedFeature, onDefaultBranch: true })._tag).toBe("remove");
     expect(decideWorktreeCleanup({ ...finishedFeature, remote: "" })._tag).toBe("remove");
+    expect(decideWorktreeCleanup({ ...finishedFeature, knowsDefaultBranch: false })._tag).toBe("remove");
   });
 });
