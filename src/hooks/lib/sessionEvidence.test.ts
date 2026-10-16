@@ -4,14 +4,16 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createKeywordMatcher, createPathMatcher } from "./localRepos.js";
+import { createPathMatcher } from "./pathMatcher.js";
 import { readClaudeEvidence, readCodexEvidence } from "./sessionEvidence.js";
 
-const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const homeRoot = "/Users/me";
 const codeFolder = "/Users/me/Desktop/Code";
-const repos = [{ name: "vybekiit", root: `${codeFolder}/vybekiit`, keywords: ["vybekiit"], checkedOut: true }];
-const matchers = { matchPaths: createPathMatcher(repos), matchKeywords: createKeywordMatcher(repos) };
+const matchers = {
+  matchPaths: createPathMatcher([{ name: "vybekiit", root: `${codeFolder}/vybekiit` }]),
+  matchKeywords: () => new Set<string>(),
+};
 const workspaces: Array<string> = [];
 
 const writeTranscript = (lines: ReadonlyArray<object>): string => {

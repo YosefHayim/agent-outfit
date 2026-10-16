@@ -4,13 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import {
-  createKeywordMatcher,
-  createPathMatcher,
-  discoverRepos,
-  repoContaining,
-  repoNamedByFolder,
-} from "./localRepos.js";
+import { createKeywordMatcher, discoverRepos, repoContaining, repoNamedByFolder } from "./localRepos.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const workspaces: Array<string> = [];
@@ -70,18 +64,6 @@ describe("local repos", () => {
     const repos = discoverRepos({ homeRoot, rootFolders: ["Code"], deletedRepoNames: [] });
 
     expect(repos.map((repo) => repo.name).sort()).toEqual(["Code/genshot-org/cli", "Code/other-org/cli", "vybekiit"]);
-  });
-
-  it("matches a repo root only at a path boundary and prefers the longest root", () => {
-    const repos = [
-      { name: "agent-runner", root: "/code/agent-runner", keywords: [], checkedOut: true },
-      { name: "agent-runner-e2e", root: "/code/agent-runner-e2e", keywords: [], checkedOut: true },
-    ];
-    const matchPaths = createPathMatcher(repos);
-
-    expect([...matchPaths('{"file_path":"/code/agent-runner-e2e/src/cart.js"}')]).toEqual(["agent-runner-e2e"]);
-    expect([...matchPaths("cd /code/agent-runner && pnpm test")]).toEqual(["agent-runner"]);
-    expect([...matchPaths("/code/agent-runnerx")]).toEqual([]);
   });
 
   it("matches prompt keywords as whole words only", () => {

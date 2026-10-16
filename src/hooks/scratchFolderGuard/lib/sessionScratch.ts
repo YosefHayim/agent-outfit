@@ -2,9 +2,8 @@ import { readdirSync } from "node:fs";
 import path from "node:path";
 
 import { claudeScratchRoots } from "../../lib/claudeScratchRoots.js";
-
-// Claude Code session IDs are UUIDv4 and Codex thread IDs UUIDv7 — never "../x" or "*".
-export const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+import { codexHome } from "../../lib/codexHome.js";
+import { SESSION_ID_PATTERN } from "../../lib/sessionIds.js";
 
 // Codex has no scratch folder of its own; a thread told to use "the session scratchpad" makes one under these names.
 const CODEX_SCRATCH_NAMES = ["scratch", "scratchpad", "scratchpads"];
@@ -29,8 +28,8 @@ export const claudeSessionFolders = (homeRoot: string): ReadonlyArray<string> =>
 
 // A folder is named after its thread, or after whatever the agent chose, e.g. "oly-canonical-20261006".
 export const codexScratchFolders = (homeRoot: string): ReadonlyArray<string> => {
-  const codexHome = process.env.CODEX_HOME || path.join(homeRoot, ".codex");
-  return CODEX_SCRATCH_NAMES.map((name) => path.join(codexHome, name)).flatMap(foldersIn);
+  const codexFolder = codexHome(homeRoot);
+  return CODEX_SCRATCH_NAMES.map((name) => path.join(codexFolder, name)).flatMap(foldersIn);
 };
 
 // The folders one session's agent writes its own scratch files to. Claude Code's tasks/ is left out: the harness

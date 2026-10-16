@@ -8,9 +8,10 @@ import { fileURLToPath } from "node:url";
 
 import { readConfig } from "../../lib/hookConfig.js";
 import { allowAndExit, printDecisionAndExit } from "../../lib/hookOutput.js";
+import { SESSION_ID_PATTERN } from "../../lib/sessionIds.js";
 import { readTranscriptHead } from "../../lib/transcriptReader.js";
 import { decideScratchCleanup } from "../lib/scratchCleanupDecision.js";
-import { agentScratchFolders, holdsFiles, SESSION_ID_PATTERN } from "../lib/sessionScratch.js";
+import { agentScratchFolders, holdsFiles } from "../lib/sessionScratch.js";
 
 // A thread opened in the terminal or the editor; "exec" and subagent threads have nobody reading along.
 const INTERACTIVE_CODEX_SOURCES = ["cli", "vscode"];

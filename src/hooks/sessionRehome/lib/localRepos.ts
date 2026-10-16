@@ -1,7 +1,10 @@
-// The git repos a session can be re-homed into, plus the matchers that map paths and prompt words onto them.
+// The git repos a session can be re-homed into, plus the matcher that maps prompt words onto them.
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+
+import { codeRootFolders, repoRootsUnder } from "../../lib/codeRepos.js";
+import { escapeForPattern } from "../../lib/patternEscape.js";
 
 export type Repo = {
   readonly name: string;
@@ -16,18 +19,6 @@ const MIN_KEYWORD_LENGTH = 4;
 
 const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
   typeof candidate === "object" && candidate !== null && !Array.isArray(candidate);
-
-const isGitCheckout = (folder: string): boolean => existsSync(path.join(folder, ".git"));
-
-const visibleChildFolders = (folder: string): ReadonlyArray<string> => {
-  try {
-    return readdirSync(folder, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
-      .map((entry) => path.join(folder, entry.name));
-  } catch {
-    return [];
-  }
-};
 
 const packageName = (repoRoot: string): string => {
   try {
@@ -68,12 +59,6 @@ const checkedOutRepo = (repoRoot: string): Repo => {
   };
 };
 
-// Repos sit directly in a root (~/Desktop/Code/vybekiit) or one grouping folder down (~/Desktop/Code/genshot-org/cli).
-const reposUnder = (root: string): ReadonlyArray<string> =>
-  visibleChildFolders(root).flatMap((child) =>
-    isGitCheckout(child) ? [child] : visibleChildFolders(child).filter(isGitCheckout),
-  );
-
 // Two checkouts named "cli" become "Desktop/Code/genshot-org/cli" and "Desktop/Code/other-org/cli", so a match
 // never lands on the wrong one.
 const withUniqueNames = (request: { readonly homeRoot: string; readonly repos: ReadonlyArray<Repo> }) =>
@@ -100,32 +85,14 @@ export const discoverRepos = (request: {
   readonly rootFolders: ReadonlyArray<string>;
   readonly deletedRepoNames: ReadonlyArray<string>;
 }): ReadonlyArray<Repo> => {
-  const roots = [...new Set(request.rootFolders.map((folder) => path.resolve(request.homeRoot, folder)))];
-  const repoRoots = [...new Set(roots.flatMap(reposUnder))];
+  const roots = codeRootFolders(request);
+  const repoRoots = repoRootsUnder(roots);
   const checkedOut = withUniqueNames({ homeRoot: request.homeRoot, repos: repoRoots.map(checkedOutRepo) });
   const firstRoot = roots.find(existsSync) || request.homeRoot;
   const deleted = request.deletedRepoNames
     .filter((name) => !checkedOut.some((repo) => repo.name === name))
     .map((name) => ({ name, root: path.join(firstRoot, name), keywords: keywordsFor([name]), checkedOut: false }));
   return withoutSharedKeywords([...checkedOut, ...deleted]);
-};
-
-const escapeForPattern = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-
-// The longest root wins at each position, and a root only counts when a path boundary follows it, so
-// ".../agent-runner" never matches inside ".../agent-runner-e2e".
-export const createPathMatcher = (repos: ReadonlyArray<Repo>): ((text: string) => ReadonlySet<string>) => {
-  if (repos.length === 0) {
-    return () => new Set();
-  }
-
-  const rootsLongestFirst = [...repos].sort((left, right) => right.root.length - left.root.length);
-  const repoNameByRoot = new Map(rootsLongestFirst.map((repo) => [repo.root, repo.name]));
-  const rootPattern = new RegExp(
-    `(${rootsLongestFirst.map((repo) => escapeForPattern(repo.root)).join("|")})(?=[/"'\\s:),\\\\\`]|$)`,
-    "gu",
-  );
-  return (text) => new Set([...text.matchAll(rootPattern)].map((match) => repoNameByRoot.get(match[1]) || ""));
 };
 
 export const createKeywordMatcher = (repos: ReadonlyArray<Repo>): ((prompt: string) => ReadonlySet<string>) => {

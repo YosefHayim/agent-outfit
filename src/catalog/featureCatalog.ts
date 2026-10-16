@@ -402,6 +402,29 @@ export const featureCatalog = Schema.decodeUnknownSync(featureCatalogSchema, { o
       ],
     },
   },
+  {
+    id: "disk-cleanup",
+    sourceDirectory: "diskCleanup",
+    installedSkill: { _tag: "none" },
+    title: "Disk cleanup",
+    summary:
+      "When a Claude Code or Codex session ends, push and remove the finished git worktrees under your code folders that no open session uses: leftover changes are committed and every branch is kept. Worktrees on the default branch, with secret or very large files, or whose push fails stay. Once a day it also deletes Xcode build folders of gone projects, old Codex versions, and npx and act caches unused for two weeks, and runs the simulator, pnpm, uv, and Docker (older than a week) prunes.",
+    selectedByDefault: false,
+    dependencies: [],
+    platform: "any",
+    runtime: {
+      _tag: "hook",
+      sourceEntrypoint: "hooks/cleanUpEndedSession.ts",
+      registrations: [
+        {
+          event: "SessionEnd",
+          matcher: { _tag: "none" },
+          entrypoint: { _tag: "featureDefault" },
+          readsAgentId: false,
+        },
+      ],
+    },
+  },
   skillFeature({
     id: "image-to-code",
     sourceDirectory: "imageToCode",

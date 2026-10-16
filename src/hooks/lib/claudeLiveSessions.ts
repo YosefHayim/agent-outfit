@@ -1,10 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+import { isRecord } from "./jsonLines.js";
 import { isProcessAlive } from "./processAlive.js";
-
-const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
-  typeof candidate === "object" && candidate !== null && !Array.isArray(candidate);
 
 // A second Claude account keeps its own config root beside ~/.claude, e.g. ~/.claude-work, with its own registry,
 // while sharing the scratch root and often the projects folder.

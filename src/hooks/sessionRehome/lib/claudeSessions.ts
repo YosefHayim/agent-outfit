@@ -17,8 +17,8 @@ import path from "node:path";
 
 import { claudeConfigRoots, liveClaudeSessionIds } from "../../lib/claudeLiveSessions.js";
 import { claudeScratchRoots } from "../../lib/claudeScratchRoots.js";
+import { appendJsonLine, decodeJsonLine, isRecord } from "../../lib/jsonLines.js";
 import { readTranscriptHead, readTranscriptTail } from "../../lib/transcriptReader.js";
-import { appendJsonLine, decodeJsonLine, isRecord } from "./jsonLines.js";
 
 export type ClaudeSession = {
   readonly sessionId: string;

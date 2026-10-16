@@ -128,6 +128,14 @@ _Avoid_: "scan", "crawl".
 session-rehome's append-only record of every decision (moved, stayed, uncertain, no-signal, deleted, conflict); the newest line for a session wins.
 _Avoid_: "log", "history" (Claude Code's `history.jsonl` is a different file).
 
+**disk-cleanup**
+Feature that, when a session ends, pushes and removes the finished git worktrees under the code folders that no open session uses, and once a day runs the **cache cleanup**. Branches always stay, and a worktree it cannot push safely stays too.
+_Avoid_: "garbage collection", "sweep" (session-rehome's word).
+
+**cache cleanup**
+disk-cleanup's daily pass over build folders, old Codex versions, and tool caches: it deletes the ones nothing has used for two weeks and runs each tool's own prune.
+_Avoid_: "sweep", "purge".
+
 **autorun**
 Feature and skill that arms the context-guard autorun watcher for hands-free compact/resume (`stop`/`exit` verbs). Its hook code is owned by **context-guard**.
 _Avoid_: "auto-compact", "autopilot".

@@ -4,6 +4,13 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
+import { createPathMatcher } from "../../lib/pathMatcher.js";
+import {
+  type RepoMatchers,
+  readClaudeEvidence,
+  readCodexEvidence,
+  type SessionEvidence,
+} from "../../lib/sessionEvidence.js";
 import {
   type ClaudeSession,
   claudeSessionIsLive,
@@ -20,7 +27,7 @@ import {
   listCodexThreads,
   moveCodexThread,
 } from "./codexThreads.js";
-import { createKeywordMatcher, createPathMatcher, type Repo, repoContaining, repoNamedByFolder } from "./localRepos.js";
+import { createKeywordMatcher, type Repo, repoContaining, repoNamedByFolder } from "./localRepos.js";
 import { decideRehome, deletedReposDominate, type RepoScore, scoreSession } from "./rehomeDecision.js";
 import {
   type LedgerDecision,
@@ -30,7 +37,6 @@ import {
   readLedger,
   recordLedgerEntry,
 } from "./rehomeLedger.js";
-import { type RepoMatchers, readClaudeEvidence, readCodexEvidence, type SessionEvidence } from "./sessionEvidence.js";
 
 export type SweepRequest = {
   readonly homeRoot: string;
